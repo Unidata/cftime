@@ -10,7 +10,7 @@ import numpy
 import re
 
 from datetime import datetime as real_datetime
-from datetime import timedelta
+from datetime import timedelta, MINYEAR
 import time                     # strftime
 
 try:
@@ -37,6 +37,304 @@ ISO8601_REGEX = re.compile(r"(?P<year>[+-]?[0-9]{1,4})(-(?P<month>[0-9]{1,2})(-(
                            )
 TIMEZONE_REGEX = re.compile(
     "(?P<prefix>[+-])(?P<hours>[0-9]{1,2}):(?P<minutes>[0-9]{1,2})")
+
+
+# start of the gregorian calendar
+gregorian = real_datetime(1582,10,15)
+
+
+def _dateparse(timestr):
+    """parse a string of the form time-units since yyyy-mm-dd hh:mm:ss,
+    return a datetime instance"""
+    # same as version in netcdftime, but returns a timezone naive
+    # python datetime instance with the utc_offset included.
+    timestr_split = timestr.split()
+    units = timestr_split[0].lower()
+    if timestr_split[1].lower() != 'since':
+        raise ValueError("no 'since' in unit_string")
+    # parse the date string.
+    n = timestr.find('since')+6
+    isostring = timestr[n:]
+    year, month, day, hour, minute, second, utc_offset =\
+        _parse_date( isostring.strip() )
+    if year >= MINYEAR:
+        basedate = real_datetime(year, month, day, hour, minute, second)
+        # add utc_offset to basedate time instance (which is timezone naive)
+        basedate += timedelta(days=utc_offset/1440.)
+    else:
+        if not utc_offset:
+            basedate = datetime(year, month, day, hour, minute, second)
+        else:
+            raise ValueError('cannot use utc_offset for reference years <= 0')
+    return basedate
+
+
+cdef _parse_date_and_units(timestr):
+    """parse a string of the form time-units since yyyy-mm-dd hh:mm:ss
+    return a tuple (units,utc_offset, datetimeinstance)"""
+    timestr_split = timestr.split()
+    units = timestr_split[0].lower()
+    if units not in _units:
+        raise ValueError(
+            "units must be one of 'seconds', 'minutes', 'hours' or 'days' (or singular version of these), got '%s'" % units)
+    if timestr_split[1].lower() != 'since':
+        raise ValueError("no 'since' in unit_string")
+    # parse the date string.
+    n = timestr.find('since') + 6
+    year, month, day, hour, minute, second, utc_offset = _parse_date(
+        timestr[n:].strip())
+    return units, utc_offset, datetime(year, month, day, hour, minute, second)
+
+
+def date2num(dates,units,calendar='standard'):
+        """
+    **`date2num(dates,units,calendar='standard')`**
+
+    Return numeric time values given datetime objects. The units
+    of the numeric time values are described by the `netcdftime.units` argument
+    and the `netcdftime.calendar` keyword. The datetime objects must
+    be in UTC with no time-zone offset.  If there is a
+    time-zone offset in `units`, it will be applied to the
+    returned numeric values.
+
+    **`dates`**: A datetime object or a sequence of datetime objects.
+    The datetime objects should not include a time-zone offset.
+
+    **`units`**: a string of the form `<time units> since <reference time>`
+    describing the time units. `<time units>` can be days, hours, minutes,
+    seconds, milliseconds or microseconds. `<reference time>` is the time
+    origin.
+
+    **`calendar`**: describes the calendar used in the time calculations.
+    All the values currently defined in the
+    [CF metadata convention](http://cfconventions.org)
+    Valid calendars `'standard', 'gregorian', 'proleptic_gregorian'
+    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'`.
+    Default is `'standard'`, which is a mixed Julian/Gregorian calendar.
+
+    returns a numeric time value, or an array of numeric time values
+    with approximately millisecond accuracy.
+        """
+        calendar = calendar.lower()
+        basedate = _dateparse(units)
+        unit = units.split()[0].lower()
+        # real-world calendars limited to positive reference years.
+        if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
+            if basedate.year == 0:
+                msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
+                raise ValueError(msg)
+            elif basedate.year < 0:
+                msg='negative reference year in time units, must be >= 1'
+                raise ValueError(msg)
+
+        if (calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
+           (calendar in ['gregorian','standard'] and basedate > gregorian):
+            # use python datetime module,
+            isscalar = False
+            try:
+                dates[0]
+            except:
+                isscalar = True
+            if isscalar:
+                dates = numpy.array([dates])
+            else:
+                dates = numpy.array(dates)
+                shape = dates.shape
+            ismasked = False
+            if hasattr(dates,'mask'):
+                mask = dates.mask
+                ismasked = True
+            times = []
+            for date in dates.flat:
+                if ismasked and not date:
+                    times.append(None)
+                else:
+                    td = date - basedate
+                    # total time in microseconds.
+                    totaltime = td.microseconds + (td.seconds + td.days * 24 * 3600) * 1.e6
+                    if unit in microsec_units:
+                        times.append(totaltime)
+                    elif unit in millisec_units:
+                        times.append(totaltime/1.e3)
+                    elif unit in sec_units:
+                        times.append(totaltime/1.e6)
+                    elif unit in min_units:
+                        times.append(totaltime/1.e6/60)
+                    elif unit in hr_units:
+                        times.append(totaltime/1.e6/3600)
+                    elif unit in day_units:
+                        times.append(totaltime/1.e6/3600./24.)
+                    else:
+                        raise ValueError('unsupported time units')
+            if isscalar:
+                return times[0]
+            else:
+                return numpy.reshape(numpy.array(times), shape)
+        else: # use netcdftime module for other calendars
+            cdftime = utime(units,calendar=calendar)
+            return cdftime.date2num(dates)
+
+
+def num2date(times,units,calendar='standard'):
+    """
+    **`num2date(times,units,calendar='standard')`**
+
+    Return datetime objects given numeric time values. The units
+    of the numeric time values are described by the `units` argument
+    and the `calendar` keyword. The returned datetime objects represent
+    UTC with no time-zone offset, even if the specified
+    `units` contain a time-zone offset.
+
+    **`times`**: numeric time values.
+
+    **`units`**: a string of the form `<time units> since <reference time>`
+    describing the time units. `<time units>` can be days, hours, minutes,
+    seconds, milliseconds or microseconds. `<reference time>` is the time
+    origin.
+
+    **`calendar`**: describes the calendar used in the time calculations.
+    All the values currently defined in the
+    [CF metadata convention](http://cfconventions.org)
+    Valid calendars `'standard', 'gregorian', 'proleptic_gregorian'
+    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'`.
+    Default is `'standard'`, which is a mixed Julian/Gregorian calendar.
+
+    returns a datetime instance, or an array of datetime instances with
+    approximately millisecond accuracy.
+
+    ***Note***: The datetime instances returned are 'real' python datetime
+    objects if `calendar='proleptic_gregorian'`, or
+    `calendar='standard'` or `'gregorian'`
+    and the date is after the breakpoint between the Julian and
+    Gregorian calendars (1582-10-15). Otherwise, they are 'phony' datetime
+    objects which support some but not all the methods of 'real' python
+    datetime objects. The datetime instances
+    do not contain a time-zone offset, even if the specified `units`
+    contains one.
+    """
+    calendar = calendar.lower()
+    basedate = _dateparse(units)
+    unit = units.split()[0].lower()
+    # real-world calendars limited to positive reference years.
+    if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
+        if basedate.year == 0:
+            msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
+            raise ValueError(msg)
+        elif basedate.year < 0:
+            msg='negative reference year in time units, must be >= 1'
+            raise ValueError(msg)
+
+    if (calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
+       (calendar in ['gregorian','standard'] and basedate > gregorian):
+        # use python datetime module,
+        isscalar = False
+        try:
+            times[0]
+        except:
+            isscalar = True
+        if isscalar:
+            times = numpy.array([times],dtype='d')
+        else:
+            times = numpy.array(times, dtype='d')
+            shape = times.shape
+        ismasked = False
+        if hasattr(times,'mask'):
+            mask = times.mask
+            ismasked = True
+        dates = []
+        for time in times.flat:
+            if ismasked and not time:
+                dates.append(None)
+            else:
+                # convert to total seconds
+                if unit in microsec_units:
+                    tsecs = time/1.e6
+                elif unit in millisec_units:
+                    tsecs = time/1.e3
+                elif unit in sec_units:
+                    tsecs = time
+                elif unit in min_units:
+                    tsecs = time*60.
+                elif unit in hr_units:
+                    tsecs = time*3600.
+                elif unit in day_units:
+                    tsecs = time*86400.
+                else:
+                    raise ValueError('unsupported time units')
+                # compute time delta.
+                days = tsecs // 86400.
+                msecsd = tsecs*1.e6 - days*86400.*1.e6
+                secs = msecsd // 1.e6
+                msecs = numpy.round(msecsd - secs*1.e6)
+                td = timedelta(days=days,seconds=secs,microseconds=msecs)
+                # add time delta to base date.
+                date = basedate + td
+                dates.append(date)
+        if isscalar:
+            return dates[0]
+        else:
+            return numpy.reshape(numpy.array(dates), shape)
+    else: # use netcdftime for other calendars
+        cdftime = utime(units,calendar=calendar)
+        return cdftime.num2date(times)
+
+
+def date2index(dates, nctime, calendar=None, select='exact'):
+    """
+    **`date2index(dates, nctime, calendar=None, select='exact')`**
+
+    Return indices of a netCDF time variable corresponding to the given dates.
+
+    **`dates`**: A datetime object or a sequence of datetime objects.
+    The datetime objects should not include a time-zone offset.
+
+    **`nctime`**: A netCDF time variable object. The nctime object must have a
+    `units` attribute.
+
+    **`calendar`**: describes the calendar used in the time calculations.
+    All the values currently defined in the
+    [CF metadata convention](http://cfconventions.org)
+    Valid calendars `'standard', 'gregorian', 'proleptic_gregorian'
+    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'`.
+    Default is `'standard'`, which is a mixed Julian/Gregorian calendar.
+    If `calendar` is None, its value is given by `nctime.calendar` or
+    `standard` if no such attribute exists.
+
+    **`select`**: `'exact', 'before', 'after', 'nearest'`
+    The index selection method. `exact` will return the indices perfectly
+    matching the dates given. `before` and `after` will return the indices
+    corresponding to the dates just before or just after the given dates if
+    an exact match cannot be found. `nearest` will return the indices that
+    correspond to the closest dates.
+
+    returns an index (indices) of the netCDF time variable corresponding
+    to the given datetime object(s).
+    """
+    try:
+        nctime.units
+    except AttributeError:
+        raise AttributeError("netcdf time variable is missing a 'units' attribute")
+    if calendar == None:
+        calendar = getattr(nctime, 'calendar', 'standard')
+    calendar = calendar.lower()
+    basedate = _dateparse(nctime.units)
+    # real-world calendars limited to positive reference years.
+    if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
+        if basedate.year == 0:
+            msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
+            raise ValueError(msg)
+        elif basedate.year < 0:
+            msg='negative reference year in time units, must be >= 1'
+            raise ValueError(msg)
+
+    if (calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
+       (calendar in ['gregorian','standard'] and basedate > gregorian):
+        # use python datetime
+        times = date2num(dates,nctime.units,calendar=calendar)
+        return time2index(times, nctime, calendar, select)
+    else: # use netcdftime module for other cases
+        return date2index(dates, nctime, calendar, select)
+
 
 def JulianDayFromDate(date, calendar='standard'):
     """
@@ -539,23 +837,6 @@ Julian Day is a fractional day with approximately millisecond accuracy.
                           int(seconds), int(microseconds), -1, dayofyr)
 
 
-cdef _dateparse(timestr):
-    """parse a string of the form time-units since yyyy-mm-dd hh:mm:ss
-    return a tuple (units,utc_offset, datetimeinstance)"""
-    timestr_split = timestr.split()
-    units = timestr_split[0].lower()
-    if units not in _units:
-        raise ValueError(
-            "units must be one of 'seconds', 'minutes', 'hours' or 'days' (or singular version of these), got '%s'" % units)
-    if timestr_split[1].lower() != 'since':
-        raise ValueError("no 'since' in unit_string")
-    # parse the date string.
-    n = timestr.find('since') + 6
-    year, month, day, hour, minute, second, utc_offset = _parse_date(
-        timestr[n:].strip())
-    return units, utc_offset, datetime(year, month, day, hour, minute, second)
-
-
 class utime:
 
     """
@@ -698,7 +979,7 @@ units to datetime objects.
         else:
             raise ValueError(
                 "calendar must be one of %s, got '%s'" % (str(_calendars), calendar))
-        units, tzoffset, self.origin = _dateparse(unit_string)
+        units, tzoffset, self.origin = _parse_date_and_units(unit_string)
         # real-world calendars limited to positive reference years.
         if self.calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
             if self.origin.year == 0:

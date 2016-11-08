@@ -5,4 +5,5 @@ from ._netcdftime import DatetimeNoLeap, DatetimeAllLeap, Datetime360Day, Dateti
                          DatetimeGregorian, DatetimeProlepticGregorian
 from ._netcdftime import microsec_units, millisec_units, \
                          sec_units, hr_units, day_units, min_units
+from ._netcdftime import num2date, date2num, date2index
 from ._netcdftime import __version__
