@@ -1,6 +1,7 @@
 name: test_env
 dependencies:
   - numpy==1.9.3
+  - cython
   - pytest
   - pip:
     - coveralls
