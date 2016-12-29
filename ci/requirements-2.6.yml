@@ -1,4 +1,5 @@
 dependencies:
+  - python=2.6
   - numpy
   - cython
   - pytest

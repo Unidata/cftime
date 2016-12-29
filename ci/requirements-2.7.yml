@@ -1,0 +1,8 @@
+dependencies:
+  - python=2.7
+  - numpy
+  - cython
+  - pytest
+  - pip:
+    - coveralls
+    - pytest-cov
