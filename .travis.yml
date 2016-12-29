@@ -26,7 +26,7 @@ before_install:
 
 install:
   - echo $TRAVIS_PYTHON_VERSION
-  - conda env create --file ci/requirements-$TRAVIS_PYTHON_VERSION.yml
+  - conda env create --file ci/requirements-$TRAVIS_PYTHON_VERSION.yml -n test_env
   - source activate test_env
   - python --version
   - python setup.py build
