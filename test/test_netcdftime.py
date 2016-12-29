@@ -1,19 +1,55 @@
+import copy
+import unittest
+from collections import namedtuple
+from datetime import datetime, timedelta
+
+import numpy as np
+from numpy.testing import assert_almost_equal, assert_equal
+
 from netcdftime import datetime as datetimex
 from netcdftime import (utime, JulianDayFromDate, DateFromJulianDay,
                         DatetimeNoLeap, DatetimeAllLeap, Datetime360Day,
                         DatetimeJulian, DatetimeGregorian,
                         DatetimeProlepticGregorian)
-from netCDF4 import Dataset
 from netcdftime import num2date, date2num, date2index
-import copy
-import numpy
-import unittest
-import os
-import tempfile
-from datetime import datetime, timedelta
-from numpy.testing import assert_almost_equal, assert_equal
+
 
 # test netcdftime module for netCDF time <--> python datetime conversions.
+
+
+dtime = namedtuple('dtime', ('values', 'units', 'calendar'))
+
+
+class NetCDFTimeVariable(object):
+    '''dummy "netCDF" variable to hold time info'''
+    def __init__(self, values, calendar='standard', units=None):
+
+        self.values = np.asarray(values)
+        self.calendar = calendar
+        self.units = units
+
+    def __array__(self):
+        # np special method that returns a np array.
+        return self.values[...]
+
+    def __getitem__(self, indexers):
+        return self.values[indexers]
+
+    def __repr__(self):
+        print('units: ', self.units)
+        print('calendar: ', self.calendar)
+        print('')
+        return repr(self.values)
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __len__(self):
+        return len(self.values)
+
+    @property
+    def shape(self):
+        return self.values.shape
 
 
 class netcdftimeTestCase(unittest.TestCase):
@@ -69,15 +105,15 @@ class netcdftimeTestCase(unittest.TestCase):
         # check day of year.
         ndayr = d.timetuple()[7]
         self.assertTrue(ndayr == 288)
-        # test using numpy arrays.
-        t = numpy.arange(t2, t2 + 240.0, 12.)
-        t = numpy.reshape(t, (4, 5))
+        # test using np arrays.
+        t = np.arange(t2, t2 + 240.0, 12.)
+        t = np.reshape(t, (4, 5))
         d = self.cdftime_mixed.num2date(t)
         self.assertTrue(d.shape == t.shape)
         d_check = "1582-10-15 00:00:001582-10-15 12:00:001582-10-16 00:00:001582-10-16 12:00:001582-10-17 00:00:001582-10-17 12:00:001582-10-18 00:00:001582-10-18 12:00:001582-10-19 00:00:001582-10-19 12:00:001582-10-20 00:00:001582-10-20 12:00:001582-10-21 00:00:001582-10-21 12:00:001582-10-22 00:00:001582-10-22 12:00:001582-10-23 00:00:001582-10-23 12:00:001582-10-24 00:00:001582-10-24 12:00:00"
         d2 = [str(dd) for dd in d.flat]
         self.assertTrue(d_check == ''.join(d2))
-        # test julian calendar with numpy arrays
+        # test julian calendar with np arrays
         d = self.cdftime_julian.num2date(t)
         self.assertTrue(d.shape == t.shape)
         d_check = "1582-10-05 00:00:001582-10-05 12:00:001582-10-06 00:00:001582-10-06 12:00:001582-10-07 00:00:001582-10-07 12:00:001582-10-08 00:00:001582-10-08 12:00:001582-10-09 00:00:001582-10-09 12:00:001582-10-10 00:00:001582-10-10 12:00:001582-10-11 00:00:001582-10-11 12:00:001582-10-12 00:00:001582-10-12 12:00:001582-10-13 00:00:001582-10-13 12:00:001582-10-14 00:00:001582-10-14 12:00:00"
@@ -91,7 +127,7 @@ class netcdftimeTestCase(unittest.TestCase):
         self.assertTrue(self.cdftime_pg.calendar == 'proleptic_gregorian')
         # check date2num method.
         d = datetime(1990, 5, 5, 2, 17)
-        t1 = numpy.around(self.cdftime_pg.date2num(d))
+        t1 = np.around(self.cdftime_pg.date2num(d))
         self.assertTrue(t1 == 62777470620.0)
         # check num2date method.
         d2 = self.cdftime_pg.num2date(t1)
@@ -207,7 +243,7 @@ class netcdftimeTestCase(unittest.TestCase):
         # test iso 8601 units string
         d = datetime(1970, 1, 1, 1)
         t = self.cdftime_iso.date2num(d)
-        assert_equal(numpy.around(t), 3600)
+        assert_equal(np.around(t), 3600)
         # test fix for issue 75 (seconds hit 60 at end of month,
         # day goes out of range).
         t = 733499.0
@@ -308,7 +344,7 @@ class netcdftimeTestCase(unittest.TestCase):
                 date1 = num2date(microsecs1, units, calendar=calendar)
                 microsecs2 = date2num(date1, units, calendar=calendar)
                 date2 = num2date(microsecs2, units, calendar=calendar)
-                err = numpy.abs(microsecs1 - microsecs2)
+                err = np.abs(microsecs1 - microsecs2)
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
             units = 'milliseconds since 1800-01-30 01:01:01'
@@ -319,7 +355,7 @@ class netcdftimeTestCase(unittest.TestCase):
                 date1 = num2date(millisecs1, units, calendar=calendar)
                 millisecs2 = date2num(date1, units, calendar=calendar)
                 date2 = num2date(millisecs2, units, calendar=calendar)
-                err = numpy.abs(millisecs1 - millisecs2)
+                err = np.abs(millisecs1 - millisecs2)
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
             eps = 1.e-4
@@ -330,7 +366,7 @@ class netcdftimeTestCase(unittest.TestCase):
                 date1 = num2date(secs1, units, calendar=calendar)
                 secs2 = date2num(date1, units, calendar=calendar)
                 date2 = num2date(secs2, units, calendar=calendar)
-                err = numpy.abs(secs1 - secs2)
+                err = np.abs(secs1 - secs2)
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
             eps = 1.e-5
@@ -341,7 +377,7 @@ class netcdftimeTestCase(unittest.TestCase):
                 date1 = num2date(mins1, units, calendar=calendar)
                 mins2 = date2num(date1, units, calendar=calendar)
                 date2 = num2date(mins2, units, calendar=calendar)
-                err = numpy.abs(mins1 - mins2)
+                err = np.abs(mins1 - mins2)
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
             eps = 1.e-5
@@ -352,7 +388,7 @@ class netcdftimeTestCase(unittest.TestCase):
                 date1 = num2date(hrs1, units, calendar=calendar)
                 hrs2 = date2num(date1, units, calendar=calendar)
                 date2 = num2date(hrs2, units, calendar=calendar)
-                err = numpy.abs(hrs1 - hrs2)
+                err = np.abs(hrs1 - hrs2)
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
             eps = 1.e-5
@@ -363,7 +399,7 @@ class netcdftimeTestCase(unittest.TestCase):
                 date1 = num2date(days1, units, calendar=calendar)
                 days2 = date2num(date1, units, calendar=calendar)
                 date2 = num2date(days2, units, calendar=calendar)
-                err = numpy.abs(days1 - days2)
+                err = np.abs(days1 - days2)
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
 
@@ -372,8 +408,8 @@ class netcdftimeTestCase(unittest.TestCase):
                 datetime(2000,1,1,0))
 
         # issue 354
-        num1 = numpy.array([[0, 1], [2, 3]])
-        num2 = numpy.array([[0, 1], [2, 3]])
+        num1 = np.array([[0, 1], [2, 3]])
+        num2 = np.array([[0, 1], [2, 3]])
         dates1 = num2date(num1, 'days since 0001-01-01')
         dates2 = num2date(num2, 'days since 2001-01-01')
         assert( dates1.shape == (2,2) )
@@ -480,8 +516,8 @@ class TestDate2index(unittest.TestCase):
             self.units = units
             self.calendar = calendar
             t0 = date2num(start, units, calendar)
-            self._data = (t0 + numpy.arange(n) * step).astype('float')
-            self.dtype = numpy.float
+            self._data = (t0 + np.arange(n) * step).astype('float')
+            self.dtype = np.float
 
         def __getitem__(self, item):
             return self._data[item]
@@ -500,31 +536,28 @@ class TestDate2index(unittest.TestCase):
         self.standardtime = self.TestTime(datetime(1950, 1, 1), 366, 24,
                                           'hours since 1900-01-01', 'standard')
 
-        self.file = tempfile.NamedTemporaryFile(suffix='.nc', delete=False).name
-        f = Dataset(self.file, 'w')
-        f.createDimension('time', None)
-        time = f.createVariable('time', float, ('time',))
-        time.units = 'hours since 1900-01-01'
-        time[:] = self.standardtime[:]
-        f.createDimension('time2', 1)
-        time2 = f.createVariable('time2', 'f8', ('time2',))
-        time2.units = 'days since 1901-01-01'
+        self.time_vars = {}
+        self.time_vars['time'] = NetCDFTimeVariable(
+            values=self.standardtime,
+            units='hours since 1900-01-01')
+
         self.first_timestamp = datetime(2000, 1, 1)
-        time2[0] = date2num(self.first_timestamp, time2.units)
+        units = 'days since 1901-01-01'
+        self.time_vars['time2'] = NetCDFTimeVariable(
+            values=date2num([self.first_timestamp], units),
+            units=units)
+
         ntimes = 21
-        f.createDimension("record", ntimes)
-        time3 = f.createVariable("time3", numpy.int32, ("record", ))
-        time3.units = "seconds since 1970-01-01 00:00:00"
-        date = datetime(2037,1,1,0)
+
+        units = "seconds since 1970-01-01 00:00:00"
+        date = datetime(2037, 1, 1, 0)
         dates = [date]
         for ndate in range(ntimes-1):
             date += (ndate+1)*timedelta(hours=1)
             dates.append(date)
-        time3[:] = date2num(dates,time3.units)
-        f.close()
-
-    def tearDown(self):
-        os.remove(self.file)
+        self.time_vars['time3'] = NetCDFTimeVariable(
+            values=date2num(dates, units),
+            units=units)
 
     def test_simple(self):
         t = date2index(datetime(1950, 2, 1), self.standardtime)
@@ -532,11 +565,9 @@ class TestDate2index(unittest.TestCase):
 
     def test_singletime(self):
         # issue 215 test (date2index with time variable length == 1)
-        f = Dataset(self.file)
-        time2 = f.variables['time2']
+        time2 = self.time_vars['time2']
         result_index = date2index(self.first_timestamp, time2, select="exact")
         assert_equal(result_index, 0)
-        f.close()
 
     def test_list(self):
         t = date2index(
@@ -550,7 +581,7 @@ class TestDate2index(unittest.TestCase):
 
         # Let's remove the second entry, so that the computed stride is not
         # representative and the bisection method is needed.
-        nutime._data = nutime._data[numpy.r_[0, slice(2, 200)]]
+        nutime._data = nutime._data[np.r_[0, slice(2, 200)]]
 
         t = date2index(datetime(1950, 2, 1), nutime)
         assert_equal(t, 30)
@@ -585,8 +616,7 @@ class TestDate2index(unittest.TestCase):
         assert_equal(t, [1, 2, 3])
 
     def test_select_nc(self):
-        f = Dataset(self.file, 'r')
-        nutime = f.variables['time']
+        nutime = self.time_vars['time']
 
         dates = [datetime(1950, 1, 2, 6), datetime(
             1950, 1, 3), datetime(1950, 1, 3, 18)]
@@ -633,33 +663,32 @@ class TestDate2index(unittest.TestCase):
         # note: microsecond accuracy lost for time intervals greater
         # than about 270 years.
         units = 'microseconds since 1776-07-04 00:00:00-12:00'
-        dates =\
-            [datetime(1962, 10, 27, 6, 1, 30, 9001), datetime(
-                1993, 11, 21, 12, 5, 25, 999), datetime(1995, 11, 25, 18, 7, 59, 999999)]
+        dates = [datetime(1962, 10, 27, 6, 1, 30, 9001),
+                 datetime(1993, 11, 21, 12, 5, 25, 999),
+                 datetime(1995, 11, 25, 18, 7, 59, 999999)]
         times2 = date2num(dates, units)
         dates2 = num2date(times2, units)
         for date, date2 in zip(dates, dates2):
             assert_equal(date, date2)
-        f.close()
 
     def test_issue444(self):
         # make sure integer overflow not causing error in
         # calculation of nearest index when sum of adjacent
         # time values won't fit in 32 bits.
-        ntimes = 20
-        f = Dataset(self.file, 'r')
         query_time = datetime(2037, 1, 3, 21, 12)
-        index = date2index(query_time, f.variables['time3'], select='nearest')
+        print(self.time_vars['time3'])
+        index = date2index(query_time, self.time_vars['time3'],
+                           select='nearest')
         assert(index == 11)
-        f.close()
+
 
 class issue584TestCase(unittest.TestCase):
     """Regression tests for issue #584."""
     converters = None
 
     def setUp(self):
-        self.converters = {"360_day" : utime("days since 1-1-1", "360_day"),
-                           "noleap" : utime("days since 1-1-1", "365_day")}
+        self.converters = {"360_day": utime("days since 1-1-1", "360_day"),
+                           "noleap": utime("days since 1-1-1", "365_day")}
 
     def test_roundtrip(self):
         "Test roundtrip conversion (num2date <-> date2num) using 360_day and 365_day calendars."
@@ -692,6 +721,7 @@ class issue584TestCase(unittest.TestCase):
                 self.assertEqual(old_date.dayofwk - date.dayofwk, 1)
 
             old_date = date
+
 
 class DateTime(unittest.TestCase):
     def setUp(self):
