@@ -1,9 +1,8 @@
 name: test_env
 dependencies:
-  - numpy==1.9.3
+  - numpy
   - cython
   - pytest
-  - netcdf4
   - pip:
     - coveralls
     - pytest-cov
