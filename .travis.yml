@@ -7,9 +7,9 @@ notifications:
 python:
   - "2.6"
   - "2.7"
-  - "3.2"
-  - "3.3"
   - "3.4"
+  - "3.5"
+  - "3.6"
 
 before_install:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
@@ -26,7 +26,7 @@ before_install:
 
 install:
   - echo $TRAVIS_PYTHON_VERSION
-  - conda env create --file ci/requirements.yml python=$TRAVIS_PYTHON_VERSION
+  - conda create -q -n test_env python=$TRAVIS_PYTHON_VERSION --file ci/requirements.yml
   - source activate test_env
   - python --version
   - python setup.py build
