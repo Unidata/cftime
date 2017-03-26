@@ -1633,6 +1633,7 @@ but uses the "noleap" ("365_day") calendar.
         datetime.__init__(self, *args, **kwargs)
         self.calendar = "noleap"
         self.datetime_compatible = False
+        assert_valid_date(self, no_leap, False)
 
     cdef _add_timedelta(self, delta):
         return DatetimeNoLeap(*add_timedelta(self, delta, no_leap, False))
@@ -1646,6 +1647,7 @@ but uses the "all_leap" ("366_day") calendar.
         datetime.__init__(self, *args, **kwargs)
         self.calendar = "all_leap"
         self.datetime_compatible = False
+        assert_valid_date(self, all_leap, False)
 
     cdef _add_timedelta(self, delta):
         return DatetimeAllLeap(*add_timedelta(self, delta, all_leap, False))
@@ -1659,6 +1661,7 @@ but uses the "360_day" calendar.
         datetime.__init__(self, *args, **kwargs)
         self.calendar = "360_day"
         self.datetime_compatible = False
+        assert_valid_date(self, no_leap, False, is_360_day=True)
 
     cdef _add_timedelta(self, delta):
         return Datetime360Day(*add_timedelta_360_day(self, delta))
@@ -1672,6 +1675,7 @@ but uses the "julian" calendar.
         datetime.__init__(self, *args, **kwargs)
         self.calendar = "julian"
         self.datetime_compatible = False
+        assert_valid_date(self, is_leap_julian, False)
 
     cdef _add_timedelta(self, delta):
         return DatetimeJulian(*add_timedelta(self, delta, is_leap_julian, False))
@@ -1699,6 +1703,7 @@ a datetime.datetime instance or vice versa.
             self.datetime_compatible = True
         else:
             self.datetime_compatible = False
+        assert_valid_date(self, is_leap_gregorian, True)
 
     cdef _add_timedelta(self, delta):
         return DatetimeGregorian(*add_timedelta(self, delta, is_leap_gregorian, True))
@@ -1724,6 +1729,7 @@ format, and calendar.
         datetime.__init__(self, *args, **kwargs)
         self.calendar = "proleptic_gregorian"
         self.datetime_compatible = True
+        assert_valid_date(self, is_leap_proleptic_gregorian, False)
 
     cdef _add_timedelta(self, delta):
         return DatetimeProlepticGregorian(*add_timedelta(self, delta,
@@ -1822,6 +1828,41 @@ cdef int* month_lengths(bint (*is_leap)(int), int year):
     else:
         return month_lengths_365_day
 
+cdef void assert_valid_date(datetime dt, bint (*is_leap)(int),
+                            bint julian_gregorian_mixed,
+                            bint is_360_day=False) except *:
+    cdef int[13] month_length
+
+    if not is_360_day:
+        if dt.year == 0:
+            raise ValueError("invalid year provided in {0!r}".format(dt))
+        month_length = month_lengths(is_leap, dt.year)
+    else:
+        for j, N in enumerate(
+                [-1, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]):
+            month_length[j] = N
+
+    if dt.month < 1 or dt.month > 12:
+        raise ValueError("invalid month provided in {0!r}".format(dt))
+
+    if dt.day < 1 or dt.day > month_length[dt.month]:
+        raise ValueError("invalid day number provided in {0!r}".format(dt))
+
+    if julian_gregorian_mixed and dt.year == 1582 and dt.month == 10 and dt.day > 4 and dt.day < 15:
+        raise ValueError("{0!r} is not present in the mixed Julian/Gregorian calendar".format(dt))
+
+    if dt.hour < 0 or dt.hour > 23:
+        raise ValueError("invalid hour provided in {0!r}".format(dt))
+
+    if dt.minute < 0 or dt.minute > 59:
+        raise ValueError("invalid minute provided in {0!r}".format(dt))
+
+    if dt.second < 0 or dt.second > 59:
+        raise ValueError("invalid second provided in {0!r}".format(dt))
+
+    if dt.microsecond < 0 or dt.microsecond > 999999:
+        raise ValueError("invalid microsecond provided in {0!r}".format(dt))
+
 # Add a datetime.timedelta to a netcdftime.datetime instance. Uses
 # integer arithmetic to avoid rounding errors and preserve
 # microsecond accuracy.
@@ -1856,20 +1897,7 @@ cdef tuple add_timedelta(datetime dt, delta, bint (*is_leap)(int), bint julian_g
     month = dt.month
     year = dt.year
 
-    # validate inputs:
-    if year == 0:
-        raise ValueError("invalid year in {0!r}".format(dt))
-
     month_length = month_lengths(is_leap, year)
-
-    if month < 1 or month > 12:
-        raise ValueError("invalid month in {0!r}".format(dt))
-
-    if day < 1 or day > month_length[month]:
-        raise ValueError("invalid day number in {0!r}".format(dt))
-
-    if julian_gregorian_mixed and year == 1582 and month == 10 and day > 4 and day < 15:
-        raise ValueError("{0!r} is not present in the mixed Julian/Gregorian calendar".format(dt))
 
     n_invalid_dates = 10 if julian_gregorian_mixed else 0
 
@@ -1932,8 +1960,6 @@ cdef tuple add_timedelta(datetime dt, delta, bint (*is_leap)(int), bint julian_g
 cdef tuple add_timedelta_360_day(datetime dt, delta):
     cdef int microsecond, second, minute, hour, day, month, year
     cdef int delta_microseconds, delta_seconds, delta_days
-
-    assert dt.month >= 1 and dt.month <= 12
 
     # extract these inputs here to avoid type conversion in the code below
     delta_microseconds = delta.microseconds
