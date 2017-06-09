@@ -1,5 +1,5 @@
 import os
-from distutils.core import setup
+from setuptools import setup
 from Cython.Build import cythonize
 
 
@@ -19,16 +19,20 @@ def extract_version(module='netcdftime'):
 
 
 with open('requirements.txt') as f:
-    tests_require = f.readlines()
-install_requires = [t.strip() for t in tests_require]
+    reqs = f.readlines()
+install_requires = [req.strip() for req in reqs]
+
+with open('requirements-dev.txt') as f:
+    reqs = f.readlines()
+tests_require = [req.strip() for req in reqs]
 
 setup(
     name='netcdftime',
-    author='Jeff Whit',
-    author_email='lapok@atmos.washington.edu',
+    author='Jeff Whitaker',
+    author_email='jeffrey.s.whitaker@noaa.gov',
     description='Time-handling functionality from netcdf4-python',
     packages=['netcdftime'],
     version=extract_version(),
     ext_modules=cythonize('netcdftime/*.pyx'),
     install_requires=install_requires,
-    tests_require=['pytest'])
+    tests_require=tests_require)
