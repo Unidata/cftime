@@ -4,7 +4,7 @@
 {
     "distutils": {
         "depends": []
-    },
+    }, 
     "module_name": "netcdftime._netcdftime"
 }
 END: Cython Metadata */
@@ -1746,8 +1746,8 @@ static const char __pyx_k_P_year_0_9_1_4_P_month_0_9_1_2[] = "(?P<year>[+-]?[0-9
 static const char __pyx_k_Performs_conversions_of_netCDF[] = "\nPerforms conversions of netCDF time coordinate data to/from datetime objects.\n";
 static const char __pyx_k_0_r_is_not_present_in_the_mixed[] = "{0!r} is not present in the mixed Julian/Gregorian calendar";
 static const char __pyx_k_P_prefix_P_hours_0_9_1_2_P_minu[] = "(?P<prefix>[+-])(?P<hours>[0-9]{1,2}):(?P<minutes>[0-9]{1,2})";
-static const char __pyx_k_Users_jhamman_Dropbox_src_netcd[] = "/Users/jhamman/Dropbox/src/netcdftime/netcdftime/_netcdftime.pyx";
 static const char __pyx_k_calendar_must_be_one_of_s_got_s[] = "calendar must be one of %s, got '%s'";
+static const char __pyx_k_home_mde_ncdftime_netcdftime_ne[] = "/home/mde/ncdftime/netcdftime/netcdftime/_netcdftime.pyx";
 static const char __pyx_k_negative_reference_year_in_time[] = "negative reference year in time units, must be >= 1";
 static const char __pyx_k_netcdf_time_variable_is_missing[] = "netcdf time variable is missing a 'units' attribute";
 static const char __pyx_k_s_is_not_an_option_for_the_sele[] = "%s is not an option for the `select` argument.";
@@ -1802,7 +1802,6 @@ static PyObject *__pyx_n_s_TIMEZONE_REGEX;
 static PyObject *__pyx_kp_s_This_strftime_implementation_doe;
 static PyObject *__pyx_n_s_TypeError;
 static PyObject *__pyx_kp_s_Unable_to_parse_date_string_r;
-static PyObject *__pyx_kp_s_Users_jhamman_Dropbox_src_netcd;
 static PyObject *__pyx_n_s_ValueError;
 static PyObject *__pyx_kp_s_Y_m_d_H_M_S;
 static PyObject *__pyx_n_s_Z;
@@ -1871,6 +1870,7 @@ static PyObject *__pyx_n_s_gregorian;
 static PyObject *__pyx_n_s_groupdict;
 static PyObject *__pyx_n_s_groups;
 static PyObject *__pyx_n_s_h;
+static PyObject *__pyx_kp_s_home_mde_ncdftime_netcdftime_ne;
 static PyObject *__pyx_n_s_hour;
 static PyObject *__pyx_n_s_hours;
 static PyObject *__pyx_n_s_hr;
@@ -2534,7 +2534,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime__dateparse(CYTHON_UNUSED Py
  *         _parse_date( isostring.strip() )
  *     if year >= MINYEAR:             # <<<<<<<<<<<<<<
  *         basedate = real_datetime(year, month, day, hour, minute, second)
- *         # add utc_offset to basedate time instance (which is timezone naive)
+ *         # subtract utc_offset from basedate time instance (which is timezone naive)
  */
   __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_MINYEAR); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 60, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
@@ -2548,8 +2548,8 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime__dateparse(CYTHON_UNUSED Py
  *         _parse_date( isostring.strip() )
  *     if year >= MINYEAR:
  *         basedate = real_datetime(year, month, day, hour, minute, second)             # <<<<<<<<<<<<<<
- *         # add utc_offset to basedate time instance (which is timezone naive)
- *         basedate += timedelta(days=utc_offset/1440.)
+ *         # subtract utc_offset from basedate time instance (which is timezone naive)
+ *         basedate -= timedelta(days=utc_offset/1440.)
  */
     __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_real_datetime); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 61, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
@@ -2615,8 +2615,8 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime__dateparse(CYTHON_UNUSED Py
 
     /* "netcdftime/_netcdftime.pyx":63
  *         basedate = real_datetime(year, month, day, hour, minute, second)
- *         # add utc_offset to basedate time instance (which is timezone naive)
- *         basedate += timedelta(days=utc_offset/1440.)             # <<<<<<<<<<<<<<
+ *         # subtract utc_offset from basedate time instance (which is timezone naive)
+ *         basedate -= timedelta(days=utc_offset/1440.)             # <<<<<<<<<<<<<<
  *     else:
  *         if not utc_offset:
  */
@@ -2632,7 +2632,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime__dateparse(CYTHON_UNUSED Py
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = PyNumber_InPlaceAdd(__pyx_v_basedate, __pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 63, __pyx_L1_error)
+    __pyx_t_2 = PyNumber_InPlaceSubtract(__pyx_v_basedate, __pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 63, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     __Pyx_DECREF_SET(__pyx_v_basedate, __pyx_t_2);
@@ -2643,13 +2643,13 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime__dateparse(CYTHON_UNUSED Py
  *         _parse_date( isostring.strip() )
  *     if year >= MINYEAR:             # <<<<<<<<<<<<<<
  *         basedate = real_datetime(year, month, day, hour, minute, second)
- *         # add utc_offset to basedate time instance (which is timezone naive)
+ *         # subtract utc_offset from basedate time instance (which is timezone naive)
  */
     goto __pyx_L6;
   }
 
   /* "netcdftime/_netcdftime.pyx":65
- *         basedate += timedelta(days=utc_offset/1440.)
+ *         basedate -= timedelta(days=utc_offset/1440.)
  *     else:
  *         if not utc_offset:             # <<<<<<<<<<<<<<
  *             basedate = datetime(year, month, day, hour, minute, second)
@@ -2694,7 +2694,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime__dateparse(CYTHON_UNUSED Py
       __pyx_t_7 = 0;
 
       /* "netcdftime/_netcdftime.pyx":65
- *         basedate += timedelta(days=utc_offset/1440.)
+ *         basedate -= timedelta(days=utc_offset/1440.)
  *     else:
  *         if not utc_offset:             # <<<<<<<<<<<<<<
  *             basedate = datetime(year, month, day, hour, minute, second)
@@ -18679,7 +18679,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
  *                     jdelta.append(_360DayFromDate(d) - self._jd0)
  *         if not isscalar:             # <<<<<<<<<<<<<<
  *             jdelta = numpy.array(jdelta)
- *         # convert to desired units, subtract time zone offset.
+ *         # convert to desired units, add time zone offset.
  */
   __pyx_t_9 = ((!(__pyx_v_isscalar != 0)) != 0);
   if (__pyx_t_9) {
@@ -18688,7 +18688,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
  *                     jdelta.append(_360DayFromDate(d) - self._jd0)
  *         if not isscalar:
  *             jdelta = numpy.array(jdelta)             # <<<<<<<<<<<<<<
- *         # convert to desired units, subtract time zone offset.
+ *         # convert to desired units, add time zone offset.
  *         if self.units in microsec_units:
  */
     __pyx_t_11 = __Pyx_GetModuleGlobalName(__pyx_n_s_numpy); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 1074, __pyx_L1_error)
@@ -18748,15 +18748,15 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
  *                     jdelta.append(_360DayFromDate(d) - self._jd0)
  *         if not isscalar:             # <<<<<<<<<<<<<<
  *             jdelta = numpy.array(jdelta)
- *         # convert to desired units, subtract time zone offset.
+ *         # convert to desired units, add time zone offset.
  */
   }
 
   /* "netcdftime/_netcdftime.pyx":1076
  *             jdelta = numpy.array(jdelta)
- *         # convert to desired units, subtract time zone offset.
+ *         # convert to desired units, add time zone offset.
  *         if self.units in microsec_units:             # <<<<<<<<<<<<<<
- *             jdelta = jdelta * 86400. * 1.e6  - self.tzoffset * 60. * 1.e6
+ *             jdelta = jdelta * 86400. * 1.e6  + self.tzoffset * 60. * 1.e6
  *         elif self.units in millisec_units:
  */
   __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_units_2); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 1076, __pyx_L1_error)
@@ -18770,11 +18770,11 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
   if (__pyx_t_7) {
 
     /* "netcdftime/_netcdftime.pyx":1077
- *         # convert to desired units, subtract time zone offset.
+ *         # convert to desired units, add time zone offset.
  *         if self.units in microsec_units:
- *             jdelta = jdelta * 86400. * 1.e6  - self.tzoffset * 60. * 1.e6             # <<<<<<<<<<<<<<
+ *             jdelta = jdelta * 86400. * 1.e6  + self.tzoffset * 60. * 1.e6             # <<<<<<<<<<<<<<
  *         elif self.units in millisec_units:
- *             jdelta = jdelta * 86400. * 1.e3  - self.tzoffset * 60. * 1.e3
+ *             jdelta = jdelta * 86400. * 1.e3  + self.tzoffset * 60. * 1.e3
  */
     if (unlikely(!__pyx_v_jdelta)) { __Pyx_RaiseUnboundLocalError("jdelta"); __PYX_ERR(0, 1077, __pyx_L1_error) }
     __pyx_t_6 = PyNumber_Multiply(__pyx_v_jdelta, __pyx_float_86400_); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1077, __pyx_L1_error)
@@ -18790,7 +18790,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
     __pyx_t_6 = PyNumber_Multiply(__pyx_t_4, __pyx_float_1_e6); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1077, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = PyNumber_Subtract(__pyx_t_12, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 1077, __pyx_L1_error)
+    __pyx_t_4 = PyNumber_Add(__pyx_t_12, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 1077, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
@@ -18799,9 +18799,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
 
     /* "netcdftime/_netcdftime.pyx":1076
  *             jdelta = numpy.array(jdelta)
- *         # convert to desired units, subtract time zone offset.
+ *         # convert to desired units, add time zone offset.
  *         if self.units in microsec_units:             # <<<<<<<<<<<<<<
- *             jdelta = jdelta * 86400. * 1.e6  - self.tzoffset * 60. * 1.e6
+ *             jdelta = jdelta * 86400. * 1.e6  + self.tzoffset * 60. * 1.e6
  *         elif self.units in millisec_units:
  */
     goto __pyx_L42;
@@ -18809,9 +18809,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
 
   /* "netcdftime/_netcdftime.pyx":1078
  *         if self.units in microsec_units:
- *             jdelta = jdelta * 86400. * 1.e6  - self.tzoffset * 60. * 1.e6
+ *             jdelta = jdelta * 86400. * 1.e6  + self.tzoffset * 60. * 1.e6
  *         elif self.units in millisec_units:             # <<<<<<<<<<<<<<
- *             jdelta = jdelta * 86400. * 1.e3  - self.tzoffset * 60. * 1.e3
+ *             jdelta = jdelta * 86400. * 1.e3  + self.tzoffset * 60. * 1.e3
  *         elif self.units in sec_units:
  */
   __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_units_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 1078, __pyx_L1_error)
@@ -18825,11 +18825,11 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
   if (__pyx_t_9) {
 
     /* "netcdftime/_netcdftime.pyx":1079
- *             jdelta = jdelta * 86400. * 1.e6  - self.tzoffset * 60. * 1.e6
+ *             jdelta = jdelta * 86400. * 1.e6  + self.tzoffset * 60. * 1.e6
  *         elif self.units in millisec_units:
- *             jdelta = jdelta * 86400. * 1.e3  - self.tzoffset * 60. * 1.e3             # <<<<<<<<<<<<<<
+ *             jdelta = jdelta * 86400. * 1.e3  + self.tzoffset * 60. * 1.e3             # <<<<<<<<<<<<<<
  *         elif self.units in sec_units:
- *             jdelta = jdelta * 86400. - self.tzoffset * 60.
+ *             jdelta = jdelta * 86400. + self.tzoffset * 60.
  */
     if (unlikely(!__pyx_v_jdelta)) { __Pyx_RaiseUnboundLocalError("jdelta"); __PYX_ERR(0, 1079, __pyx_L1_error) }
     __pyx_t_6 = PyNumber_Multiply(__pyx_v_jdelta, __pyx_float_86400_); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1079, __pyx_L1_error)
@@ -18845,7 +18845,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
     __pyx_t_6 = PyNumber_Multiply(__pyx_t_12, __pyx_float_1_e3); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1079, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-    __pyx_t_12 = PyNumber_Subtract(__pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 1079, __pyx_L1_error)
+    __pyx_t_12 = PyNumber_Add(__pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 1079, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_12);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
@@ -18854,9 +18854,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
 
     /* "netcdftime/_netcdftime.pyx":1078
  *         if self.units in microsec_units:
- *             jdelta = jdelta * 86400. * 1.e6  - self.tzoffset * 60. * 1.e6
+ *             jdelta = jdelta * 86400. * 1.e6  + self.tzoffset * 60. * 1.e6
  *         elif self.units in millisec_units:             # <<<<<<<<<<<<<<
- *             jdelta = jdelta * 86400. * 1.e3  - self.tzoffset * 60. * 1.e3
+ *             jdelta = jdelta * 86400. * 1.e3  + self.tzoffset * 60. * 1.e3
  *         elif self.units in sec_units:
  */
     goto __pyx_L42;
@@ -18864,9 +18864,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
 
   /* "netcdftime/_netcdftime.pyx":1080
  *         elif self.units in millisec_units:
- *             jdelta = jdelta * 86400. * 1.e3  - self.tzoffset * 60. * 1.e3
+ *             jdelta = jdelta * 86400. * 1.e3  + self.tzoffset * 60. * 1.e3
  *         elif self.units in sec_units:             # <<<<<<<<<<<<<<
- *             jdelta = jdelta * 86400. - self.tzoffset * 60.
+ *             jdelta = jdelta * 86400. + self.tzoffset * 60.
  *         elif self.units in min_units:
  */
   __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_units_2); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 1080, __pyx_L1_error)
@@ -18880,11 +18880,11 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
   if (__pyx_t_7) {
 
     /* "netcdftime/_netcdftime.pyx":1081
- *             jdelta = jdelta * 86400. * 1.e3  - self.tzoffset * 60. * 1.e3
+ *             jdelta = jdelta * 86400. * 1.e3  + self.tzoffset * 60. * 1.e3
  *         elif self.units in sec_units:
- *             jdelta = jdelta * 86400. - self.tzoffset * 60.             # <<<<<<<<<<<<<<
+ *             jdelta = jdelta * 86400. + self.tzoffset * 60.             # <<<<<<<<<<<<<<
  *         elif self.units in min_units:
- *             jdelta = jdelta * 1440. - self.tzoffset
+ *             jdelta = jdelta * 1440. + self.tzoffset
  */
     if (unlikely(!__pyx_v_jdelta)) { __Pyx_RaiseUnboundLocalError("jdelta"); __PYX_ERR(0, 1081, __pyx_L1_error) }
     __pyx_t_6 = PyNumber_Multiply(__pyx_v_jdelta, __pyx_float_86400_); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1081, __pyx_L1_error)
@@ -18894,7 +18894,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
     __pyx_t_4 = PyNumber_Multiply(__pyx_t_12, __pyx_float_60_); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 1081, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-    __pyx_t_12 = PyNumber_Subtract(__pyx_t_6, __pyx_t_4); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 1081, __pyx_L1_error)
+    __pyx_t_12 = PyNumber_Add(__pyx_t_6, __pyx_t_4); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 1081, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_12);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -18903,9 +18903,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
 
     /* "netcdftime/_netcdftime.pyx":1080
  *         elif self.units in millisec_units:
- *             jdelta = jdelta * 86400. * 1.e3  - self.tzoffset * 60. * 1.e3
+ *             jdelta = jdelta * 86400. * 1.e3  + self.tzoffset * 60. * 1.e3
  *         elif self.units in sec_units:             # <<<<<<<<<<<<<<
- *             jdelta = jdelta * 86400. - self.tzoffset * 60.
+ *             jdelta = jdelta * 86400. + self.tzoffset * 60.
  *         elif self.units in min_units:
  */
     goto __pyx_L42;
@@ -18913,9 +18913,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
 
   /* "netcdftime/_netcdftime.pyx":1082
  *         elif self.units in sec_units:
- *             jdelta = jdelta * 86400. - self.tzoffset * 60.
+ *             jdelta = jdelta * 86400. + self.tzoffset * 60.
  *         elif self.units in min_units:             # <<<<<<<<<<<<<<
- *             jdelta = jdelta * 1440. - self.tzoffset
+ *             jdelta = jdelta * 1440. + self.tzoffset
  *         elif self.units in hr_units:
  */
   __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_units_2); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 1082, __pyx_L1_error)
@@ -18929,18 +18929,18 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
   if (__pyx_t_9) {
 
     /* "netcdftime/_netcdftime.pyx":1083
- *             jdelta = jdelta * 86400. - self.tzoffset * 60.
+ *             jdelta = jdelta * 86400. + self.tzoffset * 60.
  *         elif self.units in min_units:
- *             jdelta = jdelta * 1440. - self.tzoffset             # <<<<<<<<<<<<<<
+ *             jdelta = jdelta * 1440. + self.tzoffset             # <<<<<<<<<<<<<<
  *         elif self.units in hr_units:
- *             jdelta = jdelta * 24. - self.tzoffset / 60.
+ *             jdelta = jdelta * 24. + self.tzoffset / 60.
  */
     if (unlikely(!__pyx_v_jdelta)) { __Pyx_RaiseUnboundLocalError("jdelta"); __PYX_ERR(0, 1083, __pyx_L1_error) }
     __pyx_t_4 = PyNumber_Multiply(__pyx_v_jdelta, __pyx_float_1440_); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 1083, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_tzoffset); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 1083, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_12);
-    __pyx_t_6 = PyNumber_Subtract(__pyx_t_4, __pyx_t_12); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1083, __pyx_L1_error)
+    __pyx_t_6 = PyNumber_Add(__pyx_t_4, __pyx_t_12); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1083, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
@@ -18949,9 +18949,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
 
     /* "netcdftime/_netcdftime.pyx":1082
  *         elif self.units in sec_units:
- *             jdelta = jdelta * 86400. - self.tzoffset * 60.
+ *             jdelta = jdelta * 86400. + self.tzoffset * 60.
  *         elif self.units in min_units:             # <<<<<<<<<<<<<<
- *             jdelta = jdelta * 1440. - self.tzoffset
+ *             jdelta = jdelta * 1440. + self.tzoffset
  *         elif self.units in hr_units:
  */
     goto __pyx_L42;
@@ -18959,9 +18959,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
 
   /* "netcdftime/_netcdftime.pyx":1084
  *         elif self.units in min_units:
- *             jdelta = jdelta * 1440. - self.tzoffset
+ *             jdelta = jdelta * 1440. + self.tzoffset
  *         elif self.units in hr_units:             # <<<<<<<<<<<<<<
- *             jdelta = jdelta * 24. - self.tzoffset / 60.
+ *             jdelta = jdelta * 24. + self.tzoffset / 60.
  *         elif self.units in day_units:
  */
   __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_units_2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1084, __pyx_L1_error)
@@ -18975,11 +18975,11 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
   if (__pyx_t_7) {
 
     /* "netcdftime/_netcdftime.pyx":1085
- *             jdelta = jdelta * 1440. - self.tzoffset
+ *             jdelta = jdelta * 1440. + self.tzoffset
  *         elif self.units in hr_units:
- *             jdelta = jdelta * 24. - self.tzoffset / 60.             # <<<<<<<<<<<<<<
+ *             jdelta = jdelta * 24. + self.tzoffset / 60.             # <<<<<<<<<<<<<<
  *         elif self.units in day_units:
- *             jdelta = jdelta - self.tzoffset / 1440.
+ *             jdelta = jdelta + self.tzoffset / 1440.
  */
     if (unlikely(!__pyx_v_jdelta)) { __Pyx_RaiseUnboundLocalError("jdelta"); __PYX_ERR(0, 1085, __pyx_L1_error) }
     __pyx_t_12 = PyNumber_Multiply(__pyx_v_jdelta, __pyx_float_24_); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 1085, __pyx_L1_error)
@@ -18989,7 +18989,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
     __pyx_t_4 = __Pyx_PyFloat_DivideObjC(__pyx_t_6, __pyx_float_60_, 60., 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 1085, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = PyNumber_Subtract(__pyx_t_12, __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1085, __pyx_L1_error)
+    __pyx_t_6 = PyNumber_Add(__pyx_t_12, __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1085, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -18998,9 +18998,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
 
     /* "netcdftime/_netcdftime.pyx":1084
  *         elif self.units in min_units:
- *             jdelta = jdelta * 1440. - self.tzoffset
+ *             jdelta = jdelta * 1440. + self.tzoffset
  *         elif self.units in hr_units:             # <<<<<<<<<<<<<<
- *             jdelta = jdelta * 24. - self.tzoffset / 60.
+ *             jdelta = jdelta * 24. + self.tzoffset / 60.
  *         elif self.units in day_units:
  */
     goto __pyx_L42;
@@ -19008,9 +19008,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
 
   /* "netcdftime/_netcdftime.pyx":1086
  *         elif self.units in hr_units:
- *             jdelta = jdelta * 24. - self.tzoffset / 60.
+ *             jdelta = jdelta * 24. + self.tzoffset / 60.
  *         elif self.units in day_units:             # <<<<<<<<<<<<<<
- *             jdelta = jdelta - self.tzoffset / 1440.
+ *             jdelta = jdelta + self.tzoffset / 1440.
  *         else:
  */
   __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_units_2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1086, __pyx_L1_error)
@@ -19024,9 +19024,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
   if (__pyx_t_9) {
 
     /* "netcdftime/_netcdftime.pyx":1087
- *             jdelta = jdelta * 24. - self.tzoffset / 60.
+ *             jdelta = jdelta * 24. + self.tzoffset / 60.
  *         elif self.units in day_units:
- *             jdelta = jdelta - self.tzoffset / 1440.             # <<<<<<<<<<<<<<
+ *             jdelta = jdelta + self.tzoffset / 1440.             # <<<<<<<<<<<<<<
  *         else:
  *             raise ValueError('unsupported time units')
  */
@@ -19036,7 +19036,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
     __pyx_t_6 = __Pyx_PyFloat_DivideObjC(__pyx_t_4, __pyx_float_1440_, 1440., 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1087, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = PyNumber_Subtract(__pyx_v_jdelta, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 1087, __pyx_L1_error)
+    __pyx_t_4 = PyNumber_Add(__pyx_v_jdelta, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 1087, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_XDECREF_SET(__pyx_v_jdelta, __pyx_t_4);
@@ -19044,16 +19044,16 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_2date2num(CYTHON_UNU
 
     /* "netcdftime/_netcdftime.pyx":1086
  *         elif self.units in hr_units:
- *             jdelta = jdelta * 24. - self.tzoffset / 60.
+ *             jdelta = jdelta * 24. + self.tzoffset / 60.
  *         elif self.units in day_units:             # <<<<<<<<<<<<<<
- *             jdelta = jdelta - self.tzoffset / 1440.
+ *             jdelta = jdelta + self.tzoffset / 1440.
  *         else:
  */
     goto __pyx_L42;
   }
 
   /* "netcdftime/_netcdftime.pyx":1089
- *             jdelta = jdelta - self.tzoffset / 1440.
+ *             jdelta = jdelta + self.tzoffset / 1440.
  *         else:
  *             raise ValueError('unsupported time units')             # <<<<<<<<<<<<<<
  *         if isscalar:
@@ -19459,7 +19459,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
  *         if not isscalar:
  *             time_value = numpy.array(time_value, dtype='d')             # <<<<<<<<<<<<<<
  *             shape = time_value.shape
- *         # convert to desired units, add time zone offset.
+ *         # convert to desired units, subtract time zone offset.
  */
     __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_numpy); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1127, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
@@ -19486,7 +19486,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
  *         if not isscalar:
  *             time_value = numpy.array(time_value, dtype='d')
  *             shape = time_value.shape             # <<<<<<<<<<<<<<
- *         # convert to desired units, add time zone offset.
+ *         # convert to desired units, subtract time zone offset.
  *         if self.units in microsec_units:
  */
     __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_time_value, __pyx_n_s_shape); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1128, __pyx_L1_error)
@@ -19505,9 +19505,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
 
   /* "netcdftime/_netcdftime.pyx":1130
  *             shape = time_value.shape
- *         # convert to desired units, add time zone offset.
+ *         # convert to desired units, subtract time zone offset.
  *         if self.units in microsec_units:             # <<<<<<<<<<<<<<
- *             jdelta = time_value / 86400000000. + self.tzoffset / 1440.
+ *             jdelta = time_value / 86400000000. - self.tzoffset / 1440.
  *         elif self.units in millisec_units:
  */
   __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_units_2); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1130, __pyx_L1_error)
@@ -19521,11 +19521,11 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
   if (__pyx_t_7) {
 
     /* "netcdftime/_netcdftime.pyx":1131
- *         # convert to desired units, add time zone offset.
+ *         # convert to desired units, subtract time zone offset.
  *         if self.units in microsec_units:
- *             jdelta = time_value / 86400000000. + self.tzoffset / 1440.             # <<<<<<<<<<<<<<
+ *             jdelta = time_value / 86400000000. - self.tzoffset / 1440.             # <<<<<<<<<<<<<<
  *         elif self.units in millisec_units:
- *             jdelta = time_value / 86400000. + self.tzoffset / 1440.
+ *             jdelta = time_value / 86400000. - self.tzoffset / 1440.
  */
     __pyx_t_4 = __Pyx_PyFloat_DivideObjC(__pyx_v_time_value, __pyx_float_86400000000_, 86400000000., 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 1131, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
@@ -19534,7 +19534,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
     __pyx_t_6 = __Pyx_PyFloat_DivideObjC(__pyx_t_9, __pyx_float_1440_, 1440., 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1131, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-    __pyx_t_9 = PyNumber_Add(__pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1131, __pyx_L1_error)
+    __pyx_t_9 = PyNumber_Subtract(__pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1131, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
@@ -19543,9 +19543,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
 
     /* "netcdftime/_netcdftime.pyx":1130
  *             shape = time_value.shape
- *         # convert to desired units, add time zone offset.
+ *         # convert to desired units, subtract time zone offset.
  *         if self.units in microsec_units:             # <<<<<<<<<<<<<<
- *             jdelta = time_value / 86400000000. + self.tzoffset / 1440.
+ *             jdelta = time_value / 86400000000. - self.tzoffset / 1440.
  *         elif self.units in millisec_units:
  */
     goto __pyx_L15;
@@ -19553,9 +19553,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
 
   /* "netcdftime/_netcdftime.pyx":1132
  *         if self.units in microsec_units:
- *             jdelta = time_value / 86400000000. + self.tzoffset / 1440.
+ *             jdelta = time_value / 86400000000. - self.tzoffset / 1440.
  *         elif self.units in millisec_units:             # <<<<<<<<<<<<<<
- *             jdelta = time_value / 86400000. + self.tzoffset / 1440.
+ *             jdelta = time_value / 86400000. - self.tzoffset / 1440.
  *         elif self.units in sec_units:
  */
   __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_units_2); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1132, __pyx_L1_error)
@@ -19569,11 +19569,11 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
   if (__pyx_t_8) {
 
     /* "netcdftime/_netcdftime.pyx":1133
- *             jdelta = time_value / 86400000000. + self.tzoffset / 1440.
+ *             jdelta = time_value / 86400000000. - self.tzoffset / 1440.
  *         elif self.units in millisec_units:
- *             jdelta = time_value / 86400000. + self.tzoffset / 1440.             # <<<<<<<<<<<<<<
+ *             jdelta = time_value / 86400000. - self.tzoffset / 1440.             # <<<<<<<<<<<<<<
  *         elif self.units in sec_units:
- *             jdelta = time_value / 86400. + self.tzoffset / 1440.
+ *             jdelta = time_value / 86400. - self.tzoffset / 1440.
  */
     __pyx_t_6 = __Pyx_PyFloat_DivideObjC(__pyx_v_time_value, __pyx_float_86400000_, 86400000., 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1133, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
@@ -19582,7 +19582,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
     __pyx_t_4 = __Pyx_PyFloat_DivideObjC(__pyx_t_9, __pyx_float_1440_, 1440., 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 1133, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-    __pyx_t_9 = PyNumber_Add(__pyx_t_6, __pyx_t_4); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1133, __pyx_L1_error)
+    __pyx_t_9 = PyNumber_Subtract(__pyx_t_6, __pyx_t_4); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1133, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -19591,9 +19591,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
 
     /* "netcdftime/_netcdftime.pyx":1132
  *         if self.units in microsec_units:
- *             jdelta = time_value / 86400000000. + self.tzoffset / 1440.
+ *             jdelta = time_value / 86400000000. - self.tzoffset / 1440.
  *         elif self.units in millisec_units:             # <<<<<<<<<<<<<<
- *             jdelta = time_value / 86400000. + self.tzoffset / 1440.
+ *             jdelta = time_value / 86400000. - self.tzoffset / 1440.
  *         elif self.units in sec_units:
  */
     goto __pyx_L15;
@@ -19601,9 +19601,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
 
   /* "netcdftime/_netcdftime.pyx":1134
  *         elif self.units in millisec_units:
- *             jdelta = time_value / 86400000. + self.tzoffset / 1440.
+ *             jdelta = time_value / 86400000. - self.tzoffset / 1440.
  *         elif self.units in sec_units:             # <<<<<<<<<<<<<<
- *             jdelta = time_value / 86400. + self.tzoffset / 1440.
+ *             jdelta = time_value / 86400. - self.tzoffset / 1440.
  *         elif self.units in min_units:
  */
   __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_units_2); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1134, __pyx_L1_error)
@@ -19617,11 +19617,11 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
   if (__pyx_t_7) {
 
     /* "netcdftime/_netcdftime.pyx":1135
- *             jdelta = time_value / 86400000. + self.tzoffset / 1440.
+ *             jdelta = time_value / 86400000. - self.tzoffset / 1440.
  *         elif self.units in sec_units:
- *             jdelta = time_value / 86400. + self.tzoffset / 1440.             # <<<<<<<<<<<<<<
+ *             jdelta = time_value / 86400. - self.tzoffset / 1440.             # <<<<<<<<<<<<<<
  *         elif self.units in min_units:
- *             jdelta = time_value / 1440. + self.tzoffset / 1440.
+ *             jdelta = time_value / 1440. - self.tzoffset / 1440.
  */
     __pyx_t_4 = __Pyx_PyFloat_DivideObjC(__pyx_v_time_value, __pyx_float_86400_, 86400., 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 1135, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
@@ -19630,7 +19630,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
     __pyx_t_6 = __Pyx_PyFloat_DivideObjC(__pyx_t_9, __pyx_float_1440_, 1440., 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1135, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-    __pyx_t_9 = PyNumber_Add(__pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1135, __pyx_L1_error)
+    __pyx_t_9 = PyNumber_Subtract(__pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1135, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
@@ -19639,9 +19639,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
 
     /* "netcdftime/_netcdftime.pyx":1134
  *         elif self.units in millisec_units:
- *             jdelta = time_value / 86400000. + self.tzoffset / 1440.
+ *             jdelta = time_value / 86400000. - self.tzoffset / 1440.
  *         elif self.units in sec_units:             # <<<<<<<<<<<<<<
- *             jdelta = time_value / 86400. + self.tzoffset / 1440.
+ *             jdelta = time_value / 86400. - self.tzoffset / 1440.
  *         elif self.units in min_units:
  */
     goto __pyx_L15;
@@ -19649,9 +19649,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
 
   /* "netcdftime/_netcdftime.pyx":1136
  *         elif self.units in sec_units:
- *             jdelta = time_value / 86400. + self.tzoffset / 1440.
+ *             jdelta = time_value / 86400. - self.tzoffset / 1440.
  *         elif self.units in min_units:             # <<<<<<<<<<<<<<
- *             jdelta = time_value / 1440. + self.tzoffset / 1440.
+ *             jdelta = time_value / 1440. - self.tzoffset / 1440.
  *         elif self.units in hr_units:
  */
   __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_units_2); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1136, __pyx_L1_error)
@@ -19665,11 +19665,11 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
   if (__pyx_t_8) {
 
     /* "netcdftime/_netcdftime.pyx":1137
- *             jdelta = time_value / 86400. + self.tzoffset / 1440.
+ *             jdelta = time_value / 86400. - self.tzoffset / 1440.
  *         elif self.units in min_units:
- *             jdelta = time_value / 1440. + self.tzoffset / 1440.             # <<<<<<<<<<<<<<
+ *             jdelta = time_value / 1440. - self.tzoffset / 1440.             # <<<<<<<<<<<<<<
  *         elif self.units in hr_units:
- *             jdelta = time_value / 24. + self.tzoffset / 1440.
+ *             jdelta = time_value / 24. - self.tzoffset / 1440.
  */
     __pyx_t_6 = __Pyx_PyFloat_DivideObjC(__pyx_v_time_value, __pyx_float_1440_, 1440., 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1137, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
@@ -19678,7 +19678,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
     __pyx_t_4 = __Pyx_PyFloat_DivideObjC(__pyx_t_9, __pyx_float_1440_, 1440., 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 1137, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-    __pyx_t_9 = PyNumber_Add(__pyx_t_6, __pyx_t_4); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1137, __pyx_L1_error)
+    __pyx_t_9 = PyNumber_Subtract(__pyx_t_6, __pyx_t_4); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1137, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -19687,9 +19687,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
 
     /* "netcdftime/_netcdftime.pyx":1136
  *         elif self.units in sec_units:
- *             jdelta = time_value / 86400. + self.tzoffset / 1440.
+ *             jdelta = time_value / 86400. - self.tzoffset / 1440.
  *         elif self.units in min_units:             # <<<<<<<<<<<<<<
- *             jdelta = time_value / 1440. + self.tzoffset / 1440.
+ *             jdelta = time_value / 1440. - self.tzoffset / 1440.
  *         elif self.units in hr_units:
  */
     goto __pyx_L15;
@@ -19697,9 +19697,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
 
   /* "netcdftime/_netcdftime.pyx":1138
  *         elif self.units in min_units:
- *             jdelta = time_value / 1440. + self.tzoffset / 1440.
+ *             jdelta = time_value / 1440. - self.tzoffset / 1440.
  *         elif self.units in hr_units:             # <<<<<<<<<<<<<<
- *             jdelta = time_value / 24. + self.tzoffset / 1440.
+ *             jdelta = time_value / 24. - self.tzoffset / 1440.
  *         elif self.units in day_units:
  */
   __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_units_2); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1138, __pyx_L1_error)
@@ -19713,11 +19713,11 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
   if (__pyx_t_7) {
 
     /* "netcdftime/_netcdftime.pyx":1139
- *             jdelta = time_value / 1440. + self.tzoffset / 1440.
+ *             jdelta = time_value / 1440. - self.tzoffset / 1440.
  *         elif self.units in hr_units:
- *             jdelta = time_value / 24. + self.tzoffset / 1440.             # <<<<<<<<<<<<<<
+ *             jdelta = time_value / 24. - self.tzoffset / 1440.             # <<<<<<<<<<<<<<
  *         elif self.units in day_units:
- *             jdelta = time_value + self.tzoffset / 1440.
+ *             jdelta = time_value - self.tzoffset / 1440.
  */
     __pyx_t_4 = __Pyx_PyFloat_DivideObjC(__pyx_v_time_value, __pyx_float_24_, 24., 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 1139, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
@@ -19726,7 +19726,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
     __pyx_t_6 = __Pyx_PyFloat_DivideObjC(__pyx_t_9, __pyx_float_1440_, 1440., 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1139, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-    __pyx_t_9 = PyNumber_Add(__pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1139, __pyx_L1_error)
+    __pyx_t_9 = PyNumber_Subtract(__pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1139, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
@@ -19735,9 +19735,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
 
     /* "netcdftime/_netcdftime.pyx":1138
  *         elif self.units in min_units:
- *             jdelta = time_value / 1440. + self.tzoffset / 1440.
+ *             jdelta = time_value / 1440. - self.tzoffset / 1440.
  *         elif self.units in hr_units:             # <<<<<<<<<<<<<<
- *             jdelta = time_value / 24. + self.tzoffset / 1440.
+ *             jdelta = time_value / 24. - self.tzoffset / 1440.
  *         elif self.units in day_units:
  */
     goto __pyx_L15;
@@ -19745,9 +19745,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
 
   /* "netcdftime/_netcdftime.pyx":1140
  *         elif self.units in hr_units:
- *             jdelta = time_value / 24. + self.tzoffset / 1440.
+ *             jdelta = time_value / 24. - self.tzoffset / 1440.
  *         elif self.units in day_units:             # <<<<<<<<<<<<<<
- *             jdelta = time_value + self.tzoffset / 1440.
+ *             jdelta = time_value - self.tzoffset / 1440.
  *         else:
  */
   __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_units_2); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1140, __pyx_L1_error)
@@ -19761,9 +19761,9 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
   if (__pyx_t_8) {
 
     /* "netcdftime/_netcdftime.pyx":1141
- *             jdelta = time_value / 24. + self.tzoffset / 1440.
+ *             jdelta = time_value / 24. - self.tzoffset / 1440.
  *         elif self.units in day_units:
- *             jdelta = time_value + self.tzoffset / 1440.             # <<<<<<<<<<<<<<
+ *             jdelta = time_value - self.tzoffset / 1440.             # <<<<<<<<<<<<<<
  *         else:
  *             raise ValueError('unsupported time units')
  */
@@ -19772,7 +19772,7 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
     __pyx_t_9 = __Pyx_PyFloat_DivideObjC(__pyx_t_6, __pyx_float_1440_, 1440., 0); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 1141, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = PyNumber_Add(__pyx_v_time_value, __pyx_t_9); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1141, __pyx_L1_error)
+    __pyx_t_6 = PyNumber_Subtract(__pyx_v_time_value, __pyx_t_9); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1141, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
     __pyx_v_jdelta = __pyx_t_6;
@@ -19780,16 +19780,16 @@ static PyObject *__pyx_pf_10netcdftime_11_netcdftime_5utime_4num2date(CYTHON_UNU
 
     /* "netcdftime/_netcdftime.pyx":1140
  *         elif self.units in hr_units:
- *             jdelta = time_value / 24. + self.tzoffset / 1440.
+ *             jdelta = time_value / 24. - self.tzoffset / 1440.
  *         elif self.units in day_units:             # <<<<<<<<<<<<<<
- *             jdelta = time_value + self.tzoffset / 1440.
+ *             jdelta = time_value - self.tzoffset / 1440.
  *         else:
  */
     goto __pyx_L15;
   }
 
   /* "netcdftime/_netcdftime.pyx":1143
- *             jdelta = time_value + self.tzoffset / 1440.
+ *             jdelta = time_value - self.tzoffset / 1440.
  *         else:
  *             raise ValueError('unsupported time units')             # <<<<<<<<<<<<<<
  *         jd = self._jd0 + jdelta
@@ -33574,7 +33574,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_s_This_strftime_implementation_doe, __pyx_k_This_strftime_implementation_doe, sizeof(__pyx_k_This_strftime_implementation_doe), 0, 0, 1, 0},
   {&__pyx_n_s_TypeError, __pyx_k_TypeError, sizeof(__pyx_k_TypeError), 0, 0, 1, 1},
   {&__pyx_kp_s_Unable_to_parse_date_string_r, __pyx_k_Unable_to_parse_date_string_r, sizeof(__pyx_k_Unable_to_parse_date_string_r), 0, 0, 1, 0},
-  {&__pyx_kp_s_Users_jhamman_Dropbox_src_netcd, __pyx_k_Users_jhamman_Dropbox_src_netcd, sizeof(__pyx_k_Users_jhamman_Dropbox_src_netcd), 0, 0, 1, 0},
   {&__pyx_n_s_ValueError, __pyx_k_ValueError, sizeof(__pyx_k_ValueError), 0, 0, 1, 1},
   {&__pyx_kp_s_Y_m_d_H_M_S, __pyx_k_Y_m_d_H_M_S, sizeof(__pyx_k_Y_m_d_H_M_S), 0, 0, 1, 0},
   {&__pyx_n_s_Z, __pyx_k_Z, sizeof(__pyx_k_Z), 0, 0, 1, 1},
@@ -33643,6 +33642,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_groupdict, __pyx_k_groupdict, sizeof(__pyx_k_groupdict), 0, 0, 1, 1},
   {&__pyx_n_s_groups, __pyx_k_groups, sizeof(__pyx_k_groups), 0, 0, 1, 1},
   {&__pyx_n_s_h, __pyx_k_h, sizeof(__pyx_k_h), 0, 0, 1, 1},
+  {&__pyx_kp_s_home_mde_ncdftime_netcdftime_ne, __pyx_k_home_mde_ncdftime_netcdftime_ne, sizeof(__pyx_k_home_mde_ncdftime_netcdftime_ne), 0, 0, 1, 0},
   {&__pyx_n_s_hour, __pyx_k_hour, sizeof(__pyx_k_hour), 0, 0, 1, 1},
   {&__pyx_n_s_hours, __pyx_k_hours, sizeof(__pyx_k_hours), 0, 0, 1, 1},
   {&__pyx_n_s_hr, __pyx_k_hr, sizeof(__pyx_k_hr), 0, 0, 1, 1},
@@ -33998,7 +33998,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__17);
 
   /* "netcdftime/_netcdftime.pyx":1089
- *             jdelta = jdelta - self.tzoffset / 1440.
+ *             jdelta = jdelta + self.tzoffset / 1440.
  *         else:
  *             raise ValueError('unsupported time units')             # <<<<<<<<<<<<<<
  *         if isscalar:
@@ -34009,7 +34009,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__18);
 
   /* "netcdftime/_netcdftime.pyx":1143
- *             jdelta = time_value + self.tzoffset / 1440.
+ *             jdelta = time_value - self.tzoffset / 1440.
  *         else:
  *             raise ValueError('unsupported time units')             # <<<<<<<<<<<<<<
  *         jd = self._jd0 + jdelta
@@ -34238,7 +34238,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__41 = PyTuple_Pack(13, __pyx_n_s_timestr, __pyx_n_s_timestr_split, __pyx_n_s_units_2, __pyx_n_s_n, __pyx_n_s_isostring, __pyx_n_s_year, __pyx_n_s_month, __pyx_n_s_day, __pyx_n_s_hour, __pyx_n_s_minute, __pyx_n_s_second, __pyx_n_s_utc_offset, __pyx_n_s_basedate); if (unlikely(!__pyx_tuple__41)) __PYX_ERR(0, 46, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__41);
   __Pyx_GIVEREF(__pyx_tuple__41);
-  __pyx_codeobj__42 = (PyObject*)__Pyx_PyCode_New(1, 0, 13, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__41, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_jhamman_Dropbox_src_netcd, __pyx_n_s_dateparse, 46, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__42)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_codeobj__42 = (PyObject*)__Pyx_PyCode_New(1, 0, 13, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__41, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_mde_ncdftime_netcdftime_ne, __pyx_n_s_dateparse, 46, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__42)) __PYX_ERR(0, 46, __pyx_L1_error)
 
   /* "netcdftime/_netcdftime.pyx":89
  * 
@@ -34250,7 +34250,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__43 = PyTuple_Pack(15, __pyx_n_s_dates, __pyx_n_s_units_2, __pyx_n_s_calendar, __pyx_n_s_basedate, __pyx_n_s_unit, __pyx_n_s_msg, __pyx_n_s_isscalar, __pyx_n_s_shape, __pyx_n_s_ismasked, __pyx_n_s_mask, __pyx_n_s_times, __pyx_n_s_date, __pyx_n_s_td, __pyx_n_s_totaltime, __pyx_n_s_cdftime); if (unlikely(!__pyx_tuple__43)) __PYX_ERR(0, 89, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__43);
   __Pyx_GIVEREF(__pyx_tuple__43);
-  __pyx_codeobj__44 = (PyObject*)__Pyx_PyCode_New(3, 0, 15, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__43, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_jhamman_Dropbox_src_netcd, __pyx_n_s_date2num, 89, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__44)) __PYX_ERR(0, 89, __pyx_L1_error)
+  __pyx_codeobj__44 = (PyObject*)__Pyx_PyCode_New(3, 0, 15, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__43, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_mde_ncdftime_netcdftime_ne, __pyx_n_s_date2num, 89, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__44)) __PYX_ERR(0, 89, __pyx_L1_error)
 
   /* "netcdftime/_netcdftime.pyx":178
  * 
@@ -34262,7 +34262,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__45 = PyTuple_Pack(20, __pyx_n_s_times, __pyx_n_s_units_2, __pyx_n_s_calendar, __pyx_n_s_basedate, __pyx_n_s_unit, __pyx_n_s_msg, __pyx_n_s_isscalar, __pyx_n_s_shape, __pyx_n_s_ismasked, __pyx_n_s_mask, __pyx_n_s_dates, __pyx_n_s_time, __pyx_n_s_tsecs, __pyx_n_s_days, __pyx_n_s_msecsd, __pyx_n_s_secs, __pyx_n_s_msecs, __pyx_n_s_td, __pyx_n_s_date, __pyx_n_s_cdftime); if (unlikely(!__pyx_tuple__45)) __PYX_ERR(0, 178, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__45);
   __Pyx_GIVEREF(__pyx_tuple__45);
-  __pyx_codeobj__46 = (PyObject*)__Pyx_PyCode_New(3, 0, 20, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__45, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_jhamman_Dropbox_src_netcd, __pyx_n_s_num2date, 178, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__46)) __PYX_ERR(0, 178, __pyx_L1_error)
+  __pyx_codeobj__46 = (PyObject*)__Pyx_PyCode_New(3, 0, 20, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__45, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_mde_ncdftime_netcdftime_ne, __pyx_n_s_num2date, 178, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__46)) __PYX_ERR(0, 178, __pyx_L1_error)
 
   /* "netcdftime/_netcdftime.pyx":282
  * 
@@ -34274,7 +34274,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__47 = PyTuple_Pack(7, __pyx_n_s_dates, __pyx_n_s_nctime, __pyx_n_s_calendar, __pyx_n_s_select, __pyx_n_s_basedate, __pyx_n_s_msg, __pyx_n_s_times); if (unlikely(!__pyx_tuple__47)) __PYX_ERR(0, 282, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__47);
   __Pyx_GIVEREF(__pyx_tuple__47);
-  __pyx_codeobj__48 = (PyObject*)__Pyx_PyCode_New(4, 0, 7, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__47, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_jhamman_Dropbox_src_netcd, __pyx_n_s_date2index, 282, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__48)) __PYX_ERR(0, 282, __pyx_L1_error)
+  __pyx_codeobj__48 = (PyObject*)__Pyx_PyCode_New(4, 0, 7, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__47, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_mde_ncdftime_netcdftime_ne, __pyx_n_s_date2index, 282, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__48)) __PYX_ERR(0, 282, __pyx_L1_error)
 
   /* "netcdftime/_netcdftime.pyx":339
  * 
@@ -34286,7 +34286,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__49 = PyTuple_Pack(18, __pyx_n_s_date, __pyx_n_s_calendar, __pyx_n_s_isscalar, __pyx_n_s_year, __pyx_n_s_month, __pyx_n_s_day, __pyx_n_s_hour, __pyx_n_s_minute, __pyx_n_s_second, __pyx_n_s_microsecond, __pyx_n_s_i, __pyx_n_s_d, __pyx_n_s_month_lt_3, __pyx_n_s_A, __pyx_n_s_jd, __pyx_n_s_B, __pyx_n_s_ii, __pyx_n_s_eps); if (unlikely(!__pyx_tuple__49)) __PYX_ERR(0, 339, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__49);
   __Pyx_GIVEREF(__pyx_tuple__49);
-  __pyx_codeobj__50 = (PyObject*)__Pyx_PyCode_New(2, 0, 18, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__49, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_jhamman_Dropbox_src_netcd, __pyx_n_s_JulianDayFromDate, 339, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__50)) __PYX_ERR(0, 339, __pyx_L1_error)
+  __pyx_codeobj__50 = (PyObject*)__Pyx_PyCode_New(2, 0, 18, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__49, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_mde_ncdftime_netcdftime_ne, __pyx_n_s_JulianDayFromDate, 339, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__50)) __PYX_ERR(0, 339, __pyx_L1_error)
 
   /* "netcdftime/_netcdftime.pyx":531
  * 
@@ -34298,7 +34298,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__51 = PyTuple_Pack(29, __pyx_n_s_JD, __pyx_n_s_calendar, __pyx_n_s_julian, __pyx_n_s_dayofwk, __pyx_n_s_Z, __pyx_n_s_F, __pyx_n_s_alpha, __pyx_n_s_A, __pyx_n_s_ind_before, __pyx_n_s_B, __pyx_n_s_C, __pyx_n_s_D, __pyx_n_s_E, __pyx_n_s_day, __pyx_n_s_nday, __pyx_n_s_dayofyr, __pyx_n_s_ind_nday_before, __pyx_n_s_month, __pyx_n_s_year, __pyx_n_s_leap, __pyx_n_s_inc_idx, __pyx_n_s_eps, __pyx_n_s_hour, __pyx_n_s_minute, __pyx_n_s_second, __pyx_n_s_microsecond, __pyx_n_s_isscalar, __pyx_n_s_datetime_type, __pyx_n_s_args); if (unlikely(!__pyx_tuple__51)) __PYX_ERR(0, 531, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__51);
   __Pyx_GIVEREF(__pyx_tuple__51);
-  __pyx_codeobj__52 = (PyObject*)__Pyx_PyCode_New(2, 0, 29, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__51, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_jhamman_Dropbox_src_netcd, __pyx_n_s_DateFromJulianDay, 531, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__52)) __PYX_ERR(0, 531, __pyx_L1_error)
+  __pyx_codeobj__52 = (PyObject*)__Pyx_PyCode_New(2, 0, 29, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__51, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_mde_ncdftime_netcdftime_ne, __pyx_n_s_DateFromJulianDay, 531, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__52)) __PYX_ERR(0, 531, __pyx_L1_error)
 
   /* "netcdftime/_netcdftime.pyx":941
  *     """
@@ -34310,7 +34310,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__53 = PyTuple_Pack(6, __pyx_n_s_self, __pyx_n_s_unit_string, __pyx_n_s_calendar, __pyx_n_s_units_2, __pyx_n_s_tzoffset, __pyx_n_s_msg); if (unlikely(!__pyx_tuple__53)) __PYX_ERR(0, 941, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__53);
   __Pyx_GIVEREF(__pyx_tuple__53);
-  __pyx_codeobj__54 = (PyObject*)__Pyx_PyCode_New(3, 0, 6, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__53, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_jhamman_Dropbox_src_netcd, __pyx_n_s_init, 941, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__54)) __PYX_ERR(0, 941, __pyx_L1_error)
+  __pyx_codeobj__54 = (PyObject*)__Pyx_PyCode_New(3, 0, 6, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__53, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_mde_ncdftime_netcdftime_ne, __pyx_n_s_init, 941, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__54)) __PYX_ERR(0, 941, __pyx_L1_error)
   __pyx_tuple__55 = PyTuple_Pack(1, ((PyObject*)__pyx_n_s_standard)); if (unlikely(!__pyx_tuple__55)) __PYX_ERR(0, 941, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__55);
   __Pyx_GIVEREF(__pyx_tuple__55);
@@ -34325,7 +34325,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__56 = PyTuple_Pack(6, __pyx_n_s_self, __pyx_n_s_date, __pyx_n_s_isscalar, __pyx_n_s_shape, __pyx_n_s_jdelta, __pyx_n_s_d); if (unlikely(!__pyx_tuple__56)) __PYX_ERR(0, 1009, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__56);
   __Pyx_GIVEREF(__pyx_tuple__56);
-  __pyx_codeobj__57 = (PyObject*)__Pyx_PyCode_New(2, 0, 6, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__56, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_jhamman_Dropbox_src_netcd, __pyx_n_s_date2num, 1009, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__57)) __PYX_ERR(0, 1009, __pyx_L1_error)
+  __pyx_codeobj__57 = (PyObject*)__Pyx_PyCode_New(2, 0, 6, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__56, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_mde_ncdftime_netcdftime_ne, __pyx_n_s_date2num, 1009, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__57)) __PYX_ERR(0, 1009, __pyx_L1_error)
 
   /* "netcdftime/_netcdftime.pyx":1095
  *             return numpy.reshape(jdelta, shape)
@@ -34337,7 +34337,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__58 = PyTuple_Pack(11, __pyx_n_s_self, __pyx_n_s_time_value, __pyx_n_s_isscalar, __pyx_n_s_ismasked, __pyx_n_s_mask, __pyx_n_s_shape, __pyx_n_s_jdelta, __pyx_n_s_jd, __pyx_n_s_date, __pyx_n_s_j, __pyx_n_s_m); if (unlikely(!__pyx_tuple__58)) __PYX_ERR(0, 1095, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__58);
   __Pyx_GIVEREF(__pyx_tuple__58);
-  __pyx_codeobj__59 = (PyObject*)__Pyx_PyCode_New(2, 0, 11, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__58, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_jhamman_Dropbox_src_netcd, __pyx_n_s_num2date, 1095, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__59)) __PYX_ERR(0, 1095, __pyx_L1_error)
+  __pyx_codeobj__59 = (PyObject*)__Pyx_PyCode_New(2, 0, 11, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__58, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_mde_ncdftime_netcdftime_ne, __pyx_n_s_num2date, 1095, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__59)) __PYX_ERR(0, 1095, __pyx_L1_error)
 
   /* "netcdftime/_netcdftime.pyx":1296
  * 
@@ -34349,7 +34349,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__60 = PyTuple_Pack(6, __pyx_n_s_dates, __pyx_n_s_nctime, __pyx_n_s_calendar, __pyx_n_s_select, __pyx_n_s_cdftime, __pyx_n_s_times); if (unlikely(!__pyx_tuple__60)) __PYX_ERR(0, 1296, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__60);
   __Pyx_GIVEREF(__pyx_tuple__60);
-  __pyx_codeobj__61 = (PyObject*)__Pyx_PyCode_New(4, 0, 6, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__60, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_jhamman_Dropbox_src_netcd, __pyx_n_s_date2index, 1296, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__61)) __PYX_ERR(0, 1296, __pyx_L1_error)
+  __pyx_codeobj__61 = (PyObject*)__Pyx_PyCode_New(4, 0, 6, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__60, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_mde_ncdftime_netcdftime_ne, __pyx_n_s_date2index, 1296, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__61)) __PYX_ERR(0, 1296, __pyx_L1_error)
 
   /* "netcdftime/_netcdftime.pyx":1335
  * 
@@ -34361,7 +34361,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__62 = PyTuple_Pack(18, __pyx_n_s_times, __pyx_n_s_nctime, __pyx_n_s_calendar, __pyx_n_s_select, __pyx_n_s_num, __pyx_n_s_N, __pyx_n_s_t0, __pyx_n_s_t1, __pyx_n_s_dt, __pyx_n_s_index, __pyx_n_s_bisect, __pyx_n_s_before, __pyx_n_s_after, __pyx_n_s_ncnum, __pyx_n_s_mismatch, __pyx_n_s_nearest_to_left, __pyx_n_s_n, __pyx_n_s_i); if (unlikely(!__pyx_tuple__62)) __PYX_ERR(0, 1335, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__62);
   __Pyx_GIVEREF(__pyx_tuple__62);
-  __pyx_codeobj__63 = (PyObject*)__Pyx_PyCode_New(4, 0, 18, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__62, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_jhamman_Dropbox_src_netcd, __pyx_n_s_time2index, 1335, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__63)) __PYX_ERR(0, 1335, __pyx_L1_error)
+  __pyx_codeobj__63 = (PyObject*)__Pyx_PyCode_New(4, 0, 18, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__62, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_mde_ncdftime_netcdftime_ne, __pyx_n_s_time2index, 1335, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__63)) __PYX_ERR(0, 1335, __pyx_L1_error)
 
   /* "netcdftime/_netcdftime.pyx":1732
  *                                                          is_leap_proleptic_gregorian, False))

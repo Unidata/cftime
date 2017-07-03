@@ -262,9 +262,9 @@ class netcdftimeTestCase(unittest.TestCase):
         # check timezone offset
         d = datetime(2012, 2, 29, 15)
         # mixed_tz is -6 hours from UTC, mixed is UTC so
-        # difference in elapsed time is 6 hours.
+        # difference in elapsed time is -6 hours.
         assert(self.cdftime_mixed_tz.date2num(
-            d) - self.cdftime_mixed.date2num(d) == 6)
+            d) - self.cdftime_mixed.date2num(d) == -6)
 
         # Check comparisons with Python datetime types
 
@@ -427,15 +427,15 @@ class netcdftimeTestCase(unittest.TestCase):
         # date after gregorian switch, python datetime used
         date = datetime(1682,10,15) # assumed UTC
         num = date2num(date,units)
-        # UTC is 7 hours ahead of units, so num should be 7
-        assert (num == 7)
+        # UTC is 7 hours ahead of units, so num should be -7
+        assert (num == -7)
         assert (num2date(num, units) == date)
         units = 'hours since 1482-10-15 -07:00 UTC'
         # date before gregorian switch, netcdftime datetime used
         date = datetime(1482,10,15)
         num = date2num(date,units)
         date2 = num2date(num, units)
-        assert (num == 7)
+        assert (num == -7)
         assert (date2.year == date.year)
         assert (date2.month == date.month)
         assert (date2.day == date.day)
@@ -475,6 +475,27 @@ class netcdftimeTestCase(unittest.TestCase):
         self.assertEqual(d, Datetime360Day(1,1,1))
         d = num2date(0, units, calendar='360_day')
         self.assertEqual(d, Datetime360Day(0,1,1))
+
+        # issue 685: wrong time zone conversion
+        # 'The following times all refer to the same moment: "18:30Z", "22:30+04", "1130-0700", and "15:00-03:30'
+        # (https://en.wikipedia.org/w/index.php?title=ISO_8601&oldid=787811367#Time_offsets_from_UTC)
+        # test num2date
+        utc_date = datetime(2000,1,1,18,30)
+        for units in ("hours since 2000-01-01 22:30+04:00", "hours since 2000-01-01 11:30-07:00", "hours since 2000-01-01 15:00-03:30"):
+            d = num2date(0, units, calendar="standard")
+            self.assertEqual(d, utc_date)
+            # also test with negative values to cover 2nd code path
+            d = num2date(-1, units, calendar="standard")
+            self.assertEqual(d, utc_date - timedelta(hours=1))
+
+            n = date2num(utc_date, units, calendar="standard")
+            # n should always be 0 as all units refer to the same point in time
+            self.assertEqual(n, 0)
+        # explicitly test 2nd code path for date2num
+        units = "hours since 2000-01-01 22:30+04:00"
+        n = date2num(utc_date, units, calendar="julian")
+        # n should always be 0 as all units refer to the same point in time
+        assert_almost_equal(n, 0)
 
         # list around missing dates in Gregorian calendar
         # scalar
