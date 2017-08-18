@@ -952,10 +952,16 @@ class issue17TestCase(unittest.TestCase):
         for datestr in ("2017-05-01 00:00+01:00", "2017-05-01 00:00+0100", "2017-05-01 00:00+01"):
             d = _parse_date(datestr)
             assert_equal(d, expected_parsed_date)
+        # some more tests with non-zero minutes, should all be ISO compliant and work
+        expected_parsed_date = (2017, 5, 1, 0, 0, 0, 85.0)
+        for datestr in ("2017-05-01 00:00+01:25", "2017-05-01 00:00+0125"):
+            d = _parse_date(datestr)
+            assert_equal(d, expected_parsed_date)
         # these are NOT ISO8601 compliant and should not even be parseable but will be parsed with timezone anyway
         # because, due to support of other legacy time formats, they are difficult to reject
+        # ATTENTION: only the hours part of this will be parsed, single-digit minutes will be ignored!
         expected_parsed_date = (2017, 5, 1, 0, 0, 0, 60.0)
-        for datestr in ("2017-05-01 00:00+01:0", "2017-05-01 00:00+01:"):
+        for datestr in ("2017-05-01 00:00+01:0", "2017-05-01 00:00+01:", "2017-05-01 00:00+01:5"):
             d = _parse_date(datestr)
             assert_equal(d, expected_parsed_date)
         # these should not even be parseable as datestrings but are parseable anyway with ignored timezone
