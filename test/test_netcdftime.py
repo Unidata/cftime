@@ -11,7 +11,7 @@ from netcdftime import (utime, JulianDayFromDate, DateFromJulianDay,
                         DatetimeNoLeap, DatetimeAllLeap, Datetime360Day,
                         DatetimeJulian, DatetimeGregorian,
                         DatetimeProlepticGregorian)
-from netcdftime import num2date, date2num, date2index
+from netcdftime import num2date, date2num, date2index, _parse_date
 
 
 # test netcdftime module for netCDF time <--> python datetime conversions.
@@ -476,6 +476,7 @@ class netcdftimeTestCase(unittest.TestCase):
         d = num2date(0, units, calendar='360_day')
         self.assertEqual(d, Datetime360Day(0,1,1))
 
+
         # list around missing dates in Gregorian calendar
         # scalar
         units = 'days since 0001-01-01 12:00:00'
@@ -933,6 +934,31 @@ class DateTime(unittest.TestCase):
 
         for func in [not_comparable_1, not_comparable_2, not_comparable_3, not_comparable_4]:
             self.assertRaises(TypeError, func)
+        
+
+
+class issue17TestCase(unittest.TestCase):
+    """Regression tests for issue #17/#669."""
+    # issue 17 / 699: timezone formats not supported correctly
+    # valid timezone formats are: +-hh, +-hh:mm, +-hhmm
+
+    def setUp(self):
+        pass
+
+    def test_parse_date_tz(self):
+        "Test timezone parsing in _parse_date"
+
+        # these should succeed
+        expected_parsed_date = (2017, 5, 1, 0, 0, 0, 60.0)
+        for datestr in ("2017-05-01 00:00+01:00", "2017-05-01 00:00+0100", "2017-05-01 00:00+01"):
+            d = _parse_date(datestr)
+            assert_equal(d, expected_parsed_date)
+        # these should fail/not be recognized as timezone modifiers
+        expected_parsed_date = (2017, 5, 1, 0, 0, 0, 0.0)
+        for datestr in ("2017-05-01 00:00+1:0", "2017-05-01 00:00+1", "2017-05-01 00:00+01:0"):
+            d = _parse_date(datestr)
+            assert_equal(d, expected_parsed_date)
+            
 
 if __name__ == '__main__':
     unittest.main()
