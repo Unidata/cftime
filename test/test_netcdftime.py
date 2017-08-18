@@ -476,7 +476,6 @@ class netcdftimeTestCase(unittest.TestCase):
         d = num2date(0, units, calendar='360_day')
         self.assertEqual(d, Datetime360Day(0,1,1))
 
-
         # list around missing dates in Gregorian calendar
         # scalar
         units = 'days since 0001-01-01 12:00:00'
