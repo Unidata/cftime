@@ -954,7 +954,7 @@ class issue17TestCase(unittest.TestCase):
             assert_equal(d, expected_parsed_date)
         # these should fail/not be recognized as timezone modifiers
         expected_parsed_date = (2017, 5, 1, 0, 0, 0, 0.0)
-        for datestr in ("2017-05-01 00:00+1:0", "2017-05-01 00:00+1", "2017-05-01 00:00+01:0"):
+        for datestr in ("2017-05-01 00:00+1:0", "2017-05-01 00:00+1", "2017-05-01 00:00+01:0", "2017-05-01 00:00+01:"):
             d = _parse_date(datestr)
             assert_equal(d, expected_parsed_date)
             
