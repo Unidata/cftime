@@ -1,0 +1,5 @@
+include *.txt
+include README.md
+include COPYING
+recursive-include netcdftime *.py
+recursive-include netcdftime *.pyx

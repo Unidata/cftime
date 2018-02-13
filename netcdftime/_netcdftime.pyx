@@ -31,12 +31,16 @@ _calendars = ['standard', 'gregorian', 'proleptic_gregorian',
 __version__ = '1.4.1'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
+# Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
+#       For example, the TZ spec "+01:0" will still work even though the minutes value is only one character long.
 ISO8601_REGEX = re.compile(r"(?P<year>[+-]?[0-9]{1,4})(-(?P<month>[0-9]{1,2})(-(?P<day>[0-9]{1,2})"
                            r"(((?P<separator1>.)(?P<hour>[0-9]{1,2}):(?P<minute>[0-9]{1,2})(:(?P<second>[0-9]{1,2})(\.(?P<fraction>[0-9]+))?)?)?"
-                           r"((?P<separator2>.?)(?P<timezone>Z|(([-+])([0-9]{1,2}):([0-9]{1,2}))))?)?)?)?"
+                           r"((?P<separator2>.?)(?P<timezone>Z|(([-+])([0-9]{2})((:([0-9]{2}))|([0-9]{2}))?)))?)?)?)?"
                            )
+# Note: The re module apparently does not support branch reset groups that allow redifinition of the same group name in alternative branches as PCRE does.
+#       Using two different group names is also somewhat ugly, but other solutions might hugely inflate the expression. feel free to contribute a better solution.
 TIMEZONE_REGEX = re.compile(
-    "(?P<prefix>[+-])(?P<hours>[0-9]{1,2}):(?P<minutes>[0-9]{1,2})")
+    "(?P<prefix>[+-])(?P<hours>[0-9]{2})(?:(?::(?P<minutes1>[0-9]{2}))|(?P<minutes2>[0-9]{2}))?")  
 
 
 # start of the gregorian calendar
@@ -59,8 +63,8 @@ def _dateparse(timestr):
         _parse_date( isostring.strip() )
     if year >= MINYEAR:
         basedate = real_datetime(year, month, day, hour, minute, second)
-        # add utc_offset to basedate time instance (which is timezone naive)
-        basedate += timedelta(days=utc_offset/1440.)
+        # subtract utc_offset from basedate time instance (which is timezone naive)
+        basedate -= timedelta(days=utc_offset/1440.)
     else:
         if not utc_offset:
             basedate = datetime(year, month, day, hour, minute, second)
@@ -1072,19 +1076,19 @@ units to datetime objects.
                     jdelta.append(_360DayFromDate(d) - self._jd0)
         if not isscalar:
             jdelta = numpy.array(jdelta)
-        # convert to desired units, subtract time zone offset.
+        # convert to desired units, add time zone offset.
         if self.units in microsec_units:
-            jdelta = jdelta * 86400. * 1.e6  - self.tzoffset * 60. * 1.e6
+            jdelta = jdelta * 86400. * 1.e6  + self.tzoffset * 60. * 1.e6
         elif self.units in millisec_units:
-            jdelta = jdelta * 86400. * 1.e3  - self.tzoffset * 60. * 1.e3
+            jdelta = jdelta * 86400. * 1.e3  + self.tzoffset * 60. * 1.e3
         elif self.units in sec_units:
-            jdelta = jdelta * 86400. - self.tzoffset * 60.
+            jdelta = jdelta * 86400. + self.tzoffset * 60.
         elif self.units in min_units:
-            jdelta = jdelta * 1440. - self.tzoffset
+            jdelta = jdelta * 1440. + self.tzoffset
         elif self.units in hr_units:
-            jdelta = jdelta * 24. - self.tzoffset / 60.
+            jdelta = jdelta * 24. + self.tzoffset / 60.
         elif self.units in day_units:
-            jdelta = jdelta - self.tzoffset / 1440.
+            jdelta = jdelta + self.tzoffset / 1440.
         else:
             raise ValueError('unsupported time units')
         if isscalar:
@@ -1126,19 +1130,19 @@ units to datetime objects.
         if not isscalar:
             time_value = numpy.array(time_value, dtype='d')
             shape = time_value.shape
-        # convert to desired units, add time zone offset.
+        # convert to desired units, subtract time zone offset.
         if self.units in microsec_units:
-            jdelta = time_value / 86400000000. + self.tzoffset / 1440.
+            jdelta = time_value / 86400000000. - self.tzoffset / 1440.
         elif self.units in millisec_units:
-            jdelta = time_value / 86400000. + self.tzoffset / 1440.
+            jdelta = time_value / 86400000. - self.tzoffset / 1440.
         elif self.units in sec_units:
-            jdelta = time_value / 86400. + self.tzoffset / 1440.
+            jdelta = time_value / 86400. - self.tzoffset / 1440.
         elif self.units in min_units:
-            jdelta = time_value / 1440. + self.tzoffset / 1440.
+            jdelta = time_value / 1440. - self.tzoffset / 1440.
         elif self.units in hr_units:
-            jdelta = time_value / 24. + self.tzoffset / 1440.
+            jdelta = time_value / 24. - self.tzoffset / 1440.
         elif self.units in day_units:
-            jdelta = time_value + self.tzoffset / 1440.
+            jdelta = time_value - self.tzoffset / 1440.
         else:
             raise ValueError('unsupported time units')
         jd = self._jd0 + jdelta
@@ -1191,8 +1195,11 @@ cdef _parse_timezone(tzstring):
     if tzstring is None:
         return 0
     m = TIMEZONE_REGEX.match(tzstring)
-    prefix, hours, minutes = m.groups()
-    hours, minutes = int(hours), int(minutes)
+    prefix, hours, minutes1, minutes2 = m.groups()
+    hours = int(hours)
+    # Note: Minutes don't have to be specified in tzstring, so if the group is not found it means minutes is 0.
+    #       Also, due to the timezone regex definition, there are two mutually exclusive groups that might hold the minutes value, so check both.
+    minutes = int(minutes1) if minutes1 is not None else int(minutes2) if minutes2 is not None else 0
     if prefix == "-":
         hours = -hours
         minutes = -minutes
