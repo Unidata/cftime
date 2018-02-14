@@ -1131,7 +1131,8 @@ def test_valid_julian_gregorian_mixed_dates(date_type, date_args):
 
 @pytest.mark.parametrize(
     'date_args',
-    [(1, 1, 1), (10, 1, 1), (100, 1, 1), (1000, 1, 1)],
+    [(1, 2, 3, 4, 5, 6), (10, 2, 3, 4, 5, 6), (100, 2, 3, 4, 5, 6),
+     (1000, 2, 3, 4, 5, 6)],
     ids=['1', '10', '100', '1000'])
 def test_str_matches_datetime_str(date_type, date_args):
     assert str(date_type(*date_args)) == str(datetime(*date_args))
