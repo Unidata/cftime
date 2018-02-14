@@ -83,7 +83,7 @@ class netcdftimeTestCase(unittest.TestCase):
         # check attributes.
         self.assertTrue(self.cdftime_mixed.units == 'hours')
         self.assertTrue(
-            str(self.cdftime_mixed.origin) == '   1-01-01 00:00:00')
+            str(self.cdftime_mixed.origin) == '0001-01-01 00:00:00')
         self.assertTrue(
             self.cdftime_mixed.unit_string == 'hours since 0001-01-01 00:00:00')
         self.assertTrue(self.cdftime_mixed.calendar == 'standard')
@@ -122,7 +122,7 @@ class netcdftimeTestCase(unittest.TestCase):
         self.assertTrue(d_check == ''.join(d2))
         # test proleptic gregorian calendar.
         self.assertTrue(self.cdftime_pg.units == 'seconds')
-        self.assertTrue(str(self.cdftime_pg.origin) == '   1-01-01 00:00:00')
+        self.assertTrue(str(self.cdftime_pg.origin) == '0001-01-01 00:00:00')
         self.assertTrue(
             self.cdftime_pg.unit_string == 'seconds since 0001-01-01 00:00:00')
         self.assertTrue(self.cdftime_pg.calendar == 'proleptic_gregorian')
@@ -317,7 +317,7 @@ class netcdftimeTestCase(unittest.TestCase):
 
         # Check leading white space
         self.assertEqual(
-            str(self.cdftime_leading_space.origin), ' 850-01-01 00:00:00')
+            str(self.cdftime_leading_space.origin), '0850-01-01 00:00:00')
 
         #issue 330
         units = "seconds since 1970-01-01T00:00:00Z"
@@ -1127,6 +1127,14 @@ def test_invalid_julian_gregorian_mixed_dates(date_type, date_args):
     [(1582, 10, 4), (1582, 10, 15)], ids=['lower-bound', 'upper-bound'])
 def test_valid_julian_gregorian_mixed_dates(date_type, date_args):
     date_type(*date_args)
+
+
+@pytest.mark.parametrize(
+    'date_args',
+    [(1, 1, 1), (10, 1, 1), (100, 1, 1), (1000, 1, 1)],
+    ids=['1', '10', '100', '1000'])
+def test_str_matches_datetime_str(date_type, date_args):
+    assert str(date_type(*date_args)) == str(datetime(*date_args))
 
 
 if __name__ == '__main__':
