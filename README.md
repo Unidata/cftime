@@ -11,8 +11,8 @@ Time-handling functionality from netcdf4-python
 ## Quick Start
 * Clone GitHub repository (`git clone https://github.com/Unidata/netcdftime.git`), or get source tarball from [PyPI](https://pypi.python.org/pypi/netcdftime). Links to Windows and OS X precompiled binary packages are also available on [PyPI](https://pypi.python.org/pypi/netcdftime).
 
-* Make sure [numpy](http://www.numpy.org/) (required) and [Cython](http://cython.org/) (recommended) are
-  installed and you have [Python](https://www.python.org) 2.6 or newer.
+* Make sure [numpy](http://www.numpy.org/) and [Cython](http://cython.org/) are
+  installed and you have [Python](https://www.python.org) 2.7 or newer.
 
 * Run `python setup.py build`, then `python setup.py install` (with `sudo` if necessary).
 
