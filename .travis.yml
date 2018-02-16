@@ -32,9 +32,7 @@ install:
 
 script:
   - if [[ $BUILD_DOCS == "true" ]]; then
-      pushd docs;
-      make html;
-      popd;
+      pushd docs && make html linkcheck O=-W && popd;
     else
       py.test -vv;
     fi;
