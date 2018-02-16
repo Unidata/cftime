@@ -1,15 +1,15 @@
-.. netcdftime documentation master file, created by
-   sphinx-quickstart on Fri Feb 16 14:30:23 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+netcdftime
+==========
 
-Welcome to netcdftime's documentation!
-======================================
+Python library for decoding time units and variable values in a netCDF file
+conforming to the Climate and Forecasting (CF) netCDF conventions.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+.. automodule:: netcdftime
+   :members: date2num, date2index, num2date, JulianDayFromDate
 
 
 Indices and tables
