@@ -514,6 +514,47 @@ class netcdftimeTestCase(unittest.TestCase):
             t1, t2, t3 = date2num([datetime(1582, 10, 4), datetime(1582, 10, 10), datetime(1582, 10, 15)], units, calendar='standard')
         except ValueError:
             pass
+        # test fix for issue #596 - julian day calculations wrong for negative years,
+        # caused incorrect rountrip num2date(date2num(date)) roundtrip for dates with year
+        # < 0.
+        u = utime("seconds since 1-1-1",calendar='julian')
+        date1 = datetimex(-1, 1, 1)
+        date2 = u.num2date(u.date2num(date1))
+        assert (date2.year == date1.year)
+        assert (date2.month == date1.month)
+        assert (date2.day == date1.day)
+        assert (date2.hour == date1.hour)
+        assert (date2.minute == date1.minute)
+        assert (date2.second == date1.second)
+        assert_almost_equal(JulianDayFromDate(date1), 1721057.5)
+        # issue 596 - negative years fail in utime.num2date
+        u = utime("seconds since 1-1-1", "proleptic_gregorian")
+        d = u.num2date(u.date2num(datetimex(-1, 1, 1)))
+        assert (d.year == -1)
+        assert (d.month == 1)
+        assert (d.day == 1)
+        assert (d.hour == 0)
+        # issue 685: wrong time zone conversion
+        # 'The following times all refer to the same moment: "18:30Z", "22:30+04", "1130-0700", and "15:00-03:30'
+        # (https://en.wikipedia.org/w/index.php?title=ISO_8601&oldid=787811367#Time_offsets_from_UTC)
+        # test num2date
+        utc_date = datetime(2000,1,1,18,30)
+        for units in ("hours since 2000-01-01 22:30+04:00", "hours since 2000-01-01 11:30-07:00", "hours since 2000-01-01 15:00-03:30"):
+            d = num2date(0, units, calendar="standard")
+            assert(np.abs((d-utc_date).total_seconds()) < 1.e-3)
+            # also test with negative values to cover 2nd code path
+            d = num2date(-1, units, calendar="standard")
+            assert(np.abs((d - \
+                (utc_date-timedelta(hours=1))).total_seconds()) < 1.e-3)
+
+            n = date2num(utc_date, units, calendar="standard")
+            # n should always be 0 as all units refer to the same point in time
+            self.assertEqual(n, 0)
+        # explicitly test 2nd code path for date2num
+        units = "hours since 2000-01-01 22:30+04:00"
+        n = date2num(utc_date, units, calendar="julian")
+        # n should always be 0 as all units refer to the same point in time
+        assert_almost_equal(n, 0)
 
 
 class TestDate2index(unittest.TestCase):
@@ -955,7 +996,7 @@ class DateTime(unittest.TestCase):
 
         for func in [not_comparable_1, not_comparable_2, not_comparable_3, not_comparable_4]:
             self.assertRaises(TypeError, func)
-        
+
 
 
 class issue17TestCase(unittest.TestCase):

@@ -385,6 +385,9 @@ def JulianDayFromDate(date, calendar='standard'):
         minute[i] = d.minute
         second[i] = d.second
         microsecond[i] = d.microsecond
+    # convert years in BC era to astronomical years (so that 1 BC is year zero)
+    # (fixes netcdf4-python issue #596)
+    year[year < 0] = year[year < 0] + 1
     # Convert time to fractions of a day
     day = day + hour / 24.0 + minute / 1440.0 + (second + microsecond/1.e6) / 86400.0
 
@@ -666,8 +669,11 @@ def DateFromJulianDay(JD, calendar='standard'):
         isscalar = True
 
     if calendar in 'proleptic_gregorian':
-        # FIXME: datetime.datetime does not support years < 1
-        datetime_type = real_datetime
+        # datetime.datetime does not support years < 1
+        if year < 0:
+            datetime_type = DatetimeProlepticGregorian
+        else:
+            datetime_type = real_datetime
     elif calendar in ('standard', 'gregorian'):
         # return a 'real' datetime instance if calendar is proleptic
         # Gregorian or Gregorian and all dates are after the
