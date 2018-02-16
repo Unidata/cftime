@@ -2,3 +2,4 @@
 *.c
 build/
 *.egg-info
+_build/
