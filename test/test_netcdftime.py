@@ -83,7 +83,7 @@ class netcdftimeTestCase(unittest.TestCase):
         # check attributes.
         self.assertTrue(self.cdftime_mixed.units == 'hours')
         self.assertTrue(
-            str(self.cdftime_mixed.origin) == '   1-01-01 00:00:00')
+            str(self.cdftime_mixed.origin) == '0001-01-01 00:00:00')
         self.assertTrue(
             self.cdftime_mixed.unit_string == 'hours since 0001-01-01 00:00:00')
         self.assertTrue(self.cdftime_mixed.calendar == 'standard')
@@ -122,7 +122,7 @@ class netcdftimeTestCase(unittest.TestCase):
         self.assertTrue(d_check == ''.join(d2))
         # test proleptic gregorian calendar.
         self.assertTrue(self.cdftime_pg.units == 'seconds')
-        self.assertTrue(str(self.cdftime_pg.origin) == '   1-01-01 00:00:00')
+        self.assertTrue(str(self.cdftime_pg.origin) == '0001-01-01 00:00:00')
         self.assertTrue(
             self.cdftime_pg.unit_string == 'seconds since 0001-01-01 00:00:00')
         self.assertTrue(self.cdftime_pg.calendar == 'proleptic_gregorian')
@@ -317,7 +317,7 @@ class netcdftimeTestCase(unittest.TestCase):
 
         # Check leading white space
         self.assertEqual(
-            str(self.cdftime_leading_space.origin), ' 850-01-01 00:00:00')
+            str(self.cdftime_leading_space.origin), '0850-01-01 00:00:00')
 
         #issue 330
         units = "seconds since 1970-01-01T00:00:00Z"
@@ -514,6 +514,47 @@ class netcdftimeTestCase(unittest.TestCase):
             t1, t2, t3 = date2num([datetime(1582, 10, 4), datetime(1582, 10, 10), datetime(1582, 10, 15)], units, calendar='standard')
         except ValueError:
             pass
+        # test fix for issue #596 - julian day calculations wrong for negative years,
+        # caused incorrect rountrip num2date(date2num(date)) roundtrip for dates with year
+        # < 0.
+        u = utime("seconds since 1-1-1",calendar='julian')
+        date1 = datetimex(-1, 1, 1)
+        date2 = u.num2date(u.date2num(date1))
+        assert (date2.year == date1.year)
+        assert (date2.month == date1.month)
+        assert (date2.day == date1.day)
+        assert (date2.hour == date1.hour)
+        assert (date2.minute == date1.minute)
+        assert (date2.second == date1.second)
+        assert_almost_equal(JulianDayFromDate(date1), 1721057.5)
+        # issue 596 - negative years fail in utime.num2date
+        u = utime("seconds since 1-1-1", "proleptic_gregorian")
+        d = u.num2date(u.date2num(datetimex(-1, 1, 1)))
+        assert (d.year == -1)
+        assert (d.month == 1)
+        assert (d.day == 1)
+        assert (d.hour == 0)
+        # issue 685: wrong time zone conversion
+        # 'The following times all refer to the same moment: "18:30Z", "22:30+04", "1130-0700", and "15:00-03:30'
+        # (https://en.wikipedia.org/w/index.php?title=ISO_8601&oldid=787811367#Time_offsets_from_UTC)
+        # test num2date
+        utc_date = datetime(2000,1,1,18,30)
+        for units in ("hours since 2000-01-01 22:30+04:00", "hours since 2000-01-01 11:30-07:00", "hours since 2000-01-01 15:00-03:30"):
+            d = num2date(0, units, calendar="standard")
+            assert(np.abs((d-utc_date).total_seconds()) < 1.e-3)
+            # also test with negative values to cover 2nd code path
+            d = num2date(-1, units, calendar="standard")
+            assert(np.abs((d - \
+                (utc_date-timedelta(hours=1))).total_seconds()) < 1.e-3)
+
+            n = date2num(utc_date, units, calendar="standard")
+            # n should always be 0 as all units refer to the same point in time
+            self.assertEqual(n, 0)
+        # explicitly test 2nd code path for date2num
+        units = "hours since 2000-01-01 22:30+04:00"
+        n = date2num(utc_date, units, calendar="julian")
+        # n should always be 0 as all units refer to the same point in time
+        assert_almost_equal(n, 0)
 
 
 class TestDate2index(unittest.TestCase):
@@ -955,7 +996,7 @@ class DateTime(unittest.TestCase):
 
         for func in [not_comparable_1, not_comparable_2, not_comparable_3, not_comparable_4]:
             self.assertRaises(TypeError, func)
-        
+
 
 
 class issue17TestCase(unittest.TestCase):
@@ -1127,6 +1168,15 @@ def test_invalid_julian_gregorian_mixed_dates(date_type, date_args):
     [(1582, 10, 4), (1582, 10, 15)], ids=['lower-bound', 'upper-bound'])
 def test_valid_julian_gregorian_mixed_dates(date_type, date_args):
     date_type(*date_args)
+
+
+@pytest.mark.parametrize(
+    'date_args',
+    [(1, 2, 3, 4, 5, 6), (10, 2, 3, 4, 5, 6), (100, 2, 3, 4, 5, 6),
+     (1000, 2, 3, 4, 5, 6)],
+    ids=['1', '10', '100', '1000'])
+def test_str_matches_datetime_str(date_type, date_args):
+    assert str(date_type(*date_args)) == str(datetime(*date_args))
 
 
 if __name__ == '__main__':
