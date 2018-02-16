@@ -1547,7 +1547,8 @@ Gregorial calendar.
                                    self._getstate())
 
     def __str__(self):
-        return self.strftime(self.format)
+        return "{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(
+            self.year, self.month, self.day, self.hour, self.minute, self.second)
 
     def __hash__(self):
         try:
