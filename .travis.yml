@@ -41,3 +41,20 @@ script:
 
 after_success:
   - coveralls
+
+before_deploy:
+  # Remove unused, unminified javascript from sphinx
+  - if [[ $BUILD_DOCS == "true" ]]; then
+      rm -f docs/build/html/_static/jquery-*.js;
+      rm -f docs/build/html/_static/underscore-*.js;
+      rm -f docs/build/html/.buildinfo;
+    fi
+
+deploy:
+  - provider: script
+    script: ci/deploy_docs.sh
+    skip_cleanup: true
+    on:
+      branch: master
+      python: 3.6
+      condition: '$BUILD_DOCS == "true"'
