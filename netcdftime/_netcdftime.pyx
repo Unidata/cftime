@@ -671,7 +671,8 @@ def DateFromJulianDay(JD, calendar='standard'):
 
     if calendar in 'proleptic_gregorian':
         # datetime.datetime does not support years < 1
-        if year < 0:
+        #if year < 0:
+        if (year < 0).any(): # netcdftime issue #28
             datetime_type = DatetimeProlepticGregorian
         else:
             datetime_type = real_datetime
