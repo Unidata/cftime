@@ -280,7 +280,7 @@ def num2date(times,units,calendar='standard'):
             return numpy.reshape(numpy.array(dates), shape)
     else: # use netcdftime for other calendars
         cdftime = utime(units,calendar=calendar)
-        return num2date(times)
+        return cdftime.num2date(times)
 
 
 def date2index(dates, nctime, calendar=None, select='exact'):
