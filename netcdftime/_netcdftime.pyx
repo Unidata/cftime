@@ -95,8 +95,8 @@ def date2num(dates,units,calendar='standard'):
     **`date2num(dates,units,calendar='standard')`**
 
     Return numeric time values given datetime objects. The units
-    of the numeric time values are described by the `netcdftime.units` argument
-    and the `netcdftime.calendar` keyword. The datetime objects must
+    of the numeric time values are described by the `units` argument
+    and the `calendar` keyword. The datetime objects must
     be in UTC with no time-zone offset.  If there is a
     time-zone offset in `units`, it will be applied to the
     returned numeric values.
@@ -280,7 +280,7 @@ def num2date(times,units,calendar='standard'):
             return numpy.reshape(numpy.array(dates), shape)
     else: # use netcdftime for other calendars
         cdftime = utime(units,calendar=calendar)
-        return cdftime.num2date(times)
+        return num2date(times)
 
 
 def date2index(dates, nctime, calendar=None, select='exact'):
@@ -337,7 +337,7 @@ def date2index(dates, nctime, calendar=None, select='exact'):
         times = date2num(dates,nctime.units,calendar=calendar)
         return time2index(times, nctime, calendar, select)
     else: # use netcdftime module for other cases
-        return date2index(dates, nctime, calendar, select)
+        return _date2index(dates, nctime, calendar, select)
 
 
 def JulianDayFromDate(date, calendar='standard'):
@@ -1306,9 +1306,9 @@ cdef _check_index(indices, times, nctime, calendar, select):
         return numpy.all(delta_check <= delta_after) and numpy.all(delta_check <= delta_before)
 
 
-def date2index(dates, nctime, calendar=None, select='exact'):
+def _date2index(dates, nctime, calendar=None, select='exact'):
     """
-    date2index(dates, nctime, calendar=None, select='exact')
+    _date2index(dates, nctime, calendar=None, select='exact')
 
     Return indices of a netCDF time variable corresponding to the given dates.
 
