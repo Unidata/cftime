@@ -91,8 +91,7 @@ cdef _parse_date_and_units(timestr):
 
 
 def date2num(dates,units,calendar='standard'):
-        """
-    **`date2num(dates,units,calendar='standard')`**
+        """date2num(dates,units,calendar='standard')
 
     Return numeric time values given datetime objects. The units
     of the numeric time values are described by the `units` argument
@@ -180,8 +179,7 @@ def date2num(dates,units,calendar='standard'):
 
 
 def num2date(times,units,calendar='standard'):
-    """
-    **`num2date(times,units,calendar='standard')`**
+    """num2date(times,units,calendar='standard')
 
     Return datetime objects given numeric time values. The units
     of the numeric time values are described by the `units` argument
@@ -285,8 +283,7 @@ def num2date(times,units,calendar='standard'):
 
 
 def date2index(dates, nctime, calendar=None, select='exact'):
-    """
-    **`date2index(dates, nctime, calendar=None, select='exact')`**
+    """date2index(dates, nctime, calendar=None, select='exact')
 
     Return indices of a netCDF time variable corresponding to the given dates.
 
@@ -342,7 +339,7 @@ def date2index(dates, nctime, calendar=None, select='exact'):
 
 
 def JulianDayFromDate(date, calendar='standard'):
-    """
+    """JulianDayFromDate(date, calendar='standard')
 
     creates a Julian Day from a 'datetime-like' object.  Returns the fractional
     Julian Day (approximately millisecond accuracy).

@@ -9,6 +9,11 @@ python:
   - 3.5
   - 3.6
 
+matrix:
+  include:
+    - python: 3.6
+      env: BUILD_DOCS="true"
+
 before_install:
   - wget http://bit.ly/miniconda -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
@@ -17,13 +22,37 @@ before_install:
   - conda config --add channels conda-forge --force
   - conda create --yes -n TEST python=$TRAVIS_PYTHON_VERSION --file requirements.txt --file requirements-dev.txt
   - source activate TEST
+  - if [[ $BUILD_DOCS == "true" ]]; then
+      conda install -qy sphinx;
+    fi;
 
 # Test source distribution.
 install:
   - python setup.py sdist && version=$(python setup.py --version) && pushd dist  && pip install netcdftime-${version}.tar.gz && popd
 
 script:
-  - py.test  -vv # --cov=netcdftime --cov-report term-missing
+  - if [[ $BUILD_DOCS == "true" ]]; then
+      pushd docs && make html linkcheck O=-W && popd;
+    else
+      py.test -vv;
+    fi;
 
 after_success:
   - coveralls
+
+before_deploy:
+  # Remove unused, unminified javascript from sphinx
+  - if [[ $BUILD_DOCS == "true" ]]; then
+      rm -f docs/build/html/_static/jquery-*.js;
+      rm -f docs/build/html/_static/underscore-*.js;
+      rm -f docs/build/html/.buildinfo;
+    fi
+
+deploy:
+  - provider: script
+    script: ci/deploy_docs.sh
+    skip_cleanup: true
+    on:
+      branch: master
+      python: 3.6
+      condition: '$BUILD_DOCS == "true"'
