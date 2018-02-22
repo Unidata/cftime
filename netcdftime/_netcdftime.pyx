@@ -228,8 +228,9 @@ def num2date(times,units,calendar='standard'):
             msg='negative reference year in time units, must be >= 1'
             raise ValueError(msg)
 
-    if (calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
-       (calendar in ['gregorian','standard'] and basedate > gregorian):
+    postimes =  (numpy.asarray(times) > 0).all() # netcdf4-python issue #659
+    if postimes and ((calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
+       (calendar in ['gregorian','standard'] and basedate > gregorian)):
         # use python datetime module,
         isscalar = False
         try:
@@ -670,7 +671,8 @@ def DateFromJulianDay(JD, calendar='standard'):
 
     if calendar in 'proleptic_gregorian':
         # datetime.datetime does not support years < 1
-        if year < 0:
+        #if year < 0:
+        if (year < 0).any(): # netcdftime issue #28
             datetime_type = DatetimeProlepticGregorian
         else:
             datetime_type = real_datetime

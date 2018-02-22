@@ -484,7 +484,9 @@ class netcdftimeTestCase(unittest.TestCase):
         utc_date = datetime(2000,1,1,18,30)
         for units in ("hours since 2000-01-01 22:30+04:00", "hours since 2000-01-01 11:30-07:00", "hours since 2000-01-01 15:00-03:30"):
             d = num2date(0, units, calendar="standard")
-            self.assertEqual(d, utc_date)
+            #self.assertEqual(d, utc_date)
+            # tolerance of 1.e-3 secs
+            assert(np.abs((d-utc_date).total_seconds()) < 1.e-3)
             # also test with negative values to cover 2nd code path
             d = num2date(-1, units, calendar="standard")
             self.assertEqual(d, utc_date - timedelta(hours=1))
@@ -531,6 +533,13 @@ class netcdftimeTestCase(unittest.TestCase):
         u = utime("seconds since 1-1-1", "proleptic_gregorian")
         d = u.num2date(u.date2num(datetimex(-1, 1, 1)))
         assert (d.year == -1)
+        assert (d.month == 1)
+        assert (d.day == 1)
+        assert (d.hour == 0)
+        # test fix for issue #659 (proper treatment of negative time values)
+        units = 'days since 1800-01-01 00:00:0.0'
+        d = num2date(-657073, units, calendar='standard')
+        assert (d.year == 1)
         assert (d.month == 1)
         assert (d.day == 1)
         assert (d.hour == 0)
