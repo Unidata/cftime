@@ -23,7 +23,8 @@ git config user.email "travis@nobody.org"
 # The first and only commit to this new Git repo contains all the
 # files present with the commit message "Deploy to GitHub Pages".
 echo Updating docs...
-cp -R ${TRAVIS_BUILD_DIR}/docs/_build/html/ ./
+rm -rf *
+cp -R ${TRAVIS_BUILD_DIR}/docs/_build/html/* ./
 touch .nojekyll
 
 echo Staging...
