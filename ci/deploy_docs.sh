@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e # exit with nonzero exit code if anything fails
+export GH_PAGES_DIR="$HOME/gh-pages"
 
 # Decrypt and activate the deploy key
 echo Setting up access...
