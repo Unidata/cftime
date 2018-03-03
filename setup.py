@@ -29,7 +29,7 @@ setup(
     description='Time-handling functionality from netcdf4-python',
     packages=['netcdftime'],
     version=extract_version(),
-    ext_modules=[Extension('netcdftime',sources=['netcdftime/_netcdftime.pyx'])],
+    ext_modules=[Extension('netcdftime._netcdftime',sources=['netcdftime/_netcdftime.pyx'])],
     setup_requires=install_requires,
     install_requires=install_requires,
     tests_require=tests_require)
