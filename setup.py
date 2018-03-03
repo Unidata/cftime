@@ -30,6 +30,6 @@ setup(
     packages=['netcdftime'],
     version=extract_version(),
     ext_modules=[Extension('netcdftime',sources=['netcdftime/_netcdftime.pyx'])],
-    setup_requires=["cython>=0.19","setuptools>=18.0"],
+    setup_requires=install_requires,
     install_requires=install_requires,
     tests_require=tests_require)
