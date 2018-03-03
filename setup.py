@@ -1,10 +1,7 @@
 import os
-from setuptools import setup
-from Cython.Build import cythonize
-
+from setuptools import setup, Extension
 
 rootpath = os.path.abspath(os.path.dirname(__file__))
-
 
 def extract_version(module='netcdftime'):
     version = None
@@ -16,7 +13,6 @@ def extract_version(module='netcdftime'):
                 version = version.strip()[1:-1]  # Remove quotation characters.
                 break
     return version
-
 
 with open('requirements.txt') as f:
     reqs = f.readlines()
@@ -33,6 +29,7 @@ setup(
     description='Time-handling functionality from netcdf4-python',
     packages=['netcdftime'],
     version=extract_version(),
-    ext_modules=cythonize('netcdftime/*.pyx'),
+    ext_modules=[Extension('netcdftime',sources=['netcdftime/_netcdftime.pyx'])],
+    setup_requires=["cython>=0.19","setuptools>=18.0"],
     install_requires=install_requires,
     tests_require=tests_require)
