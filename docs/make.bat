@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=netcdftime
+set SPHINXPROJ=cftime
 
 if "%1" == "" goto help
 

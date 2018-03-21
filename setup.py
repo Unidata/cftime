@@ -3,9 +3,9 @@ from setuptools import setup, Extension
 
 rootpath = os.path.abspath(os.path.dirname(__file__))
 
-def extract_version(module='netcdftime'):
+def extract_version(module='cftime'):
     version = None
-    fname = os.path.join(rootpath, module, '_netcdftime.pyx')
+    fname = os.path.join(rootpath, module, '_cftime.pyx')
     with open(fname) as f:
         for line in f:
             if (line.startswith('__version__')):
@@ -23,13 +23,13 @@ with open('requirements-dev.txt') as f:
 tests_require = [req.strip() for req in reqs]
 
 setup(
-    name='netcdftime',
+    name='cftime',
     author='Jeff Whitaker',
     author_email='jeffrey.s.whitaker@noaa.gov',
     description='Time-handling functionality from netcdf4-python',
-    packages=['netcdftime'],
+    packages=['cftime'],
     version=extract_version(),
-    ext_modules=[Extension('netcdftime._netcdftime',sources=['netcdftime/_netcdftime.pyx'])],
+    ext_modules=[Extension('cftime._cftime',sources=['cftime/_cftime.pyx'])],
     setup_requires=install_requires,
     install_requires=install_requires,
     tests_require=tests_require)
