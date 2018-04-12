@@ -1,5 +1,5 @@
-netcdftime
-==========
+cftime
+======
 
 Python library for decoding time units and variable values in a netCDF file
 conforming to the Climate and Forecasting (CF) netCDF conventions.
@@ -8,8 +8,8 @@ conforming to the Climate and Forecasting (CF) netCDF conventions.
    :maxdepth: 2
    :caption: Contents:
 
-.. automodule:: netcdftime
-   :members: date2num, date2index, num2date, JulianDayFromDate
+.. automodule:: cftime
+   :members: datetime, date2num, date2index, num2date, JulianDayFromDate, DatetimeJulian, DatetimeProlepticGregorian, DatetimeNoLeap, DatetimeAllLeap, DatetimeGregorian
 
 
 Indices and tables

@@ -1,7 +1,7 @@
 {% set version = "dev" %}
 
 package:
-  name: netcdftime
+  name: cftime
   version: {{ version }}
 
 source:
@@ -28,11 +28,11 @@ test:
   requires:
     - pytest
   imports:
-    - netcdftime
+    - cftime
   commands:
     - py.test -vv test
 
 about:
-  home: https://github.com/Unidata/netcdftime
+  home: https://github.com/Unidata/cftime
   license: OSI Approved
   summary: 'Provides an object-oriented python interface to the netCDF version 4 library..'
