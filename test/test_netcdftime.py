@@ -1,19 +1,17 @@
 import copy
-import pytest
 import unittest
 from collections import namedtuple
 from datetime import datetime, timedelta
 
 import numpy as np
+import pytest
 from numpy.testing import assert_almost_equal, assert_equal
 
 from cftime import datetime as datetimex
-from cftime import (utime, JulianDayFromDate, DateFromJulianDay,
-                        DatetimeNoLeap, DatetimeAllLeap, Datetime360Day,
-                        DatetimeJulian, DatetimeGregorian,
-                        DatetimeProlepticGregorian)
-from cftime import num2date, date2num, date2index, _parse_date
-
+from cftime import (DateFromJulianDay, Datetime360Day, DatetimeAllLeap,
+                    DatetimeGregorian, DatetimeJulian, DatetimeNoLeap,
+                    DatetimeProlepticGregorian, JulianDayFromDate, _parse_date,
+                    date2index, date2num, num2date, utime)
 
 # test cftime module for netCDF time <--> python datetime conversions.
 
