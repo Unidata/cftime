@@ -1,27 +1,25 @@
 import copy
-import pytest
 import unittest
 from collections import namedtuple
 from datetime import datetime, timedelta
 
 import numpy as np
+import pytest
 from numpy.testing import assert_almost_equal, assert_equal
 
-from netcdftime import datetime as datetimex
-from netcdftime import (utime, JulianDayFromDate, DateFromJulianDay,
-                        DatetimeNoLeap, DatetimeAllLeap, Datetime360Day,
-                        DatetimeJulian, DatetimeGregorian,
-                        DatetimeProlepticGregorian)
-from netcdftime import num2date, date2num, date2index, _parse_date
+from cftime import datetime as datetimex
+from cftime import (DateFromJulianDay, Datetime360Day, DatetimeAllLeap,
+                    DatetimeGregorian, DatetimeJulian, DatetimeNoLeap,
+                    DatetimeProlepticGregorian, JulianDayFromDate, _parse_date,
+                    date2index, date2num, num2date, utime)
 
-
-# test netcdftime module for netCDF time <--> python datetime conversions.
+# test cftime module for netCDF time <--> python datetime conversions.
 
 
 dtime = namedtuple('dtime', ('values', 'units', 'calendar'))
 
 
-class NetCDFTimeVariable(object):
+class CFTimeVariable(object):
     '''dummy "netCDF" variable to hold time info'''
     def __init__(self, values, calendar='standard', units=None):
 
@@ -53,7 +51,7 @@ class NetCDFTimeVariable(object):
         return self.values.shape
 
 
-class netcdftimeTestCase(unittest.TestCase):
+class cftimeTestCase(unittest.TestCase):
 
     def setUp(self):
         self.cdftime_mixed = utime('hours since 0001-01-01 00:00:00')
@@ -78,7 +76,7 @@ class netcdftimeTestCase(unittest.TestCase):
             'days since 1600-02-28 00:00:00', calendar='NOLEAP')
 
     def runTest(self):
-        """testing netcdftime"""
+        """testing cftime"""
         # test mixed julian/gregorian calendar
         # check attributes.
         self.assertTrue(self.cdftime_mixed.units == 'hours')
@@ -205,7 +203,7 @@ class netcdftimeTestCase(unittest.TestCase):
         assert_almost_equal(
             self.cdftime_360day.date2num(self.cdftime_360day.origin), 0.0)
         # check date2num,num2date methods.
-        # use datetime from netcdftime, since this date doesn't
+        # use datetime from cftime, since this date doesn't
         # exist in "normal" calendars.
         d = datetimex(2000, 2, 30)
         t1 = self.cdftime_360day.date2num(d)
@@ -432,7 +430,7 @@ class netcdftimeTestCase(unittest.TestCase):
         assert (num == -7)
         assert (num2date(num, units) == date)
         units = 'hours since 1482-10-15 -07:00 UTC'
-        # date before gregorian switch, netcdftime datetime used
+        # date before gregorian switch, cftime datetime used
         date = datetime(1482,10,15)
         num = date2num(date,units)
         date2 = num2date(num, units)
@@ -609,13 +607,13 @@ class TestDate2index(unittest.TestCase):
                                           'hours since 1900-01-01', 'standard')
 
         self.time_vars = {}
-        self.time_vars['time'] = NetCDFTimeVariable(
+        self.time_vars['time'] = CFTimeVariable(
             values=self.standardtime,
             units='hours since 1900-01-01')
 
         self.first_timestamp = datetime(2000, 1, 1)
         units = 'days since 1901-01-01'
-        self.time_vars['time2'] = NetCDFTimeVariable(
+        self.time_vars['time2'] = CFTimeVariable(
             values=date2num([self.first_timestamp], units),
             units=units)
 
@@ -627,7 +625,7 @@ class TestDate2index(unittest.TestCase):
         for ndate in range(ntimes-1):
             date += (ndate+1)*timedelta(hours=1)
             dates.append(date)
-        self.time_vars['time3'] = NetCDFTimeVariable(
+        self.time_vars['time3'] = CFTimeVariable(
             values=date2num(dates, units),
             units=units)
 
@@ -871,17 +869,17 @@ class DateTime(unittest.TestCase):
             """
             return (td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**6
 
-        # sutracting two netcdftime.datetime instances
+        # sutracting two cftime.datetime instances
         delta = self.date2_365_day - self.date1_365_day
         # date1 and date2 are exactly one day apart
         self.assertEqual(total_seconds(delta), 86400)
 
-        # subtracting netcdftime.datetime from datetime.datetime
+        # subtracting cftime.datetime from datetime.datetime
         delta = self.datetime_date1 - self.date3_gregorian
         # real_date2 and real_date1 are exactly one day apart
         self.assertEqual(total_seconds(delta), 86400)
 
-        # subtracting datetime.datetime from netcdftime.datetime
+        # subtracting datetime.datetime from cftime.datetime
         delta = self.date3_gregorian - self.datetime_date1
         # real_date2 and real_date1 are exactly one day apart
         self.assertEqual(total_seconds(delta), -86400)
@@ -996,7 +994,7 @@ class DateTime(unittest.TestCase):
             self.date2_365_day > self.datetime_date1
 
         def not_comparable_3():
-            "compare datetime.datetime to netcdftime.datetime with a non-gregorian calendar"
+            "compare datetime.datetime to cftime.datetime with a non-gregorian calendar"
             self.datetime_date1 > self.date2_365_day
 
         def not_comparable_4():
@@ -1203,10 +1201,10 @@ _EXPECTED_DATE_TYPES = {'noleap': DatetimeNoLeap,
     ['calendar', 'expected_date_type'],
     list(_EXPECTED_DATE_TYPES.items())
 )
-def test_num2date_only_use_netcdftime_datetimes_negative_years(
+def test_num2date_only_use_cftime_datetimes_negative_years(
         calendar, expected_date_type):
     result = num2date(-1000., units='days since 0001-01-01', calendar=calendar,
-                      only_use_netcdftime_datetimes=True)
+                      only_use_cftime_datetimes=True)
     assert isinstance(result, expected_date_type)
 
 
@@ -1214,10 +1212,10 @@ def test_num2date_only_use_netcdftime_datetimes_negative_years(
     ['calendar', 'expected_date_type'],
     list(_EXPECTED_DATE_TYPES.items())
 )
-def test_num2date_only_use_netcdftime_datetimes_pre_gregorian(
+def test_num2date_only_use_cftime_datetimes_pre_gregorian(
         calendar, expected_date_type):
     result = num2date(1., units='days since 0001-01-01', calendar=calendar,
-                      only_use_netcdftime_datetimes=True)
+                      only_use_cftime_datetimes=True)
     assert isinstance(result, expected_date_type)
 
 
@@ -1225,10 +1223,10 @@ def test_num2date_only_use_netcdftime_datetimes_pre_gregorian(
     ['calendar', 'expected_date_type'],
     list(_EXPECTED_DATE_TYPES.items())
 )
-def test_num2date_only_use_netcdftime_datetimes_post_gregorian(
+def test_num2date_only_use_cftime_datetimes_post_gregorian(
         calendar, expected_date_type):
     result = num2date(0., units='days since 1582-10-15', calendar=calendar,
-                      only_use_netcdftime_datetimes=True)
+                      only_use_cftime_datetimes=True)
     assert isinstance(result, expected_date_type)
 
 

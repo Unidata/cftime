@@ -28,7 +28,7 @@ before_install:
 
 # Test source distribution.
 install:
-  - python setup.py sdist && version=$(python setup.py --version) && pushd dist  && pip install netcdftime-${version}.tar.gz && popd
+  - python setup.py sdist && version=$(python setup.py --version) && pushd dist  && pip install cftime-${version}.tar.gz && popd
 
 script:
   - if [[ $BUILD_DOCS == "true" ]]; then
