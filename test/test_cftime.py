@@ -1186,5 +1186,49 @@ def test_str_matches_datetime_str(date_type, date_args):
     assert str(date_type(*date_args)) == str(datetime(*date_args))
 
 
+_EXPECTED_DATE_TYPES = {'noleap': DatetimeNoLeap,
+                        '365_day': DatetimeNoLeap,
+                        '360_day': Datetime360Day,
+                        'julian': DatetimeJulian,
+                        'all_leap': DatetimeAllLeap,
+                        '366_day': DatetimeAllLeap,
+                        'gregorian': DatetimeGregorian,
+                        'proleptic_gregorian': DatetimeProlepticGregorian,
+                        'standard': DatetimeGregorian}
+
+
+@pytest.mark.parametrize(
+    ['calendar', 'expected_date_type'],
+    list(_EXPECTED_DATE_TYPES.items())
+)
+def test_num2date_only_use_cftime_datetimes_negative_years(
+        calendar, expected_date_type):
+    result = num2date(-1000., units='days since 0001-01-01', calendar=calendar,
+                      only_use_cftime_datetimes=True)
+    assert isinstance(result, expected_date_type)
+
+
+@pytest.mark.parametrize(
+    ['calendar', 'expected_date_type'],
+    list(_EXPECTED_DATE_TYPES.items())
+)
+def test_num2date_only_use_cftime_datetimes_pre_gregorian(
+        calendar, expected_date_type):
+    result = num2date(1., units='days since 0001-01-01', calendar=calendar,
+                      only_use_cftime_datetimes=True)
+    assert isinstance(result, expected_date_type)
+
+
+@pytest.mark.parametrize(
+    ['calendar', 'expected_date_type'],
+    list(_EXPECTED_DATE_TYPES.items())
+)
+def test_num2date_only_use_cftime_datetimes_post_gregorian(
+        calendar, expected_date_type):
+    result = num2date(0., units='days since 1582-10-15', calendar=calendar,
+                      only_use_cftime_datetimes=True)
+    assert isinstance(result, expected_date_type)
+
+
 if __name__ == '__main__':
     unittest.main()

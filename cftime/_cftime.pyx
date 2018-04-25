@@ -178,7 +178,7 @@ def date2num(dates,units,calendar='standard'):
             return cdftime.date2num(dates)
 
 
-def num2date(times,units,calendar='standard'):
+def num2date(times,units,calendar='standard',only_use_cftime_datetimes=False):
     """num2date(times,units,calendar='standard')
 
     Return datetime objects given numeric time values. The units
@@ -200,6 +200,10 @@ def num2date(times,units,calendar='standard'):
     Valid calendars `'standard', 'gregorian', 'proleptic_gregorian'
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'`.
     Default is `'standard'`, which is a mixed Julian/Gregorian calendar.
+
+    **`only_use_cftime_datetimes`**: if False (default), datetime.datetime
+    objects are returned from num2date where possible; if True dates which
+    subclass cftime.datetime are returned for all calendars.
 
     returns a datetime instance, or an array of datetime instances with
     approximately millisecond accuracy.
@@ -227,7 +231,11 @@ def num2date(times,units,calendar='standard'):
             raise ValueError(msg)
 
     postimes =  (numpy.asarray(times) > 0).all() # netcdf4-python issue #659
-    if postimes and ((calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
+    if only_use_cftime_datetimes:
+        cdftime = utime(units, calendar=calendar,
+                        only_use_cftime_datetimes=only_use_cftime_datetimes)
+        return cdftime.num2date(times)
+    elif postimes and ((calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
        (calendar in ['gregorian','standard'] and basedate > gregorian)):
         # use python datetime module,
         isscalar = False
@@ -533,7 +541,7 @@ Returns the fractional Julian Day (approximately millisecond accuracy).
     return jd
 
 
-def DateFromJulianDay(JD, calendar='standard'):
+def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False):
     """
 
     returns a 'datetime-like' object given Julian Day. Julian Day is a
@@ -546,12 +554,12 @@ def DateFromJulianDay(JD, calendar='standard'):
 
     if calendar='julian', Julian Day follows julian calendar.
 
-    The datetime object is a 'real' datetime object if the date falls in
-    the Gregorian calendar (i.e. calendar='proleptic_gregorian', or
-    calendar = 'standard'/'gregorian' and the date is after 1582-10-15).
-    Otherwise, it's a 'phony' datetime object which is actually an instance
-    of cftime.datetime.
-
+    If only_use_cftime_datetimes is set to True, then cftime.datetime
+    objects are returned for all calendars.  Otherwise the datetime object is a
+    'real' datetime object if the date falls in the Gregorian calendar
+    (i.e. calendar='proleptic_gregorian', or  calendar = 'standard'/'gregorian'
+    and the date is after 1582-10-15).  In all other cases a 'phony' datetime
+    objects are used, which are actually instances of cftime.datetime.
 
     Algorithm:
 
@@ -669,15 +677,21 @@ def DateFromJulianDay(JD, calendar='standard'):
     if calendar in 'proleptic_gregorian':
         # datetime.datetime does not support years < 1
         #if year < 0:
-        if (year < 0).any(): # cftime issue #28
-            datetime_type = DatetimeProlepticGregorian
+        if only_use_cftime_datetimes:
+           if calendar == 'gregorian':
+              datetime_type = DatetimeGregorian
+           else:
+              datetime_type = DatetimeProlepticGregorian
         else:
-            datetime_type = real_datetime
+            if (year < 0).any(): # netcdftime issue #28
+               datetime_type = DatetimeProlepticGregorian
+            else:
+               datetime_type = real_datetime
     elif calendar in ('standard', 'gregorian'):
         # return a 'real' datetime instance if calendar is proleptic
         # Gregorian or Gregorian and all dates are after the
         # Julian/Gregorian transition
-        if len(ind_before) == 0:
+        if len(ind_before) == 0 and not only_use_cftime_datetimes:
             datetime_type = real_datetime
         else:
             datetime_type = DatetimeGregorian
@@ -947,7 +961,8 @@ it should be noted that udunits treats 0 AD as identical to 1 AD."
 @ivar units:  the units part of C{unit_string} (i.e. 'days', 'hours', 'seconds').
     """
 
-    def __init__(self, unit_string, calendar='standard'):
+    def __init__(self, unit_string, calendar='standard',
+                 only_use_cftime_datetimes=False):
         """
 @param unit_string: a string of the form
 C{'time-units since <time-origin>'} defining the time units.
@@ -978,6 +993,10 @@ are:
  -C{'julian'}:
  Proleptic Julian calendar, extended to dates after 1582-10-5. A year is a
  leap year if it is divisible by 4.
+
+@keyword only_use_cftime_datetimes: if False (default), datetime.datetime
+objects are returned from num2date where possible; if True dates which subclass
+cftime.datetime are returned for all calendars.
 
 @returns: A class instance which may be used for converting times from netCDF
 units to datetime objects.
@@ -1014,6 +1033,7 @@ units to datetime objects.
             self._jd0 = _360DayFromDate(self.origin)
         else:
             self._jd0 = JulianDayFromDate(self.origin, calendar=self.calendar)
+        self.only_use_cftime_datetimes = only_use_cftime_datetimes
 
     def date2num(self, date):
         """
@@ -1157,16 +1177,19 @@ units to datetime objects.
                     date = []
                     for j, m in zip(jd.flat, mask.flat):
                         if not m:
-                            date.append(DateFromJulianDay(j, self.calendar))
+                            date.append(DateFromJulianDay(j, self.calendar,
+                                                          self.only_use_cftime_datetimes))
                         else:
                             date.append(None)
                 else:
-                    date = DateFromJulianDay(jd.flat, self.calendar)
+                    date = DateFromJulianDay(jd.flat, self.calendar,
+                                             self.only_use_cftime_datetimes)
             else:
                 if ismasked and mask.item():
                     date = None
                 else:
-                    date = DateFromJulianDay(jd, self.calendar)
+                    date = DateFromJulianDay(jd, self.calendar,
+                                             self.only_use_cftime_datetimes)
         elif self.calendar in ['noleap', '365_day']:
             if not isscalar:
                 date = [_DateFromNoLeapDay(j) for j in jd.flat]
