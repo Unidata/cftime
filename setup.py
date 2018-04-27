@@ -1,7 +1,9 @@
 import os
-from setuptools import setup, Extension
+
+from setuptools import Extension, setup
 
 rootpath = os.path.abspath(os.path.dirname(__file__))
+
 
 def extract_version(module='cftime'):
     version = None
@@ -13,6 +15,7 @@ def extract_version(module='cftime'):
                 version = version.strip()[1:-1]  # Remove quotation characters.
                 break
     return version
+
 
 with open('requirements.txt') as f:
     reqs = f.readlines()
@@ -29,7 +32,7 @@ setup(
     description='Time-handling functionality from netcdf4-python',
     packages=['cftime'],
     version=extract_version(),
-    ext_modules=[Extension('cftime._cftime',sources=['cftime/_cftime.pyx'])],
+    ext_modules=[Extension('cftime._cftime', sources=['cftime/_cftime.pyx'])],
     setup_requires=install_requires,
     install_requires=install_requires,
     tests_require=tests_require)
