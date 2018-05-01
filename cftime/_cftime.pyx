@@ -1562,10 +1562,10 @@ Gregorial calendar.
     def timetuple(self):
         """
         Return a time.struct_time such as returned by time.localtime().
-        The hours, minutes and seconds are 0, and the DST flag is -1.
-        d.timetuple() is equivalent to time.struct_time((d.year, d.month, d.day,
-        0, 0, 0, d.weekday(), yday, -1)), where yday is the day number within
-        the current year starting with 1 for January 1st.
+        The DST flag is -1. d.timetuple() is equivalent to
+        time.struct_time((d.year, d.month, d.day, d.hour, d.minute,
+        d.second, d.weekday(), yday, dst)), where yday is the
+        day number within the current year starting with 1 for January 1st.
         """
         return time.struct_time((self.year, self.month, self.day, self.hour,
                 self.minute, self.second, self.dayofwk, self.dayofyr, -1))
