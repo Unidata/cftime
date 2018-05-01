@@ -1535,8 +1535,7 @@ Gregorial calendar.
     def strftime(self, format=None):
         """
         Return a string representing the date, controlled by an explicit format
-        string. Format codes referring to hours, minutes or seconds will see 0
-        values. For a complete list of formatting directives, see section
+        string. For a complete list of formatting directives, see section
         strftime() and strptime() Behavior in the base Python documentation.
         """
         if format is None:
