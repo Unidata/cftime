@@ -1536,7 +1536,7 @@ Gregorial calendar.
         """
         Return a string representing the date, controlled by an explicit format
         string. For a complete list of formatting directives, see section
-        strftime() and strptime() Behavior in the base Python documentation.
+        'strftime() and strptime() Behavior' in the base Python documentation.
         """
         if format is None:
             format = self.format
