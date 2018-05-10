@@ -3,16 +3,15 @@ Performs conversions of netCDF time coordinate data to/from datetime objects.
 """
 
 from cpython.object cimport PyObject_RichCompare
-
+import cython
 import numpy as np
 import math
 import numpy
 import re
-
+import time
 from datetime import datetime as real_datetime
 from datetime import timedelta, MINYEAR
 import time                     # strftime
-
 try:
     from itertools import izip as zip
 except ImportError:  # python 3.x
@@ -1495,6 +1494,7 @@ _converters = {}
 for calendar in _calendars:
     _converters[calendar] = utime("seconds since 1-1-1", calendar)
 
+@cython.embedsignature(True)
 cdef class datetime(object):
     """
 The base class implementing most methods of datetime classes that
@@ -1533,12 +1533,17 @@ Gregorial calendar.
         return '%Y-%m-%d %H:%M:%S'
 
     def strftime(self, format=None):
+        """
+        Return a string representing the date, controlled by an explicit format
+        string. For a complete list of formatting directives, see section
+        'strftime() and strptime() Behavior' in the base Python documentation.
+        """
         if format is None:
             format = self.format
         return _strftime(self, format)
 
     def replace(self, **kwargs):
-        "Return datetime with new specified fields."
+        """Return datetime with new specified fields."""
         args = {"year": self.year,
                 "month": self.month,
                 "day": self.day,
@@ -1555,8 +1560,15 @@ Gregorial calendar.
         return self.__class__(**args)
 
     def timetuple(self):
-        return (self.year, self.month, self.day, self.hour,
-                self.minute, self.second, self.dayofwk, self.dayofyr, -1)
+        """
+        Return a time.struct_time such as returned by time.localtime().
+        The DST flag is -1. d.timetuple() is equivalent to
+        time.struct_time((d.year, d.month, d.day, d.hour, d.minute,
+        d.second, d.weekday(), yday, dst)), where yday is the
+        day number within the current year starting with 1 for January 1st.
+        """
+        return time.struct_time((self.year, self.month, self.day, self.hour,
+                self.minute, self.second, self.dayofwk, self.dayofyr, -1))
 
     cpdef _to_real_datetime(self):
         return real_datetime(self.year, self.month, self.day,
@@ -1660,6 +1672,7 @@ Gregorial calendar.
             else:
                 return NotImplemented
 
+@cython.embedsignature(True)
 cdef class DatetimeNoLeap(datetime):
     """
 Phony datetime object which mimics the python datetime object,
@@ -1674,6 +1687,7 @@ but uses the "noleap" ("365_day") calendar.
     cdef _add_timedelta(self, delta):
         return DatetimeNoLeap(*add_timedelta(self, delta, no_leap, False))
 
+@cython.embedsignature(True)
 cdef class DatetimeAllLeap(datetime):
     """
 Phony datetime object which mimics the python datetime object,
@@ -1688,6 +1702,7 @@ but uses the "all_leap" ("366_day") calendar.
     cdef _add_timedelta(self, delta):
         return DatetimeAllLeap(*add_timedelta(self, delta, all_leap, False))
 
+@cython.embedsignature(True)
 cdef class Datetime360Day(datetime):
     """
 Phony datetime object which mimics the python datetime object,
@@ -1702,6 +1717,7 @@ but uses the "360_day" calendar.
     cdef _add_timedelta(self, delta):
         return Datetime360Day(*add_timedelta_360_day(self, delta))
 
+@cython.embedsignature(True)
 cdef class DatetimeJulian(datetime):
     """
 Phony datetime object which mimics the python datetime object,
@@ -1716,6 +1732,7 @@ but uses the "julian" calendar.
     cdef _add_timedelta(self, delta):
         return DatetimeJulian(*add_timedelta(self, delta, is_leap_julian, False))
 
+@cython.embedsignature(True)
 cdef class DatetimeGregorian(datetime):
     """
 Phony datetime object which mimics the python datetime object,
@@ -1744,6 +1761,7 @@ a datetime.datetime instance or vice versa.
     cdef _add_timedelta(self, delta):
         return DatetimeGregorian(*add_timedelta(self, delta, is_leap_gregorian, True))
 
+@cython.embedsignature(True)
 cdef class DatetimeProlepticGregorian(datetime):
     """
 Phony datetime object which mimics the python datetime object,
