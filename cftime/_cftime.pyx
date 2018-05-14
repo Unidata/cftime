@@ -1576,7 +1576,7 @@ Gregorial calendar.
                              self.microsecond)
 
     def __repr__(self):
-        return "{0}.{1}{2}".format(self.__class__.__module__,
+        return "{0}.{1}{2}".format('cftime',
                                    self.__class__.__name__,
                                    self._getstate())
 
