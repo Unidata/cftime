@@ -6,13 +6,12 @@ Required dependencies
 
 - Python 2.7, 3.4, 3.5, or 3.6
 - `numpy <http://www.numpy.org/>`__ (1.7 or later)
-- `cython <http://cython.org/>`__ (0.19 or later)
 
 
 Instructions
 ------------
 
-The easiest way to get everything installed is to use conda_ using the conda command line tool::
+The easiest way to get everything installed is to use conda_ command line tool::
 
     $ conda install cftime
 
@@ -34,8 +33,9 @@ cython) installed first. Then, install cftime with pip::
 Developing
 ----------
 
+
 When developing we recommend cloning the GitHub repository,
-building the extension in-place,
+building the extension in-place with `cython <http://cython.org/>`__ 0.19 or later
 ``python setup.py build_ext --inplace``
 
 and running the test suite to check if the changes are passing the tests
