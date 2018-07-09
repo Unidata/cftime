@@ -1615,7 +1615,7 @@ Gregorial calendar.
                 raise TypeError("cannot compare {0!r} and {1!r} (different calendars)".format(self, other))
             return PyObject_RichCompare(dt.to_tuple(), to_tuple(other), op)
         else:
-            raise TypeError("cannot compare {0!r} and {1!r}".format(self, other))
+            return NotImplemented
 
     cdef _getstate(self):
         return (self.year, self.month, self.day, self.hour,
