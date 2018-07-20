@@ -143,7 +143,7 @@ def date2num(dates,units,calendar='standard'):
                 dates = numpy.array(dates)
                 shape = dates.shape
             ismasked = False
-            if hasattr(dates,'mask'):
+            if numpy.ma.isMA(dates) and numpy.ma.is_masked(dates):
                 mask = dates.mask
                 ismasked = True
             times = []
@@ -248,7 +248,7 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=False):
             times = numpy.array(times, dtype='d')
             shape = times.shape
         ismasked = False
-        if hasattr(times,'mask'):
+        if numpy.ma.isMA(times) and numpy.ma.is_masked(times):
             mask = times.mask
             ismasked = True
         dates = []
@@ -1148,7 +1148,7 @@ units to datetime objects.
         except:
             isscalar = True
         ismasked = False
-        if hasattr(time_value, 'mask'):
+        if numpy.ma.isMA(time_value) and numpy.ma.is_masked(time_value):
             mask = time_value.mask
             ismasked = True
         if not isscalar:
