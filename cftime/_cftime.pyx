@@ -8,6 +8,7 @@ import numpy as np
 import math
 import numpy
 import re
+import sys
 import time
 from datetime import datetime as real_datetime
 from datetime import timedelta, MINYEAR
@@ -1615,7 +1616,10 @@ Gregorial calendar.
                 raise TypeError("cannot compare {0!r} and {1!r} (different calendars)".format(self, other))
             return PyObject_RichCompare(dt.to_tuple(), to_tuple(other), op)
         else:
-            return NotImplemented
+            if sys.version_info[0] < 3:
+                raise TypeError("cannot compare {0!r} and {1!r}".format(self, other))
+            else:
+                return NotImplemented
 
     cdef _getstate(self):
         return (self.year, self.month, self.day, self.hour,
