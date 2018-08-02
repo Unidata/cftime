@@ -50,7 +50,7 @@ def _datesplit(timestr):
     after 'since'
     """
     try:
-        (units, sincestring, remainder) = timestr.split(maxsplit=2)
+        (units, sincestring, remainder) = timestr.split(None,2)
     except ValueError as e:
         raise ValueError('Incorrectly formatted CF date-time unit_string')
 
