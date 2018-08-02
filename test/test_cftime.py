@@ -1049,7 +1049,7 @@ class issue57TestCase(unittest.TestCase):
         pass
 
     def test_parse_incorrect_unitstring(self):
-        for datestr in ("days since2017-05-01 ", "dayssince 2017-05-01 00:00", "days_since_2017-05-01 00:00", 
+        for datestr in ("days since2017-05-01 ", "dayssince 2017-05-01 00:00", "days snce 2017-05-01 00:00", "days_since_2017-05-01 00:00", 
             "days_since_2017-05-01_00:00"):
             self.assertRaises(
                 ValueError, cftime._cftime._dateparse, datestr)
