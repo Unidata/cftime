@@ -33,6 +33,6 @@ setup(
     packages=['cftime'],
     version=extract_version(),
     ext_modules=[Extension('cftime._cftime', sources=['cftime/_cftime.pyx'])],
-    setup_requires=install_requires,
+    setup_requires=['setuptools>=18.0', 'cython>=0.19'],
     install_requires=install_requires,
     tests_require=tests_require)
