@@ -2,20 +2,12 @@ environment:
   CONDA_INSTALL_LOCN: C:\\Miniconda36-x64
   matrix:
     - TARGET_ARCH: x64
-      CONDA_NPY: 111
-      CONDA_PY: 27
+      NPY: 1.15
+      PY: 3.6
 
     - TARGET_ARCH: x64
-      CONDA_NPY: 114
-      CONDA_PY: 27
-
-    - TARGET_ARCH: x64
-      CONDA_NPY: 111
-      CONDA_PY: 36
-
-    - TARGET_ARCH: x64
-      CONDA_NPY: 114
-      CONDA_PY: 36
+      NPY: 1.15
+      PY: 3.7
 
 platform:
     - x64
@@ -35,6 +27,7 @@ install:
     - cmd: call %CONDA_INSTALL_LOCN%\Scripts\activate.bat
     - cmd: conda.exe config --set always_yes yes --set changeps1 no --set show_channel_urls true
     - cmd: conda.exe update conda
+    - cmd: conda.exe config --remove channels defaults --force
     - cmd: conda.exe config --add channels conda-forge --force
 
     - cmd: set PYTHONUNBUFFERED=1
@@ -48,4 +41,7 @@ install:
 build: off
 
 test_script:
-    - "conda build conda.recipe"
+    - conda.exe create --name TEST python=%PY% numpy=%NPY% cython pip pytest
+    - conda activate TEST
+    - python -m pip install . --no-deps --ignore-installed --no-cache-dir -vvv
+    - py.test -vv test
