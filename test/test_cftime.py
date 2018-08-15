@@ -12,9 +12,8 @@ from cftime import (DateFromJulianDay, Datetime360Day, DatetimeAllLeap,
                     DatetimeGregorian, DatetimeJulian, DatetimeNoLeap,
                     DatetimeProlepticGregorian, JulianDayFromDate, _parse_date,
                     date2index, date2num, num2date, utime)
-
+import cftime
 # test cftime module for netCDF time <--> python datetime conversions.
-
 
 dtime = namedtuple('dtime', ('values', 'units', 'calendar'))
 
@@ -1040,6 +1039,26 @@ class issue17TestCase(unittest.TestCase):
         for datestr in ("2017-05-01 00:00+1",):
             d = _parse_date(datestr)
             assert_equal(d, expected_parsed_date)
+
+
+class issue57TestCase(unittest.TestCase):
+    """Regression tests for issue #57."""
+    # issue 57: cftime._cftime._dateparse returns quite opaque error messages that make it difficult to 
+    # track down the source of problem
+    def setUp(self):
+        pass
+
+    def test_parse_incorrect_unitstring(self):
+        for datestr in ("days since2017-05-01 ", "dayssince 2017-05-01 00:00", "days snce 2017-05-01 00:00", "days_since_2017-05-01 00:00", 
+            "days_since_2017-05-01_00:00"):
+            self.assertRaises(
+                ValueError, cftime._cftime._dateparse, datestr)
+
+            self.assertRaises(
+                ValueError, cftime._cftime.num2date, 1, datestr)
+
+            self.assertRaises(
+                ValueError, cftime._cftime.date2num, datetime(1900, 1, 1, 0), datestr)
 
 
 _DATE_TYPES = [DatetimeNoLeap, DatetimeAllLeap, DatetimeJulian, Datetime360Day,

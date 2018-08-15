@@ -45,19 +45,29 @@ TIMEZONE_REGEX = re.compile(
 # start of the gregorian calendar
 gregorian = real_datetime(1582,10,15)
 
+def _datesplit(timestr):
+    """split a time string into two components, units and the remainder 
+    after 'since'
+    """
+    try:
+        (units, sincestring, remainder) = timestr.split(None,2)
+    except ValueError as e:
+        raise ValueError('Incorrectly formatted CF date-time unit_string')
+
+    if sincestring.lower() != 'since':
+        raise ValueError("no 'since' in unit_string")
+
+    return units.lower(), remainder
 
 def _dateparse(timestr):
     """parse a string of the form time-units since yyyy-mm-dd hh:mm:ss,
     return a datetime instance"""
     # same as version in cftime, but returns a timezone naive
     # python datetime instance with the utc_offset included.
-    timestr_split = timestr.split()
-    units = timestr_split[0].lower()
-    if timestr_split[1].lower() != 'since':
-        raise ValueError("no 'since' in unit_string")
+
+    (units, isostring) = _datesplit(timestr)
+
     # parse the date string.
-    n = timestr.find('since')+6
-    isostring = timestr[n:]
     year, month, day, hour, minute, second, utc_offset =\
         _parse_date( isostring.strip() )
     if year >= MINYEAR:
@@ -75,17 +85,13 @@ def _dateparse(timestr):
 cdef _parse_date_and_units(timestr):
     """parse a string of the form time-units since yyyy-mm-dd hh:mm:ss
     return a tuple (units,utc_offset, datetimeinstance)"""
-    timestr_split = timestr.split()
-    units = timestr_split[0].lower()
+    (units, isostring) = _datesplit(timestr)
     if units not in _units:
         raise ValueError(
             "units must be one of 'seconds', 'minutes', 'hours' or 'days' (or singular version of these), got '%s'" % units)
-    if timestr_split[1].lower() != 'since':
-        raise ValueError("no 'since' in unit_string")
     # parse the date string.
-    n = timestr.find('since') + 6
     year, month, day, hour, minute, second, utc_offset = _parse_date(
-        timestr[n:].strip())
+        isostring.strip())
     return units, utc_offset, datetime(year, month, day, hour, minute, second)
 
 
@@ -119,7 +125,7 @@ def date2num(dates,units,calendar='standard'):
         """
         calendar = calendar.lower()
         basedate = _dateparse(units)
-        unit = units.split()[0].lower()
+        (unit, ignore) = _datesplit(units)
         # real-world calendars limited to positive reference years.
         if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
             if basedate.year == 0:
@@ -219,7 +225,7 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=False):
     """
     calendar = calendar.lower()
     basedate = _dateparse(units)
-    unit = units.split()[0].lower()
+    (unit, ignore) = _datesplit(units)
     # real-world calendars limited to positive reference years.
     if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
         if basedate.year == 0:
@@ -2046,3 +2052,4 @@ cdef tuple add_timedelta_360_day(datetime dt, delta):
     month = (month - 1) % 12 + 1
 
     return (year, month, day, hour, minute, second, microsecond, -1, 1)
+
