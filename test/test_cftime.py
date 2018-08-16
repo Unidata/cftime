@@ -569,6 +569,21 @@ class cftimeTestCase(unittest.TestCase):
         assert (d.hour == 0)
         assert (d.minute == 0)
         assert (d.second == 0)
+        # cftime issue #52
+        d = DateFromJulianDay(1684958.5,calendar='gregorian')
+        assert (d.year == -100)
+        assert (d.month == 3)
+        assert (d.day == 2)
+        assert (d.hour == 0)
+        assert (d.minute == 0)
+        assert (d.second == 0)
+        d = DateFromJulianDay(1684958.5,calendar='standard')
+        assert (d.year == -100)
+        assert (d.month == 3)
+        assert (d.day == 2)
+        assert (d.hour == 0)
+        assert (d.minute == 0)
+        assert (d.second == 0)
 
 
 class TestDate2index(unittest.TestCase):
