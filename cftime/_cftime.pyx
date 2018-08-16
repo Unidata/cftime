@@ -79,6 +79,9 @@ def _dateparse(timestr):
             raise ValueError('cannot use utc_offset for reference years <= 0')
     return basedate
 
+def _round_half_up(x):
+    # 'round half up' so 0.5 rounded to 1 (instead of 0 as in numpy.round)
+    return np.ceil(np.floor(2.*x)/2.)
 
 cdef _parse_date_and_units(timestr):
     """parse a string of the form time-units since yyyy-mm-dd hh:mm:ss
@@ -579,10 +582,9 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False):
 
     dayofwk = np.atleast_1d(np.int32(np.fmod(np.int32(julian + 1.5), 7)))
     # get the day (Z) and the fraction of the day (F)
-    # add 0.000005 which is 452 ms in case of jd being after
-    # second 23:59:59 of a day we want to round to the next day
-    # (see netcdf4-python issue #75, also cftime issue #49)
-    Z = np.atleast_1d(np.int32(np.round(julian+0.000005)))
+    # use 'round half up' rounding instead of numpy's even rounding
+    # so that 0.5 is rounded to 1.0, not 0 (cftime issue #49)
+    Z = np.atleast_1d(np.int32(_round_half_up(julian)))
     F = np.atleast_1d(julian + 0.5 - Z).astype(np.float64)
     if calendar in ['standard', 'gregorian']:
         # MC
