@@ -904,10 +904,10 @@ Julian Day is a fractional day with approximately millisecond accuracy.
     microseconds = sfrac*1.e6
 
     if return_tuple:
-        return year, month, int(days), int(hours), int(minutes),\
+        return year-year_offset, month, int(days), int(hours), int(minutes),\
                int(seconds), int(microseconds),-1, dayofyr
     else:
-        return Datetime360Day(year, month, int(days), int(hours), int(minutes),\
+        return Datetime360Day(year-year_offset, month, int(days), int(hours), int(minutes),\
                int(seconds), int(microseconds),-1, dayofyr)
 
 
