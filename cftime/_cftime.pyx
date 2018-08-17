@@ -5,8 +5,6 @@ Performs conversions of netCDF time coordinate data to/from datetime objects.
 from cpython.object cimport PyObject_RichCompare
 import cython
 import numpy as np
-import math
-import numpy
 import re
 import time
 from datetime import datetime as real_datetime
@@ -81,6 +79,9 @@ def _dateparse(timestr):
             raise ValueError('cannot use utc_offset for reference years <= 0')
     return basedate
 
+def _round_half_up(x):
+    # 'round half up' so 0.5 rounded to 1 (instead of 0 as in numpy.round)
+    return np.ceil(np.floor(2.*x)/2.)
 
 cdef _parse_date_and_units(timestr):
     """parse a string of the form time-units since yyyy-mm-dd hh:mm:ss
@@ -144,12 +145,12 @@ def date2num(dates,units,calendar='standard'):
             except:
                 isscalar = True
             if isscalar:
-                dates = numpy.array([dates])
+                dates = np.array([dates])
             else:
-                dates = numpy.array(dates)
+                dates = np.array(dates)
                 shape = dates.shape
             ismasked = False
-            if numpy.ma.isMA(dates) and numpy.ma.is_masked(dates):
+            if np.ma.isMA(dates) and np.ma.is_masked(dates):
                 mask = dates.mask
                 ismasked = True
             times = []
@@ -177,7 +178,7 @@ def date2num(dates,units,calendar='standard'):
             if isscalar:
                 return times[0]
             else:
-                return numpy.reshape(numpy.array(times), shape)
+                return np.reshape(np.array(times), shape)
         else: # use cftime module for other calendars
             cdftime = utime(units,calendar=calendar)
             return cdftime.date2num(dates)
@@ -235,7 +236,7 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=False):
             msg='negative reference year in time units, must be >= 1'
             raise ValueError(msg)
 
-    postimes =  (numpy.asarray(times) > 0).all() # netcdf4-python issue #659
+    postimes =  (np.asarray(times) > 0).all() # netcdf4-python issue #659
     if only_use_cftime_datetimes:
         cdftime = utime(units, calendar=calendar,
                         only_use_cftime_datetimes=only_use_cftime_datetimes)
@@ -249,12 +250,12 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=False):
         except:
             isscalar = True
         if isscalar:
-            times = numpy.array([times],dtype='d')
+            times = np.array([times],dtype='d')
         else:
-            times = numpy.array(times, dtype='d')
+            times = np.array(times, dtype='d')
             shape = times.shape
         ismasked = False
-        if numpy.ma.isMA(times) and numpy.ma.is_masked(times):
+        if np.ma.isMA(times) and np.ma.is_masked(times):
             mask = times.mask
             ismasked = True
         dates = []
@@ -281,7 +282,7 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=False):
                 days = tsecs // 86400.
                 msecsd = tsecs*1.e6 - days*86400.*1.e6
                 secs = msecsd // 1.e6
-                msecs = numpy.round(msecsd - secs*1.e6)
+                msecs = np.round(msecsd - secs*1.e6)
                 td = timedelta(days=days,seconds=secs,microseconds=msecs)
                 # add time delta to base date.
                 date = basedate + td
@@ -289,7 +290,7 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=False):
         if isscalar:
             return dates[0]
         else:
-            return numpy.reshape(numpy.array(dates), shape)
+            return np.reshape(np.array(dates), shape)
     else: # use cftime for other calendars
         cdftime = utime(units,calendar=calendar)
         return cdftime.num2date(times)
@@ -574,21 +575,21 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False):
 
     # based on redate.py by David Finlayson.
 
-    julian = np.array(JD, dtype=float)
+    julian = np.array(JD, dtype=np.float64)
 
     if np.min(julian) < 0:
         raise ValueError('Julian Day must be positive')
 
     dayofwk = np.atleast_1d(np.int32(np.fmod(np.int32(julian + 1.5), 7)))
     # get the day (Z) and the fraction of the day (F)
-    # add 0.000005 which is 452 ms in case of jd being after
-    # second 23:59:59 of a day we want to round to the next day see issue #75
-    Z = np.atleast_1d(np.int32(np.round(julian)))
+    # use 'round half up' rounding instead of numpy's even rounding
+    # so that 0.5 is rounded to 1.0, not 0 (cftime issue #49)
+    Z = np.atleast_1d(np.int32(_round_half_up(julian)))
     F = np.atleast_1d(julian + 0.5 - Z).astype(np.float64)
     if calendar in ['standard', 'gregorian']:
         # MC
-        # alpha = int((Z - 1867216.25)/36524.25)
-        # A = Z + 1 + alpha - int(alpha/4)
+        #alpha = np.int32((Z - 1867216.25)/36524.25)
+        #A = Z + 1 + alpha - np.int32(alpha/4)
         alpha = np.int32(((Z - 1867216.) - 0.25) / 36524.25)
         A = Z + 1 + alpha - np.int32(0.25 * alpha)
         # check if dates before oct 5th 1582 are in the array
@@ -610,8 +611,8 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False):
 
     B = A + 1524
     # MC
-    # C = int((B - 122.1)/365.25)
-    # D = int(365.25 * C)
+    #C = np.atleast_1d(np.int32((B - 122.1)/365.25))
+    #D = np.atleast_1d(np.int32(365.25 * C))
     C = np.atleast_1d(np.int32(6680. + ((B - 2439870.) - 122.1) / 365.25))
     D = np.atleast_1d(np.int32(365 * C + np.int32(0.25 * C)))
     E = np.atleast_1d(np.int32((B - D) / 30.6001))
@@ -732,8 +733,8 @@ days. Julian Day is a fractional day with approximately millisecond accuracy.
     else:
         year_offset = 0
 
-    dayofwk = int(math.fmod(int(JD + 1.5), 7))
-    (F, Z) = math.modf(JD + 0.5)
+    dayofwk = int(np.fmod(int(JD + 1.5), 7))
+    (F, Z) = np.modf(JD + 0.5)
     Z = int(Z)
     A = Z
     B = A + 1524
@@ -759,10 +760,10 @@ days. Julian Day is a fractional day with approximately millisecond accuracy.
         year = C - 4715
 
     # Convert fractions of a day to time
-    (dfrac, days) = math.modf(day / 1.0)
-    (hfrac, hours) = math.modf(dfrac * 24.0)
-    (mfrac, minutes) = math.modf(hfrac * 60.0)
-    (sfrac, seconds) = math.modf(mfrac * 60.0)
+    (dfrac, days) = np.modf(day / 1.0)
+    (hfrac, hours) = np.modf(dfrac * 24.0)
+    (mfrac, minutes) = np.modf(hfrac * 60.0)
+    (sfrac, seconds) = np.modf(mfrac * 60.0)
     microseconds = sfrac*1.e6
 
     if year_offset > 0:
@@ -770,7 +771,7 @@ days. Julian Day is a fractional day with approximately millisecond accuracy.
 
         # 365 mod 7 = 1, so the day of the week changes by one day for
         # every year in year_offset
-        dayofwk -= int(math.fmod(year_offset, 7))
+        dayofwk -= int(np.fmod(year_offset, 7))
 
         if dayofwk < 0:
             dayofwk += 7
@@ -793,8 +794,8 @@ Julian Day is a fractional day with approximately millisecond accuracy.
     if JD < 0:
         raise ValueError('Julian Day must be positive')
 
-    dayofwk = int(math.fmod(int(JD + 1.5), 7))
-    (F, Z) = math.modf(JD + 0.5)
+    dayofwk = int(np.fmod(int(JD + 1.5), 7))
+    (F, Z) = np.modf(JD + 0.5)
     Z = int(Z)
     A = Z
     B = A + 1524
@@ -822,10 +823,10 @@ Julian Day is a fractional day with approximately millisecond accuracy.
         year = C - 4715
 
     # Convert fractions of a day to time
-    (dfrac, days) = math.modf(day / 1.0)
-    (hfrac, hours) = math.modf(dfrac * 24.0)
-    (mfrac, minutes) = math.modf(hfrac * 60.0)
-    (sfrac, seconds) = math.modf(mfrac * 60.0)
+    (dfrac, days) = np.modf(day / 1.0)
+    (hfrac, hours) = np.modf(dfrac * 24.0)
+    (mfrac, minutes) = np.modf(hfrac * 60.0)
+    (sfrac, seconds) = np.modf(mfrac * 60.0)
     microseconds = sfrac*1.e6
 
     return DatetimeAllLeap(year, month, int(days), int(hours), int(minutes),
@@ -848,17 +849,17 @@ Julian Day is a fractional day with approximately millisecond accuracy.
         year_offset = 0
 
     #jd = int(360. * (year + 4716)) + int(30. * (month - 1)) + day
-    (F, Z) = math.modf(JD)
+    (F, Z) = np.modf(JD)
     year = int((Z - 0.5) / 360.) - 4716
     dayofyr = Z - (year + 4716) * 360
     month = int((dayofyr - 0.5) / 30) + 1
     day = dayofyr - (month - 1) * 30 + F
 
     # Convert fractions of a day to time
-    (dfrac, days) = math.modf(day / 1.0)
-    (hfrac, hours) = math.modf(dfrac * 24.0)
-    (mfrac, minutes) = math.modf(hfrac * 60.0)
-    (sfrac, seconds) = math.modf(mfrac * 60.0)
+    (dfrac, days) = np.modf(day / 1.0)
+    (hfrac, hours) = np.modf(dfrac * 24.0)
+    (mfrac, minutes) = np.modf(hfrac * 60.0)
+    (sfrac, seconds) = np.modf(mfrac * 60.0)
     microseconds = sfrac*1.e6
 
     return Datetime360Day(year - year_offset, month, int(days), int(hours), int(minutes),
@@ -1065,7 +1066,7 @@ units to datetime objects.
         except:
             isscalar = True
         if not isscalar:
-            date = numpy.array(date)
+            date = np.array(date)
             shape = date.shape
         if self.calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
             if isscalar:
@@ -1105,7 +1106,7 @@ units to datetime objects.
                             'there are only 30 days in every month with the 360_day calendar')
                     jdelta.append(_360DayFromDate(d) - self._jd0)
         if not isscalar:
-            jdelta = numpy.array(jdelta)
+            jdelta = np.array(jdelta)
         # convert to desired units, add time zone offset.
         if self.units in microsec_units:
             jdelta = jdelta * 86400. * 1.e6  + self.tzoffset * 60. * 1.e6
@@ -1124,7 +1125,7 @@ units to datetime objects.
         if isscalar:
             return jdelta
         else:
-            return numpy.reshape(jdelta, shape)
+            return np.reshape(jdelta, shape)
 
     def num2date(self, time_value):
         """
@@ -1154,11 +1155,11 @@ units to datetime objects.
         except:
             isscalar = True
         ismasked = False
-        if numpy.ma.isMA(time_value) and numpy.ma.is_masked(time_value):
+        if np.ma.isMA(time_value) and np.ma.is_masked(time_value):
             mask = time_value.mask
             ismasked = True
         if not isscalar:
-            time_value = numpy.array(time_value, dtype='d')
+            time_value = np.array(time_value, dtype='d')
             shape = time_value.shape
         # convert to desired units, subtract time zone offset.
         if self.units in microsec_units:
@@ -1213,7 +1214,7 @@ units to datetime objects.
         if isscalar:
             return date
         else:
-            return numpy.reshape(numpy.array(date), shape)
+            return np.reshape(np.array(date), shape)
 
 
 cdef _parse_timezone(tzstring):
@@ -1314,23 +1315,23 @@ cdef _check_index(indices, times, nctime, calendar, select):
 #       t.append(nctime[ind])
 
     if select == 'exact':
-        return numpy.all(t == times)
+        return np.all(t == times)
 
     elif select == 'before':
-        ta = nctime[numpy.clip(indices + 1, 0, N - 1)]
-        return numpy.all(t <= times) and numpy.all(ta > times)
+        ta = nctime[np.clip(indices + 1, 0, N - 1)]
+        return np.all(t <= times) and np.all(ta > times)
 
     elif select == 'after':
-        tb = nctime[numpy.clip(indices - 1, 0, N - 1)]
-        return numpy.all(t >= times) and numpy.all(tb < times)
+        tb = nctime[np.clip(indices - 1, 0, N - 1)]
+        return np.all(t >= times) and np.all(tb < times)
 
     elif select == 'nearest':
-        ta = nctime[numpy.clip(indices + 1, 0, N - 1)]
-        tb = nctime[numpy.clip(indices - 1, 0, N - 1)]
+        ta = nctime[np.clip(indices + 1, 0, N - 1)]
+        tb = nctime[np.clip(indices - 1, 0, N - 1)]
         delta_after = ta - t
         delta_before = t - tb
-        delta_check = numpy.abs(times - t)
-        return numpy.all(delta_check <= delta_after) and numpy.all(delta_check <= delta_before)
+        delta_check = np.abs(times - t)
+        return np.all(delta_check <= delta_after) and np.all(delta_check <= delta_before)
 
 
 def _date2index(dates, nctime, calendar=None, select='exact'):
@@ -1406,7 +1407,7 @@ def time2index(times, nctime, calendar=None, select='exact'):
     if calendar == None:
         calendar = getattr(nctime, 'calendar', 'standard')
 
-    num = numpy.atleast_1d(times)
+    num = np.atleast_1d(times)
     N = len(nctime)
 
     # Trying to infer the correct index from the starting time and the stride.
@@ -1418,11 +1419,11 @@ def time2index(times, nctime, calendar=None, select='exact'):
         t0 = nctime[0]
         dt = 1.
     if select in ['exact', 'before']:
-        index = numpy.array((num - t0) / dt, int)
+        index = np.array((num - t0) / dt, int)
     elif select == 'after':
-        index = numpy.array(numpy.ceil((num - t0) / dt), int)
+        index = np.array(np.ceil((num - t0) / dt), int)
     else:
-        index = numpy.array(numpy.around((num - t0) / dt), int)
+        index = np.array(np.around((num - t0) / dt), int)
 
     # Checking that the index really corresponds to the given time.
     # If the times do not correspond, then it means that the times
@@ -1431,17 +1432,17 @@ def time2index(times, nctime, calendar=None, select='exact'):
 
         # Use the bisection method. Assumes nctime is ordered.
         import bisect
-        index = numpy.array([bisect.bisect_right(nctime, n) for n in num], int)
+        index = np.array([bisect.bisect_right(nctime, n) for n in num], int)
         before = index == 0
 
-        index = numpy.array([bisect.bisect_left(nctime, n) for n in num], int)
+        index = np.array([bisect.bisect_left(nctime, n) for n in num], int)
         after = index == N
 
-        if select in ['before', 'exact'] and numpy.any(before):
+        if select in ['before', 'exact'] and np.any(before):
             raise ValueError(
                 'Some of the times given are before the first time in `nctime`.')
 
-        if select in ['after', 'exact'] and numpy.any(after):
+        if select in ['after', 'exact'] and np.any(after):
             raise ValueError(
                 'Some of the times given are after the last time in `nctime`.')
 
@@ -1449,8 +1450,8 @@ def time2index(times, nctime, calendar=None, select='exact'):
         # Use list comprehension instead of the simpler `nctime[index]` since
         # not all time objects support numpy integer indexing (eg dap).
         index[after] = N - 1
-        ncnum = numpy.squeeze([nctime[i] for i in index])
-        mismatch = numpy.nonzero(ncnum != num)[0]
+        ncnum = np.squeeze([nctime[i] for i in index])
+        mismatch = np.nonzero(ncnum != num)[0]
 
         if select == 'exact':
             if len(mismatch) > 0:
@@ -1465,7 +1466,7 @@ def time2index(times, nctime, calendar=None, select='exact'):
             pass
 
         elif select == 'nearest':
-            nearest_to_left = num[mismatch] < numpy.array(
+            nearest_to_left = num[mismatch] < np.array(
                 [float(nctime[i - 1]) + float(nctime[i]) for i in index[mismatch]]) / 2.
             index[mismatch] = index[mismatch] - 1 * nearest_to_left
 

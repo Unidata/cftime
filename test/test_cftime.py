@@ -561,6 +561,29 @@ class cftimeTestCase(unittest.TestCase):
         n = date2num(utc_date, units, calendar="julian")
         # n should always be 0 as all units refer to the same point in time
         assert_almost_equal(n, 0)
+        # cftime issue #49
+        d = DateFromJulianDay(2450022.5, "standard")
+        assert (d.year == 1995)
+        assert (d.month == 11)
+        assert (d.day == 1)
+        assert (d.hour == 0)
+        assert (d.minute == 0)
+        assert (d.second == 0)
+        # cftime issue #52
+        d = DateFromJulianDay(1684958.5,calendar='gregorian')
+        assert (d.year == -100)
+        assert (d.month == 3)
+        assert (d.day == 2)
+        assert (d.hour == 0)
+        assert (d.minute == 0)
+        assert (d.second == 0)
+        d = DateFromJulianDay(1684958.5,calendar='standard')
+        assert (d.year == -100)
+        assert (d.month == 3)
+        assert (d.day == 2)
+        assert (d.hour == 0)
+        assert (d.minute == 0)
+        assert (d.second == 0)
 
 
 class TestDate2index(unittest.TestCase):
@@ -745,7 +768,6 @@ class TestDate2index(unittest.TestCase):
         # calculation of nearest index when sum of adjacent
         # time values won't fit in 32 bits.
         query_time = datetime(2037, 1, 3, 21, 12)
-        print(self.time_vars['time3'])
         index = date2index(query_time, self.time_vars['time3'],
                            select='nearest')
         assert(index == 11)
@@ -1043,13 +1065,13 @@ class issue17TestCase(unittest.TestCase):
 
 class issue57TestCase(unittest.TestCase):
     """Regression tests for issue #57."""
-    # issue 57: cftime._cftime._dateparse returns quite opaque error messages that make it difficult to 
+    # issue 57: cftime._cftime._dateparse returns quite opaque error messages that make it difficult to
     # track down the source of problem
     def setUp(self):
         pass
 
     def test_parse_incorrect_unitstring(self):
-        for datestr in ("days since2017-05-01 ", "dayssince 2017-05-01 00:00", "days snce 2017-05-01 00:00", "days_since_2017-05-01 00:00", 
+        for datestr in ("days since2017-05-01 ", "dayssince 2017-05-01 00:00", "days snce 2017-05-01 00:00", "days_since_2017-05-01 00:00",
             "days_since_2017-05-01_00:00"):
             self.assertRaises(
                 ValueError, cftime._cftime._dateparse, datestr)
