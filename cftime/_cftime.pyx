@@ -7,7 +7,7 @@ import cython
 import numpy as np
 import re
 import time
-from datetime import datetime as real_datetime
+from datetime import datetime as datetime_python
 from datetime import timedelta, MINYEAR
 import time                     # strftime
 try:
@@ -39,6 +39,14 @@ ISO8601_REGEX = re.compile(r"(?P<year>[+-]?[0-9]{1,4})(-(?P<month>[0-9]{1,2})(-(
 TIMEZONE_REGEX = re.compile(
     "(?P<prefix>[+-])(?P<hours>[0-9]{2})(?:(?::(?P<minutes1>[0-9]{2}))|(?P<minutes2>[0-9]{2}))?")
 
+class real_datetime(datetime_python):
+    """add dayofwk and dayofyr attributes to python datetime instance"""
+    @property
+    def dayofwk(self):
+        return self.weekday()
+    @property
+    def dayofyr(self):
+        return self.timetuple().tm_yday
 
 # start of the gregorian calendar
 gregorian = real_datetime(1582,10,15)
@@ -547,7 +555,8 @@ Returns the fractional Julian Day (approximately millisecond accuracy).
     return jd
 
 
-def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False):
+def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
+                      return_tuple=False):
     """
 
     returns a 'datetime-like' object given Julian Day. Julian Day is a
@@ -580,7 +589,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False):
     if np.min(julian) < 0:
         raise ValueError('Julian Day must be positive')
 
-    dayofwk = np.atleast_1d(np.int32(np.fmod(np.int32(julian + 1.5), 7)))
+    dayofwk = np.atleast_1d(np.int32(np.fmod(np.int32(julian + 1), 7)))
     # get the day (Z) and the fraction of the day (F)
     # use 'round half up' rounding instead of numpy's even rounding
     # so that 0.5 is rounded to 1.0, not 0 (cftime issue #49)
@@ -680,6 +689,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False):
     except:
         isscalar = True
 
+    is_real_dateime = False
     if calendar in 'proleptic_gregorian':
         # datetime.datetime does not support years < 1
         #if year < 0:
@@ -692,12 +702,14 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False):
             if (year < 0).any(): # netcdftime issue #28
                datetime_type = DatetimeProlepticGregorian
             else:
+               is_real_datetime = True
                datetime_type = real_datetime
     elif calendar in ('standard', 'gregorian'):
         # return a 'real' datetime instance if calendar is proleptic
         # Gregorian or Gregorian and all dates are after the
         # Julian/Gregorian transition
         if len(ind_before) == 0 and not only_use_cftime_datetimes:
+            is_real_datetime = True
             datetime_type = real_datetime
         else:
             datetime_type = DatetimeGregorian
@@ -707,17 +719,38 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False):
         raise ValueError("unsupported calendar: {0}".format(calendar))
 
     if not isscalar:
-        return np.array([datetime_type(*args)
-                         for args in
-                         zip(year, month, day, hour, minute, second,
-                             microsecond)])
+        if return_tuple:
+            return np.array([args for args in
+                            zip(year, month, day, hour, minute, second,
+                                microsecond,dayofwk,dayofyr)])
+        else:
+            if is_real_datetime:
+                return np.array([datetime_type(*args)
+                                 for args in
+                                 zip(year, month, day, hour, minute, second,
+                                     microsecond)])
+            else:
+                return np.array([datetime_type(*args)
+                                 for args in
+                                 zip(year, month, day, hour, minute, second,
+                                     microsecond,dayofwk,dayofyr)])
 
     else:
-        return datetime_type(year[0], month[0], day[0], hour[0],
-                             minute[0], second[0], microsecond[0])
+        if return_tuple:
+            return (year[0], month[0], day[0], hour[0],
+                    minute[0], second[0], microsecond[0],
+                    dayofwk[0], dayofyr[0])
+        else:
+            if is_real_datetime:
+                return datetime_type(year[0], month[0], day[0], hour[0],
+                                     minute[0], second[0], microsecond[0])
+            else:
+                return datetime_type(year[0], month[0], day[0], hour[0],
+                                     minute[0], second[0], microsecond[0],
+                                     dayofwk[0], dayofyr[0])
 
 
-cdef _DateFromNoLeapDay(JD):
+cdef _DateFromNoLeapDay(JD,return_tuple=False):
     """
 
 returns a 'datetime-like' object given Julian Day for a calendar with no leap
@@ -733,7 +766,7 @@ days. Julian Day is a fractional day with approximately millisecond accuracy.
     else:
         year_offset = 0
 
-    dayofwk = int(np.fmod(int(JD + 1.5), 7))
+    dayofwk = int(np.fmod(int(JD + 1), 7))
     (F, Z) = np.modf(JD + 0.5)
     Z = int(Z)
     A = Z
@@ -776,11 +809,15 @@ days. Julian Day is a fractional day with approximately millisecond accuracy.
         if dayofwk < 0:
             dayofwk += 7
 
-    return DatetimeNoLeap(year - year_offset, month, int(days), int(hours), int(minutes),
-                          int(seconds), int(microseconds),dayofwk, dayofyr)
+    if return_tuple:
+        return year-year_offset, month, int(days), int(hours), int(minutes),\
+        int(seconds), int(microseconds), dayofwk, dayofyr
+    else:
+        return DatetimeNoLeap(year-year_offset,month,int(days),int(hours),int(minutes),\
+        int(seconds), int(microseconds), dayofwk, dayofyr)
 
 
-cdef _DateFromAllLeap(JD):
+cdef _DateFromAllLeap(JD,return_tuple=False):
     """
 
 returns a 'datetime-like' object given Julian Day for a calendar where all
@@ -794,7 +831,7 @@ Julian Day is a fractional day with approximately millisecond accuracy.
     if JD < 0:
         raise ValueError('Julian Day must be positive')
 
-    dayofwk = int(np.fmod(int(JD + 1.5), 7))
+    dayofwk = int(np.fmod(int(JD + 1), 7))
     (F, Z) = np.modf(JD + 0.5)
     Z = int(Z)
     A = Z
@@ -829,11 +866,15 @@ Julian Day is a fractional day with approximately millisecond accuracy.
     (sfrac, seconds) = np.modf(mfrac * 60.0)
     microseconds = sfrac*1.e6
 
-    return DatetimeAllLeap(year, month, int(days), int(hours), int(minutes),
-                           int(seconds), int(microseconds),dayofwk, dayofyr)
+    if return_tuple:
+        return year, month, int(days), int(hours), int(minutes),\
+               int(seconds), int(microseconds),dayofwk, dayofyr
+    else:
+        return DatetimeAllLeap(year, month, int(days), int(hours), int(minutes),\
+               int(seconds), int(microseconds),dayofwk, dayofyr)
 
 
-cdef _DateFrom360Day(JD):
+cdef _DateFrom360Day(JD,return_tuple=False):
     """
 
 returns a 'datetime-like' object given Julian Day for a calendar where all
@@ -862,8 +903,12 @@ Julian Day is a fractional day with approximately millisecond accuracy.
     (sfrac, seconds) = np.modf(mfrac * 60.0)
     microseconds = sfrac*1.e6
 
-    return Datetime360Day(year - year_offset, month, int(days), int(hours), int(minutes),
-                          int(seconds), int(microseconds), -1, dayofyr)
+    if return_tuple:
+        return year, month, int(days), int(hours), int(minutes),\
+               int(seconds), int(microseconds),-1, dayofyr
+    else:
+        return Datetime360Day(year, month, int(days), int(hours), int(minutes),\
+               int(seconds), int(microseconds),-1, dayofyr)
 
 
 class utime:
@@ -1690,6 +1735,13 @@ but uses the "noleap" ("365_day") calendar.
         self.calendar = "noleap"
         self.datetime_compatible = False
         assert_valid_date(self, no_leap, False)
+        # if dayofwk, dayofyr not set, calculate them.
+        if self.dayofwk < 0:
+            jd = _NoLeapDayFromDate(self)
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            _DateFromNoLeapDay(jd,return_tuple=True)
+            self.dayofwk = dayofwk
+            self.dayofyr = dayofyr
 
     cdef _add_timedelta(self, delta):
         return DatetimeNoLeap(*add_timedelta(self, delta, no_leap, False))
@@ -1705,6 +1757,13 @@ but uses the "all_leap" ("366_day") calendar.
         self.calendar = "all_leap"
         self.datetime_compatible = False
         assert_valid_date(self, all_leap, False)
+        # if dayofwk, dayofyr not set, calculate them.
+        if self.dayofwk < 0:
+            jd = _AllLeapFromDate(self)
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            _DateFromAllLeap(jd,return_tuple=True)
+            self.dayofwk = dayofwk
+            self.dayofyr = dayofyr
 
     cdef _add_timedelta(self, delta):
         return DatetimeAllLeap(*add_timedelta(self, delta, all_leap, False))
@@ -1720,6 +1779,13 @@ but uses the "360_day" calendar.
         self.calendar = "360_day"
         self.datetime_compatible = False
         assert_valid_date(self, no_leap, False, is_360_day=True)
+        # if dayofwk, dayofyr not set, calculate them.
+        if self.dayofwk < 0:
+            jd = _360DayFromDate(self)
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            _DateFrom360Day(jd,return_tuple=True)
+            self.dayofwk = dayofwk
+            self.dayofyr = dayofyr
 
     cdef _add_timedelta(self, delta):
         return Datetime360Day(*add_timedelta_360_day(self, delta))
@@ -1735,6 +1801,13 @@ but uses the "julian" calendar.
         self.calendar = "julian"
         self.datetime_compatible = False
         assert_valid_date(self, is_leap_julian, False)
+        # if dayofwk, dayofyr not set, calculate them.
+        if self.dayofwk < 0:
+            jd = JulianDayFromDate(self,calendar='julian')
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            DateFromJulianDay(jd,return_tuple=True,calendar='gregorian')
+            self.dayofwk = dayofwk
+            self.dayofyr = dayofyr
 
     cdef _add_timedelta(self, delta):
         return DatetimeJulian(*add_timedelta(self, delta, is_leap_julian, False))
@@ -1764,6 +1837,13 @@ a datetime.datetime instance or vice versa.
         else:
             self.datetime_compatible = False
         assert_valid_date(self, is_leap_gregorian, True)
+        # if dayofwk, dayofyr not set, calculate them.
+        if self.dayofwk < 0:
+            jd = JulianDayFromDate(self,calendar='gregorian')
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            DateFromJulianDay(jd,return_tuple=True,calendar='gregorian')
+            self.dayofwk = dayofwk
+            self.dayofyr = dayofyr
 
     cdef _add_timedelta(self, delta):
         return DatetimeGregorian(*add_timedelta(self, delta, is_leap_gregorian, True))
@@ -1791,6 +1871,13 @@ format, and calendar.
         self.calendar = "proleptic_gregorian"
         self.datetime_compatible = True
         assert_valid_date(self, is_leap_proleptic_gregorian, False)
+        # if dayofwk, dayofyr not set, calculate them.
+        if self.dayofwk < 0:
+            jd = JulianDayFromDate(self,calendar='proleptic_gregorian')
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            DateFromJulianDay(jd,return_tuple=True,calendar='proleptic_gregorian')
+            self.dayofwk = dayofwk
+            self.dayofyr = dayofyr
 
     cdef _add_timedelta(self, delta):
         return DatetimeProlepticGregorian(*add_timedelta(self, delta,
