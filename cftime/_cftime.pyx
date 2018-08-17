@@ -687,7 +687,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     microsecond = microsecond.astype(np.int32)
 
     # before noon, add one to day of week
-    if hour < 12: 
+    if hour < 12:
         dayofwk += 1; dayofwk = np.where(dayofwk==7, 0, dayofwk)
 
     # check if input was scalar and change return accordingly
@@ -776,7 +776,7 @@ days. Julian Day is a fractional day with approximately millisecond accuracy.
 
     dayofwk = np.fmod(int(JD) + 1, 7)
     # convert to 0=Monday, 6=Saturday
-    dayofwk -= 1; dayofwk = np.where(dayofwk==-1, 6, dayofwk)
+    if dayofwk == -1: dayofwk = 6
     (F, Z) = np.modf(JD + 0.5)
     Z = int(Z)
     A = Z
@@ -810,8 +810,9 @@ days. Julian Day is a fractional day with approximately millisecond accuracy.
     microseconds = sfrac*1.e6
 
     # before noon, add one to day of week
-    if hours < 12: 
-        dayofwk += 1; dayofwk = np.where(dayofwk==7, 0, dayofwk)
+    if hours < 12:
+        dayofwk += 1
+        if dayofwk == 7: dayofwk = 0
 
     if year_offset > 0:
         # correct dayofwk
@@ -847,7 +848,8 @@ Julian Day is a fractional day with approximately millisecond accuracy.
 
     dayofwk = np.fmod(int(JD) + 1, 7)
     # convert to 0=Monday, 6=Saturday
-    dayofwk -= 1; dayofwk = np.where(dayofwk==-1, 6, dayofwk)
+    dayofwk -= 1
+    if dayofwk == -1: dayofwk = 6
     (F, Z) = np.modf(JD + 0.5)
     Z = int(Z)
     A = Z
@@ -883,8 +885,9 @@ Julian Day is a fractional day with approximately millisecond accuracy.
     microseconds = sfrac*1.e6
 
     # before noon, add one to day of week
-    if hours < 12: 
-        dayofwk += 1; dayofwk = np.where(dayofwk==7, 0, dayofwk)
+    if hours < 12:
+        dayofwk += 1
+        if dayofwk == 7: dayofwk = 0
 
     if return_tuple:
         return year, month, int(days), int(hours), int(minutes),\
