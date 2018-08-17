@@ -1661,7 +1661,7 @@ Gregorial calendar.
                 # utime.date2num(), but this implementation does
                 # not attempt it.
                 raise TypeError("cannot compare {0!r} and {1!r} (different calendars)".format(dt, dt_other))
-        elif isinstance(other, real_datetime):
+        elif isinstance(other, datetime_python):
             # comparing datetime and real_datetime
             if not dt.datetime_compatible:
                 raise TypeError("cannot compare {0!r} and {1!r} (different calendars)".format(self, other))
@@ -1705,7 +1705,7 @@ Gregorial calendar.
                     raise ValueError("cannot compute the time difference between dates that are not calendar-aware")
                 converter = _converters[dt.calendar]
                 return timedelta(seconds=converter.date2num(dt) - converter.date2num(other))
-            elif isinstance(other, real_datetime):
+            elif isinstance(other, datetime_python):
                 # datetime - real_datetime
                 if not dt.datetime_compatible:
                     raise ValueError("cannot compute the time difference between dates with different calendars")
@@ -1716,7 +1716,7 @@ Gregorial calendar.
             else:
                 return NotImplemented
         else:
-            if isinstance(self, real_datetime):
+            if isinstance(self, datetime_python):
                 # real_datetime - datetime
                 if not other.datetime_compatible:
                     raise ValueError("cannot compute the time difference between dates with different calendars")
