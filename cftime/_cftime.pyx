@@ -43,6 +43,7 @@ class real_datetime(datetime_python):
     """add dayofwk and dayofyr attributes to python datetime instance"""
     @property
     def dayofwk(self):
+        # 0=Monday, 6=Sunday
         return self.weekday()
     @property
     def dayofyr(self):
@@ -589,7 +590,10 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     if np.min(julian) < 0:
         raise ValueError('Julian Day must be positive')
 
-    dayofwk = np.atleast_1d(np.int32(np.fmod(np.int32(julian + 1), 7)))
+    # 0 = Sunday, 6 = Sat, valid after noon UTC
+    dayofwk = np.atleast_1d(np.int32(np.fmod(np.int32(julian) + 1, 7)))
+    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
+    dayofwk -= 1; dayofwk = np.where(dayofwk==-1, 6, dayofwk)
     # get the day (Z) and the fraction of the day (F)
     # use 'round half up' rounding instead of numpy's even rounding
     # so that 0.5 is rounded to 1.0, not 0 (cftime issue #49)
@@ -682,6 +686,9 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     second = second.astype(np.int32)
     microsecond = microsecond.astype(np.int32)
 
+    # before noon, add one to day of week
+    dayofwk += 1; dayofwk = np.where(dayofwk==7, 0, dayofwk)
+
     # check if input was scalar and change return accordingly
     isscalar = False
     try:
@@ -766,7 +773,9 @@ days. Julian Day is a fractional day with approximately millisecond accuracy.
     else:
         year_offset = 0
 
-    dayofwk = int(np.fmod(int(JD + 1), 7))
+    dayofwk = np.fmod(int(JD) + 1, 7)
+    # convert to 0=Monday, 6=Saturday
+    dayofwk -= 1; dayofwk = np.where(dayofwk==-1, 6, dayofwk)
     (F, Z) = np.modf(JD + 0.5)
     Z = int(Z)
     A = Z
@@ -831,7 +840,9 @@ Julian Day is a fractional day with approximately millisecond accuracy.
     if JD < 0:
         raise ValueError('Julian Day must be positive')
 
-    dayofwk = int(np.fmod(int(JD + 1), 7))
+    dayofwk = np.fmod(int(JD) + 1, 7)
+    # convert to 0=Monday, 6=Saturday
+    dayofwk -= 1; dayofwk = np.where(dayofwk==-1, 6, dayofwk)
     (F, Z) = np.modf(JD + 0.5)
     Z = int(Z)
     A = Z
@@ -1572,8 +1583,7 @@ Gregorial calendar.
         self.day = day
         self.hour = hour
         self.minute = minute
-        self.dayofwk = dayofwk
-        self.dayofyr = dayofyr
+        self.dayofwk = dayofwk # 0 is Monday, 6 is Sunday
         self.second = second
         self.microsecond = microsecond
         self.calendar = ""
