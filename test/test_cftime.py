@@ -1272,10 +1272,10 @@ def test_num2date_only_use_cftime_datetimes_post_gregorian(
 
 
 def test_repr():
-    expected = 'cftime.datetime(2000, 1, 1, 0, 0, 0, 0, -1, 1)'
+    expected = 'cftime.datetime(2000, 1, 1, 0, 0, 0, 0, 5, 1)'
     assert repr(datetimex(2000, 1, 1)) == expected
 
-    expected = 'cftime.DatetimeGregorian(2000, 1, 1, 0, 0, 0, 0, -1, 1)'
+    expected = 'cftime.DatetimeGregorian(2000, 1, 1, 0, 0, 0, 0, 5, 1)'
     assert repr(DatetimeGregorian(2000, 1, 1)) == expected
 
 
