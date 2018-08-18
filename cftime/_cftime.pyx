@@ -1829,7 +1829,7 @@ but uses the "julian" calendar.
         if self.dayofwk < 0:
             jd = JulianDayFromDate(self,calendar='julian')
             year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='gregorian')
+            DateFromJulianDay(jd,return_tuple=True,calendar='julian')
             self.dayofwk = dayofwk
             self.dayofyr = dayofyr
 
