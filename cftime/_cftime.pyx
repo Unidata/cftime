@@ -776,6 +776,7 @@ days. Julian Day is a fractional day with approximately millisecond accuracy.
 
     dayofwk = np.fmod(int(JD) + 1, 7)
     # convert to 0=Monday, 6=Saturday
+    dayofwk -= 1
     if dayofwk == -1: dayofwk = 6
     (F, Z) = np.modf(JD + 0.5)
     Z = int(Z)
