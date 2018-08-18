@@ -8,6 +8,7 @@ import pytest
 from numpy.testing import assert_almost_equal, assert_equal
 
 from cftime import datetime as datetimex
+from cftime import real_datetime
 from cftime import (DateFromJulianDay, Datetime360Day, DatetimeAllLeap,
                     DatetimeGregorian, DatetimeJulian, DatetimeNoLeap,
                     DatetimeProlepticGregorian, JulianDayFromDate, _parse_date,
@@ -584,6 +585,33 @@ class cftimeTestCase(unittest.TestCase):
         assert (d.hour == 0)
         assert (d.minute == 0)
         assert (d.second == 0)
+        # test dayofwk, dayofyr attribute setting (cftime issue #13)
+        d1 = DatetimeGregorian(2020,2,29)
+        d2 = real_datetime(2020,2,29)
+        assert (d1.dayofwk == d2.dayofwk == 5)
+        assert (d1.dayofyr == d2.dayofyr == 60)
+        d1 = DatetimeGregorian(2020,2,29,23,59,59)
+        d2 = real_datetime(2020,2,29,23,59,59)
+        assert (d1.dayofwk == d2.dayofwk == 5)
+        assert (d1.dayofyr == d2.dayofyr == 60)
+        d1 = DatetimeGregorian(2020,2,28,23,59,59)
+        d2 = real_datetime(2020,2,28,23,59,59)
+        assert (d1.dayofwk == d2.dayofwk == 4)
+        assert (d1.dayofyr == d2.dayofyr == 59)
+        d1 = DatetimeGregorian(1700,1,1)
+        d2 = real_datetime(1700,1,1)
+        assert (d1.dayofwk == d2.dayofwk == 4)
+        assert (d1.dayofyr == d2.dayofyr == 1)
+        # last day of Julian Calendar (Thursday)
+        d1 = DatetimeJulian(1582, 10, 4, 12)
+        d2 = DatetimeGregorian(1582, 10, 4, 12)
+        assert (d1.dayofwk == d2.dayofwk == 3)
+        assert (d1.dayofyr == d2.dayofyr == 277)
+        # Monday in proleptic gregorian calendar
+        d1 = DatetimeProlepticGregorian(1582, 10, 4, 12)
+        d2 = real_datetime(1582,10,4,12)
+        assert (d1.dayofwk == d2.dayofwk == 0)
+        assert (d1.dayofyr == d2.dayofyr == 277)
 
 
 class TestDate2index(unittest.TestCase):
