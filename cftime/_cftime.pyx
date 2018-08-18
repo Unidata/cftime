@@ -687,8 +687,8 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     microsecond = microsecond.astype(np.int32)
 
     # before noon, add one to day of week
-    if hour < 12:
-        dayofwk += 1; dayofwk = np.where(dayofwk==7, 0, dayofwk)
+    dayofwk[hour < 12] += 1
+    dayofwk = np.where(dayofwk==7, 0, dayofwk)
 
     # check if input was scalar and change return accordingly
     isscalar = False
@@ -1596,6 +1596,7 @@ Gregorial calendar.
         self.hour = hour
         self.minute = minute
         self.dayofwk = dayofwk # 0 is Monday, 6 is Sunday
+        self.dayofyr = dayofyr
         self.second = second
         self.microsecond = microsecond
         self.calendar = ""
