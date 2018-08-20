@@ -6,6 +6,7 @@ from cpython.object cimport PyObject_RichCompare
 import cython
 import numpy as np
 import re
+import sys
 import time
 from datetime import datetime as datetime_python
 from datetime import timedelta, MINYEAR
@@ -1691,7 +1692,17 @@ Gregorial calendar.
                 raise TypeError("cannot compare {0!r} and {1!r} (different calendars)".format(self, other))
             return PyObject_RichCompare(dt.to_tuple(), to_tuple(other), op)
         else:
-            raise TypeError("cannot compare {0!r} and {1!r}".format(self, other))
+            # With Python3 we can use "return NotImplemented". If the other
+            # object does not have rich comparison instructions for cftime
+            # then a TypeError is automatically raised. With Python2 in this
+            # scenario the default behaviour is to compare the object ids
+            # which will always have a result. Therefore there is no way to
+            # differentiate between objects that do or do not have legitimate
+            # comparisons, and so we cannot remove the TypeError below.
+            if sys.version_info[0] < 3:
+                raise TypeError("cannot compare {0!r} and {1!r}".format(self, other))
+            else:
+                return NotImplemented
 
     cdef _getstate(self):
         return (self.year, self.month, self.day, self.hour,
