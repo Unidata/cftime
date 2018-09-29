@@ -22,6 +22,7 @@ sec_units =      ['second', 'seconds', 'sec', 'secs', 's']
 min_units =      ['minute', 'minutes', 'min', 'mins']
 hr_units =       ['hour', 'hours', 'hr', 'hrs', 'h']
 day_units =      ['day', 'days', 'd']
+month_units =    ['month', 'months'] # only valid for 360_day calendar
 _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 _calendars = ['standard', 'gregorian', 'proleptic_gregorian',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
@@ -54,7 +55,7 @@ class real_datetime(datetime_python):
 gregorian = real_datetime(1582,10,15)
 
 def _datesplit(timestr):
-    """split a time string into two components, units and the remainder 
+    """split a time string into two components, units and the remainder
     after 'since'
     """
     try:
@@ -93,11 +94,11 @@ def _round_half_up(x):
     # 'round half up' so 0.5 rounded to 1 (instead of 0 as in numpy.round)
     return np.ceil(np.floor(2.*x)/2.)
 
-cdef _parse_date_and_units(timestr):
+cdef _parse_date_and_units(timestr, calendar):
     """parse a string of the form time-units since yyyy-mm-dd hh:mm:ss
     return a tuple (units,utc_offset, datetimeinstance)"""
     (units, isostring) = _datesplit(timestr)
-    if units not in _units:
+    if not ((units in month_units and calendar=='360_day') or units in _units):
         raise ValueError(
             "units must be one of 'seconds', 'minutes', 'hours' or 'days' (or singular version of these), got '%s'" % units)
     # parse the date string.
@@ -1083,7 +1084,7 @@ units to datetime objects.
         else:
             raise ValueError(
                 "calendar must be one of %s, got '%s'" % (str(_calendars), calendar))
-        units, tzoffset, self.origin = _parse_date_and_units(unit_string)
+        units, tzoffset, self.origin = _parse_date_and_units(unit_string, calendar)
         # real-world calendars limited to positive reference years.
         if self.calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
             if self.origin.year == 0:
@@ -1244,6 +1245,9 @@ units to datetime objects.
             jdelta = time_value / 24. - self.tzoffset / 1440.
         elif self.units in day_units:
             jdelta = time_value - self.tzoffset / 1440.
+        elif self.units in month_units:
+            # only possible for 360_day calendar
+            jdelta = time_value * 30. - self.tzoffset / 1440.
         else:
             raise ValueError('unsupported time units')
         jd = self._jd0 + jdelta
@@ -2175,4 +2179,3 @@ cdef tuple add_timedelta_360_day(datetime dt, delta):
     month = (month - 1) % 12 + 1
 
     return (year, month, day, hour, minute, second, microsecond, -1, 1)
-

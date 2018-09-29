@@ -475,6 +475,10 @@ class cftimeTestCase(unittest.TestCase):
         d = num2date(0, units, calendar='360_day')
         self.assertEqual(d, Datetime360Day(0,1,1))
 
+        # issue XXX
+        d = num2date(1, 'months since 0000-01-01 00:00:00', calendar='360_day')
+        self.assertEqual(d, Datetime360Day(0,2,1))
+
         # issue 685: wrong time zone conversion
         # 'The following times all refer to the same moment: "18:30Z", "22:30+04", "1130-0700", and "15:00-03:30'
         # (https://en.wikipedia.org/w/index.php?title=ISO_8601&oldid=787811367#Time_offsets_from_UTC)
