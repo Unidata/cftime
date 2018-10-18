@@ -19,11 +19,11 @@ def is_leap(year, calendar):
     else:
         tyear = year
     if calendar == 'gregorian' or (calendar == 'mixed' and year > 1581):
-         if tyear % 4:
+         if tyear % 4: # not divisible by 4
              leap = False
-         elif year % 100:
+         elif year % 100: # not divisible by 100
              leap = True
-         elif year % 400:
+         elif year % 400: # not divisible by 400
              leap = False
          else:
              leap = True
