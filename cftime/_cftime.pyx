@@ -417,7 +417,6 @@ def JulianDayFromDate(date, calendar='standard'):
     eps = np.finfo(float).eps
     eps = np.maximum(eps*jd, eps)
     jd += eps
-    jd += eps
 
     if isscalar:
         return jd[0]
@@ -547,77 +546,20 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     Z = np.atleast_1d(np.int32(_round_half_up(julian)))
     F = np.atleast_1d(julian + 0.5 - Z).astype(np.float64)
 
-    #year = np.empty(len(Z), dtype=np.int32)
-    #month = year.copy()
-    #day = year.copy()
-    #for i, ijd in enumerate(Z):
-    #    yr,mon,dy = IntJulianDayToDate(ijd,calendar)
-    #    year[i]=yr; month[i]=mon; day[i]=dy
+    year = np.empty(len(Z), dtype=np.int32)
+    dayofyr = np.zeros(len(year),dtype=year.dtype)
+    month = year.copy()
+    day = year.copy()
+    for i, ijd in enumerate(Z):
+        yr,mon,dy = IntJulianDayToDate(ijd,calendar)
+        year[i]=yr; month[i]=mon; day[i]=dy
+        if calendar in ['standard', 'gregorian'] and yr == 1582:
+            yr = yr + 1 # skip missing days in transition year
+        dayofyr[i] =\
+        IntJulianDayFromDate(yr,mon,dy,calendar)-IntJulianDayFromDate(yr,1,1,calendar)+1
 
     if calendar in ['standard', 'gregorian']:
-        # MC
-        #alpha = np.int32((Z - 1867216.25)/36524.25)
-        #A = Z + 1 + alpha - np.int32(alpha/4)
-        alpha = np.int32(((Z - 1867216.) - 0.25) / 36524.25)
-        A = Z + 1 + alpha - np.int32(0.25 * alpha)
-        # check if dates before oct 5th 1582 are in the array
         ind_before = np.where(julian < 2299160.5)[0]
-        if len(ind_before) > 0:
-            A[ind_before] = Z[ind_before]
-
-    elif calendar == 'proleptic_gregorian':
-        # MC
-        # alpha = int((Z - 1867216.25)/36524.25)
-        # A = Z + 1 + alpha - int(alpha/4)
-        alpha = np.int32(((Z - 1867216.) - 0.25) / 36524.25)
-        A = Z + 1 + alpha - np.int32(0.25 * alpha)
-    elif calendar == 'julian':
-        A = Z
-    else:
-        raise ValueError(
-            'unknown calendar, must be one of julian,standard,gregorian,proleptic_gregorian, got %s' % calendar)
-
-    B = A + 1524
-    # MC
-    #C = np.atleast_1d(np.int32((B - 122.1)/365.25))
-    #D = np.atleast_1d(np.int32(365.25 * C))
-    C = np.atleast_1d(np.int32(6680. + ((B - 2439870.) - 122.1) / 365.25))
-    D = np.atleast_1d(np.int32(365 * C + np.int32(0.25 * C)))
-    E = np.atleast_1d(np.int32((B - D) / 30.6001))
-
-    # Convert to date
-    day = np.clip(B - D - np.int64(30.6001 * E) + F, 1, None)
-    nday = B - D - 123
-    dayofyr = nday - 305
-    ind_nday_before = np.where(nday <= 305)[0]
-    if len(ind_nday_before) > 0:
-        dayofyr[ind_nday_before] = nday[ind_nday_before] + 60
-    # MC
-    # if E < 14:
-    #     month = E - 1
-    # else:
-    #     month = E - 13
-
-    # if month > 2:
-    #     year = C - 4716
-    # else:
-    #     year = C - 4715
-    month = E - 1
-    month[month > 12] = month[month > 12] - 12
-    year = C - 4715
-    year[month > 2] = year[month > 2] - 1
-    year[year <= 0] = year[year <= 0] - 1
-
-    # a leap year?
-    leap = np.zeros(len(year),dtype=dayofyr.dtype)
-    leap[year % 4 == 0] = 1
-    if calendar == 'proleptic_gregorian':
-        leap[(year % 100 == 0) & (year % 400 != 0)] = 0
-    elif calendar in ['standard', 'gregorian']:
-        leap[(year % 100 == 0) & (year % 400 != 0) & (julian < 2299160.5)] = 0
-
-    inc_idx = np.where((leap == 1) & (month > 2))[0]
-    dayofyr[inc_idx] = dayofyr[inc_idx] + leap[inc_idx]
 
     # Subtract the offset from JulianDayFromDate from the microseconds (pull
     # request #433).
@@ -632,10 +574,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     # remove the offset from the microsecond calculation.
     microsecond = np.clip(microsecond - eps*86400.*1e6, 0, 999999)
 
-    # convert year, month, day, hour, minute, second to int32
-    year = year.astype(np.int32)
-    month = month.astype(np.int32)
-    day = day.astype(np.int32)
+    # convert hour, minute, second to int32
     hour = hour.astype(np.int32)
     minute = minute.astype(np.int32)
     second = second.astype(np.int32)

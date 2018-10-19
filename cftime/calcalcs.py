@@ -54,7 +54,7 @@ def is_leap(year, calendar):
         leap = False
     return leap
 
-def IntJulianDayFromDate(year,month,day,calendar):
+def IntJulianDayFromDate(year,month,day,calendar,skip_transition=False):
     """Compute integer Julian Day from year,month,day.
     Negative years allowed back to -4714
     (proleptic_gregorian) or -4713 (standard or gregorian calendar).
@@ -122,7 +122,10 @@ def IntJulianDayFromDate(year,month,day,calendar):
         if jday_jul < 2299161: # 1582 October 15
             return jday_jul
         else:
-            return jday_greg
+            if skip_transition:
+                return jday_greg+10
+            else:
+                return jday_greg
 
     return jday
 
@@ -143,7 +146,7 @@ def IntJulianDayFromDate_366day(year,month,day):
     366_day calendar"""
     return year*366 + _spm_366day[month-1] + day - 1
 
-def IntJulianDayToDate(jday,calendar):
+def IntJulianDayToDate(jday,calendar,skip_transition=False):
     """Compute the year,month,day given the integer Julian day
     for (proleptic) julian, proleptic_gregorian or mixed julian/proleptic_gregorian calendars."""
 
@@ -169,11 +172,13 @@ def IntJulianDayToDate(jday,calendar):
     elif calendar in ['standard','julian']:
         year = jday/366 - 4713;
 
+    if not skip_transition and calendar == 'standard' and jday > 2299160: jday += 10
+
     # Advance years until we find the right one
     yp1 = year + 1
     if yp1 == 0:
        yp1 = 1 # no year 0
-    tjday = IntJulianDayFromDate(yp1,1,1,calendar)
+    tjday = IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True)
     while jday >= tjday:
         year += 1
         if year == 0:
@@ -181,17 +186,19 @@ def IntJulianDayToDate(jday,calendar):
         yp1 = year + 1
         if yp1 == 0:
             yp1 = 1
-        tjday = IntJulianDayFromDate(yp1,1,1,calendar)
+        tjday = IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True)
     if is_leap(year, calendar):
         dpm2use = _dpm_leap
     else:
         dpm2use = _dpm
     month = 1
-    tjday = IntJulianDayFromDate(year,month,dpm2use[month-1],calendar)
+    tjday =\
+    IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True)
     while jday > tjday:
         month += 1
-        tjday = IntJulianDayFromDate(year,month,dpm2use[month-1],calendar)
-    tjday = IntJulianDayFromDate(year,month,1,calendar)
+        tjday =\
+        IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True)
+    tjday = IntJulianDayFromDate(year,month,1,calendar,skip_transition=True)
     day = jday - tjday + 1
     return year,month,day
 
