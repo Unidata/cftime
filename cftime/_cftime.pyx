@@ -3,7 +3,7 @@ Performs conversions of netCDF time coordinate data to/from datetime objects.
 """
 
 from cpython.object cimport PyObject_RichCompare
-from .calcalcs import IntJulianDayFromDate, IntJulianDayToDate
+from .calcalcs import IntJulianDayFromDate, IntJulianDayToDate, is_leap
 import cython
 import numpy as np
 import re
@@ -528,14 +528,9 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     (i.e. calendar='proleptic_gregorian', or  calendar = 'standard'/'gregorian'
     and the date is after 1582-10-15).  In all other cases a 'phony' datetime
     objects are used, which are actually instances of cftime.datetime.
-
-    Algorithm:
-
-    Meeus, Jean (1998) Astronomical Algorithms (2nd Edition). Willmann-Bell,
-    Virginia. p. 63
     """
 
-    # based on redate.py by David Finlayson.
+    # based on calcalcs by David W. Pierce
 
     julian = np.array(JD, dtype=np.float64)
 
@@ -551,6 +546,14 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     # so that 0.5 is rounded to 1.0, not 0 (cftime issue #49)
     Z = np.atleast_1d(np.int32(_round_half_up(julian)))
     F = np.atleast_1d(julian + 0.5 - Z).astype(np.float64)
+
+    #year = np.empty(len(Z), dtype=np.int32)
+    #month = year.copy()
+    #day = year.copy()
+    #for i, ijd in enumerate(Z):
+    #    yr,mon,dy = IntJulianDayToDate(ijd,calendar)
+    #    year[i]=yr; month[i]=mon; day[i]=dy
+
     if calendar in ['standard', 'gregorian']:
         # MC
         #alpha = np.int32((Z - 1867216.25)/36524.25)
