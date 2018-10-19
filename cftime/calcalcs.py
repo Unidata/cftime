@@ -12,19 +12,7 @@ _spm_366day = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
 _calendars = ['standard', 'gregorian', 'proleptic_gregorian','mixed',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
 
-def _check_calendar(calendar):
-    """validate calendars, convert to subset of names to get rid of synonyms"""
-    if calendar not in _calendars:
-        raise ValueError('unsupported calendar')
-    calout = calendar
-    # remove 'gregorian','noleap','all_leap'
-    if calendar in ['gregorian','standard']:
-        calout = 'standard'
-    if calendar == 'noleap':
-        calout = '365_day'
-    if calendar == 'all_leap':
-        calout = '366_day'
-    return calout
+# public functions.
 
 def is_leap(year, calendar):
     calendar = _check_calendar(calendar)
@@ -75,11 +63,11 @@ def IntJulianDayFromDate(year,month,day,calendar,skip_transition=False):
 
     # handle all calendars except standard, julian, proleptic_gregorian.
     if calendar == '360_day':
-        return IntJulianDayFromDate_360day(year,month,day)
+        return _IntJulianDayFromDate_360day(year,month,day)
     elif calendar == '365_day':
-        return IntJulianDayFromDate_365day(year,month,day)
+        return _IntJulianDayFromDate_365day(year,month,day)
     elif calendar == '366_day':
-        return IntJulianDayFromDate_366day(year,month,day)
+        return _IntJulianDayFromDate_366day(year,month,day)
 
     # handle standard, julian, proleptic_gregorian calendars.
     if year == 0:
@@ -129,19 +117,35 @@ def IntJulianDayFromDate(year,month,day,calendar,skip_transition=False):
 
     return jday
 
-def IntJulianDayFromDate_360day(year,month,day):
+# private functions
+
+def _check_calendar(calendar):
+    """validate calendars, convert to subset of names to get rid of synonyms"""
+    if calendar not in _calendars:
+        raise ValueError('unsupported calendar')
+    calout = calendar
+    # remove 'gregorian','noleap','all_leap'
+    if calendar in ['gregorian','standard']:
+        calout = 'standard'
+    if calendar == 'noleap':
+        calout = '365_day'
+    if calendar == 'all_leap':
+        calout = '366_day'
+    return calout
+
+def _IntJulianDayFromDate_360day(year,month,day):
     """Compute integer Julian Day from year,month,day in
     360_day calendar"""
     return year*360 + (month-1)*30 + day - 1
 
-def IntJulianDayFromDate_365day(year,month,day):
+def _IntJulianDayFromDate_365day(year,month,day):
     """Compute integer Julian Day from year,month,day in
     365_day calendar"""
     if month == 2 and day == 29:
         raise ValueError('no leap days in 365_day calendar')
     return year*365 + _spm_365day[month-1] + day - 1
 
-def IntJulianDayFromDate_366day(year,month,day):
+def _IntJulianDayFromDate_366day(year,month,day):
     """Compute integer Julian Day from year,month,day in
     366_day calendar"""
     return year*366 + _spm_366day[month-1] + day - 1
@@ -155,11 +159,11 @@ def IntJulianDayToDate(jday,calendar,skip_transition=False):
 
     # handle all calendars except standard, julian, proleptic_gregorian.
     if calendar == '360_day':
-        return IntJulianDayToDate_360day(jday)
+        return _IntJulianDayToDate_360day(jday)
     elif calendar == '365_day':
-        return IntJulianDayToDate_365day(jday)
+        return _IntJulianDayToDate_365day(jday)
     elif calendar == '366_day':
-        return IntJulianDayToDate_366day(jday)
+        return _IntJulianDayToDate_366day(jday)
 
     # handle standard, julian, proleptic_gregorian calendars.
     if jday < 0:
@@ -202,7 +206,7 @@ def IntJulianDayToDate(jday,calendar,skip_transition=False):
     day = jday - tjday + 1
     return year,month,day
 
-def IntJulianDayToDate_365day(jday):
+def _IntJulianDayToDate_365day(jday):
     """Compute the year,month,day given the integer Julian day
     for 365_day calendar."""
 
@@ -221,7 +225,7 @@ def IntJulianDayToDate_365day(jday):
 
     return year,month,day
 
-def IntJulianDayToDate_366day(jday):
+def _IntJulianDayToDate_366day(jday):
     """Compute the year,month,day given the integer Julian day
     for 366_day calendar."""
 
@@ -240,7 +244,7 @@ def IntJulianDayToDate_366day(jday):
 
     return year,month,day
 
-def IntJulianDayToDate_360day(jday):
+def _IntJulianDayToDate_360day(jday):
     """Compute the year,month,day given the integer Julian day
     for 360_day calendar."""
 
