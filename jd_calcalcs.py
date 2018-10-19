@@ -153,6 +153,61 @@ def IntJulianDayToDate(jday,calendar):
     day = jday - tjday + 1
     return year,month,day
 
+def IntJulianDayToDate_365day(jday,calendar):
+    """Compute the year,month,day given the integer Julian day
+    for 365_day calendar."""
+
+    yr_offset = 0;
+    if jday < 0:
+        yr_offset = -jday/365+1
+        jday += 365*yr_offset
+    year = jday/365
+    nextra = jday - year*365
+    doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
+    month = 1
+    while doy > spm_365day[month]:
+        month += 1
+    day = doy - spm_365day[month-1]
+    year -= yr_offset
+
+    return year,month,day
+
+def IntJulianDayToDate_366day(jday,calendar):
+    """Compute the year,month,day given the integer Julian day
+    for 366_day calendar."""
+
+    yr_offset = 0;
+    if jday < 0:
+        yr_offset = -jday/366+1
+        jday += 366*yr_offset
+    year = jday/366
+    nextra = jday - year*366
+    doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
+    month = 1
+    while doy > spm_366day[month]:
+        month += 1
+    day = doy - spm_366day[month-1]
+    year -= yr_offset
+
+    return year,month,day
+
+def IntJulianDayToDate_360day(jday,calendar):
+    """Compute the year,month,day given the integer Julian day
+    for 360_day calendar."""
+
+    yr_offset = 0;
+    if jday < 0:
+        yr_offset = -jday/360+1
+        jday += 360*yr_offset
+    year = jday/360
+    nextra = jday - year*360
+    doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
+    month = nextra/30 + 1
+    day   = doy - (month-1)*30
+    year -= yr_offset
+
+    return year,month,day
+
 if __name__ == "__main__":
     import sys
     year = int(sys.argv[1])
