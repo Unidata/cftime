@@ -1,10 +1,11 @@
 # Based on calcalcs http://meteora.ucsd.edu/~pierce/calcalcs
 
 # Following are number of Days Per Month (dpm).
-dpm = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-dpm_leap = [ 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+dpm      = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+dpm_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 # Same as above, but SUM of previous months (no leap years).
-spm = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
+spm_365day = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
+spm_366day = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
 
 def is_leap(year, calendar):
     if calendar not in ['julian','gregorian','mixed']:
@@ -32,9 +33,14 @@ def is_leap(year, calendar):
     return leap
 
 def IntJulianDayFromDate(year,month,day,calendar):
-    """Compute integer Julian Day from year,month,day in proleptic julian,
-    gregorian or mixed calendars. Negative years allowed back to -4714 (gregorian) or -4713
-    (mixed or julian calendar)."""
+    """Compute integer Julian Day from year,month,day in (proleptic) julian,
+    gregorian or mixed calendars. Negative years allowed back to -4714
+    (gregorian) or -4713 (mixed or julian calendar).
+    integer julian day is number of days since noon UTC -4713-1-1
+    in the julian or mixed julian/gregorian calendar, or noon UTC
+    -4714-11-24 in the (proleptic) gregorian calendar.
+    Subtract 0.5 to get 00 UTC on that day."""
+
     # validate inputs.
     if calendar not in ['julian','gregorian','mixed']:
         raise ValueError('unsupported calendar')
@@ -48,6 +54,9 @@ def IntJulianDayFromDate(year,month,day,calendar):
     if (calendar == 'gregorian'         and year < -4714) or\
        (calendar in ['julian','mixed']  and year < -4713):
         raise ValueError('year out of range for %s calendar' % calendar)
+    leap = is_leap(year,calendar)
+    if not leap and month == 2 and day == 29:
+        raise ValueError('%s is not a leap year' % year)
 
     # add year offset
     if year < 0:
@@ -55,7 +64,7 @@ def IntJulianDayFromDate(year,month,day,calendar):
     else:
         year += 4800
 
-    if is_leap(year,calendar):
+    if leap:
         dpm2use = dpm_leap
     else:
         dpm2use = dpm
@@ -82,6 +91,23 @@ def IntJulianDayFromDate(year,month,day,calendar):
             return jday_greg
 
     return jday
+
+def IntJulianDayFromDate_360day(year,month,day):
+    """Compute integer Julian Day from year,month,day in 
+    360_day calendar"""
+    return year*360 + (month-1)*30 + day - 1
+
+def IntJulianDayFromDate_365day(year,month,day):
+    """Compute integer Julian Day from year,month,day in 
+    365_day calendar"""
+    if month == 2 and day == 29:
+        raise ValueError('no leap days in 365_day calendar')
+    return year*365 + spm_365day[month-1] + day - 1
+
+def IntJulianDayFromDate_366day(year,month,day):
+    """Compute integer Julian Day from year,month,day in 
+    366_day calendar"""
+    return year*366 + spm_366day[month-1] + day - 1
 
 if __name__ == "__main__":
     import sys
