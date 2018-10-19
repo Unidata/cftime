@@ -612,6 +612,14 @@ class cftimeTestCase(unittest.TestCase):
         d2 = real_datetime(1582,10,4,12)
         assert (d1.dayofwk == d2.dayofwk == 0)
         assert (d1.dayofyr == d2.dayofyr == 277)
+        # issue 71: negative reference years
+        # https://coastwatch.pfeg.noaa.gov/erddap/convert/time.html
+        # gives 2446433 (365 days more - is it counting year 0?)
+        units = "days since -4713-01-01T00:00:00Z"
+        t = date2num(datetime(1985,1,2), units, calendar="standard")
+        assert_almost_equal(t, 2446068)
+
+
 
 
 class TestDate2index(unittest.TestCase):
