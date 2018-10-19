@@ -615,6 +615,8 @@ class cftimeTestCase(unittest.TestCase):
         # issue 71: negative reference years
         # https://coastwatch.pfeg.noaa.gov/erddap/convert/time.html
         # gives 2446433 (365 days more - is it counting year 0?)
+        # however http://aa.usno.navy.mil/data/docs/JulianDate.php gives
+        # 2446068, which agrees with us
         units = "days since -4713-01-01T00:00:00Z"
         t = date2num(datetime(1985,1,2), units, calendar="standard")
         assert_almost_equal(t, 2446068)
