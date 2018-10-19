@@ -109,6 +109,42 @@ def IntJulianDayFromDate_366day(year,month,day):
     366_day calendar"""
     return year*366 + spm_366day[month-1] + day - 1
 
+def IntJulianDayToDate(jday):
+
+    # Make first estimate for year. subtract 4714 or 4713 because Julian Day number
+    # 0 occurs in year 4714 BC in the Gregorian calendar and 4713 BC in the
+    # Julian calendar.
+    if calendar == 'gregorian':
+        year = jday/366 - 4714
+    elif calendar in ['mixed','julian']:
+        year = jday/366 - 4713;
+
+    # Advance years until we find the right one
+    yp1 = year + 1
+    if yp1 == 0:
+       yp1 = 1 # no year 0
+    jday = IntJulianDayFromDate(yp1,1,1,calendar)
+    while jday >= tjday:
+        year += 1
+        if year == 0:
+            year = 1
+        yp1 = year + 1
+        if yp1 == 0:
+            yp1 = 1
+        tjday = IntJulianDayFromDate(yp1,1,1,calendar)
+    if is_leap(year, calendar):
+        dpm2use = dpm_leap
+    else:
+        dpm2use = dpm
+    month = 1
+    tjday = IntJulianDayFromDate(year,month,dpm2use[month-1],calendar)
+    while jday > tjday:
+        month += 1
+        tjday = IntJulianDayFromDate(year,month,dpm2use[month-1],calendar)
+    tjday = IntJulianDayFromDate(year,month,1,tjday,calendar)
+    day = jday - tjday + 1
+    return year,month,day
+
 if __name__ == "__main__":
     import sys
     year = int(sys.argv[1])
