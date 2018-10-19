@@ -123,7 +123,7 @@ def IntJulianDayToDate(jday):
     yp1 = year + 1
     if yp1 == 0:
        yp1 = 1 # no year 0
-    jday = IntJulianDayFromDate(yp1,1,1,calendar)
+    tjday = IntJulianDayFromDate(yp1,1,1,calendar)
     while jday >= tjday:
         year += 1
         if year == 0:
@@ -141,7 +141,7 @@ def IntJulianDayToDate(jday):
     while jday > tjday:
         month += 1
         tjday = IntJulianDayFromDate(year,month,dpm2use[month-1],calendar)
-    tjday = IntJulianDayFromDate(year,month,1,tjday,calendar)
+    tjday = IntJulianDayFromDate(year,month,1,calendar)
     day = jday - tjday + 1
     return year,month,day
 
@@ -151,5 +151,8 @@ if __name__ == "__main__":
     month = int(sys.argv[2])
     day = int(sys.argv[3])
     calendar = sys.argv[4]
+    jday = IntJulianDayFromDate(year,month,day,calendar)
     print 'Julian Day %s-%s-%s in %s calendar = %s' %\
-    (year,month,day,calendar,IntJulianDayFromDate(year,month,day,calendar))
+    (year,month,day,calendar,jday)
+    print 'round trip date = %s-%s-%s' %\
+    (IntJulianDayToDate(jday))
