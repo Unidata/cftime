@@ -119,7 +119,7 @@ def IntJulianDayFromDate(year,month,day,calendar):
         # check for invalid days in mixed calendar (there are 10 missing)
         if jday_jul >= 2299161 and jday_jul < 2299171:
             raise ValueError('invalid date in mixed calendar')
-        if jday_jul <= 2299171: # 1582 October 15
+        if jday_jul < 2299161: # 1582 October 15
             return jday_jul
         else:
             return jday_greg

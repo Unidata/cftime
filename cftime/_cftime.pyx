@@ -3,6 +3,7 @@ Performs conversions of netCDF time coordinate data to/from datetime objects.
 """
 
 from cpython.object cimport PyObject_RichCompare
+from .calcalcs import IntJulianDayFromDate, IntJulianDayToDate
 import cython
 import numpy as np
 import re
@@ -374,15 +375,9 @@ def JulianDayFromDate(date, calendar='standard'):
     if calendar='proleptic_gregorian', Julian Day follows gregorian calendar.
 
     if calendar='julian', Julian Day follows julian calendar.
-
-    Algorithm:
-
-    Meeus, Jean (1998) Astronomical Algorithms (2nd Edition). Willmann-Bell,
-    Virginia. p. 63
-
     """
 
-    # based on redate.py by David Finlayson.
+    # based on calcalcs by David W. Pierce
 
     # check if input was scalar and change return accordingly
     isscalar = False
@@ -399,6 +394,7 @@ def JulianDayFromDate(date, calendar='standard'):
     minute = year.copy()
     second = year.copy()
     microsecond = year.copy()
+    jd = np.empty(year.shape, np.float64)
     for i, d in enumerate(date):
         year[i] = d.year
         month[i] = d.month
@@ -407,65 +403,20 @@ def JulianDayFromDate(date, calendar='standard'):
         minute[i] = d.minute
         second[i] = d.second
         microsecond[i] = d.microsecond
-    # convert years in BC era to astronomical years (so that 1 BC is year zero)
-    # (fixes netcdf4-python issue #596)
-    year[year < 0] = year[year < 0] + 1
-    # Convert time to fractions of a day
-    day = day + hour / 24.0 + minute / 1440.0 + (second + microsecond/1.e6) / 86400.0
+        jd[i] = IntJulianDayFromDate(year[i],month[i],day[i],calendar)
 
-    # Start Meeus algorithm (variables are in his notation)
-    month_lt_3 = month < 3
-    month[month_lt_3] = month[month_lt_3] + 12
-    year[month_lt_3] = year[month_lt_3] - 1
-
-    # MC - assure array
-    # A = np.int64(year / 100)
-    A = (year / 100).astype(np.int64)
-
-    # MC
-    # jd = int(365.25 * (year + 4716)) + int(30.6001 * (month + 1)) + \
-    #      day - 1524.5
-    jd = 365. * year + np.int32(0.25 * year + 2000.) + np.int32(30.6001 * (month + 1)) + \
-        day + 1718994.5
-
-    # optionally adjust the jd for the switch from
-    # the Julian to Gregorian Calendar
-    # here assumed to have occurred the day after 1582 October 4
-    if calendar in ['standard', 'gregorian']:
-        # MC - do not have to be contiguous dates
-        # if np.min(jd) >= 2299170.5:
-        #     # 1582 October 15 (Gregorian Calendar)
-        #     B = 2 - A + np.int32(A / 4)
-        # elif np.max(jd) < 2299160.5:
-        #     # 1582 October 5 (Julian Calendar)
-        #     B = np.zeros(len(jd))
-        # else:
-        #     print(date, calendar, jd)
-        #     raise ValueError(
-        #         'impossible date (falls in gap between end of Julian calendar and beginning of Gregorian calendar')
-        if np.any((jd >= 2299160.5) & (jd < 2299170.5)): # missing days in Gregorian calendar
-            raise ValueError(
-                'impossible date (falls in gap between end of Julian calendar and beginning of Gregorian calendar')
-        B = np.zeros(len(jd))             # 1582 October 5 (Julian Calendar)
-        ii = np.where(jd >= 2299170.5)[0] # 1582 October 15 (Gregorian Calendar)
-        if ii.size>0:
-            B[ii] = 2 - A[ii] + np.int32(A[ii] / 4)
-    elif calendar == 'proleptic_gregorian':
-        B = 2 - A + np.int32(A / 4)
-    elif calendar == 'julian':
-        B = np.zeros(len(jd))
-    else:
-        raise ValueError(
-            'unknown calendar, must be one of julian,standard,gregorian,proleptic_gregorian, got %s' % calendar)
-
-    # adjust for Julian calendar if necessary
-    jd = jd + B
+    # at this point jd is an integer representing noon UTC on the given
+    # year,month,day.
+    # compute fractional day from hour,minute,second,microsecond
+    fracday = hour / 24.0 + minute / 1440.0 + (second + microsecond/1.e6) / 86400.0
+    jd = jd - 0.5 + fracday
 
     # Add a small offset (proportional to Julian date) for correct re-conversion.
     # This is about 45 microseconds in 2000 for Julian date starting -4712.
     # (pull request #433).
     eps = np.finfo(float).eps
     eps = np.maximum(eps*jd, eps)
+    jd += eps
     jd += eps
 
     if isscalar:
