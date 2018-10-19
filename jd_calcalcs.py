@@ -109,7 +109,15 @@ def IntJulianDayFromDate_366day(year,month,day):
     366_day calendar"""
     return year*366 + spm_366day[month-1] + day - 1
 
-def IntJulianDayToDate(jday):
+def IntJulianDayToDate(jday,calendar):
+    """Compute the year,month,day given the integer Julian day
+    for (proleptic) julian, gregorian or mixed julian/gregorian calendars."""
+
+    # validate inputs.
+    if calendar not in ['julian','gregorian','mixed']:
+        raise ValueError('unsupported calendar')
+    if jday < 0:
+        raise ValueError('julian day must be a positive integer')
 
     # Make first estimate for year. subtract 4714 or 4713 because Julian Day number
     # 0 occurs in year 4714 BC in the Gregorian calendar and 4713 BC in the
@@ -155,4 +163,4 @@ if __name__ == "__main__":
     print 'Julian Day %s-%s-%s in %s calendar = %s' %\
     (year,month,day,calendar,jday)
     print 'round trip date = %s-%s-%s' %\
-    (IntJulianDayToDate(jday))
+    (IntJulianDayToDate(jday,calendar))
