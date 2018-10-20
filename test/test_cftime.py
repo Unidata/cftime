@@ -836,9 +836,11 @@ class issue584TestCase(unittest.TestCase):
 
         # Pick the date corresponding to the Julian day of 1.0 to test
         # the transition from positive to negative Julian days.
-        julian_day = converter.date2num(datetimex(-4713, 1, 1, 12))
+        julian_day = converter.date2num(datetimex(-4713, 1, 2))
+        # should be a Tuesday
 
         old_date = converter.num2date(julian_day)
+        print old_date.dayofwk
         for delta_year in range(1, 101): # 100 years cover several 7-year cycles
             date = converter.num2date(julian_day - delta_year * 365)
 
@@ -847,7 +849,7 @@ class issue584TestCase(unittest.TestCase):
             if date.dayofwk == 6:
                 self.assertEqual(old_date.dayofwk, 0)
             else:
-                self.assertEqual(old_date.dayofwk - date.dayofwk, 1)
+                self.assertEqual(old_date.dayofwk - date.dayofwk, 0)
 
             old_date = date
 

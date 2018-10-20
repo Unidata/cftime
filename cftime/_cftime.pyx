@@ -143,9 +143,6 @@ def date2num(dates,units,calendar='standard'):
             if basedate.year == 0:
                 msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
                 raise ValueError(msg)
-            #elif basedate.year < 0:
-            #    msg='negative reference year in time units, must be >= 1'
-            #    raise ValueError(msg)
 
         if (calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
            (calendar in ['gregorian','standard'] and basedate > gregorian):
@@ -448,27 +445,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     # based on calcalcs by David W. Pierce
 
     julian = np.array(JD, dtype=np.float64)
-    year_offset = np.zeros(julian.shape, dtype=np.int32)
 
-    # add offset to years in non-real-world calendars so that
-    # dayofwk calculation works.
-    if calendar in ['noleap','365_day']:
-        year_offset[julian<0] = -np.trunc(julian) // 365 + 1
-        julian += year_offset*365
-    elif calendar in ['all_leap','366_day']:
-        year_offset[julian<0] = -np.trunc(julian) // 366 + 1
-        julian += year_offset*366
-    elif calendar == '360_day':
-        year_offset[julian<0] = -np.trunc(julian) // 360 + 1
-        julian += year_offset*360
-
-    if np.min(julian) < 0:
-        raise ValueError('Julian Day must be positive')
-
-    # 0 = Sunday, 6 = Sat, valid after noon UTC
-    dayofwk = np.atleast_1d(np.int32(np.fmod(np.int32(julian) + 1, 7)))
-    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
-    dayofwk -= 1; dayofwk = np.where(dayofwk==-1, 6, dayofwk)
     # get the day (Z) and the fraction of the day (F)
     # use 'round half up' rounding instead of numpy's even rounding
     # so that 0.5 is rounded to 1.0, not 0 (cftime issue #49)
@@ -477,15 +454,13 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
 
     year = np.empty(len(Z), dtype=np.int32)
     dayofyr = np.zeros(len(year),dtype=year.dtype)
+    dayofwk = np.zeros(len(year),dtype=year.dtype)
     month = year.copy()
     day = year.copy()
     for i, ijd in enumerate(Z):
-        yr,mon,dy = IntJulianDayToDate(ijd,calendar)
+        yr,mon,dy,dow,doy = IntJulianDayToDate(ijd,calendar)
         year[i]=yr; month[i]=mon; day[i]=dy
-        if calendar in ['standard', 'gregorian'] and yr == 1582:
-            yr = yr + 1 # skip missing days in transition year
-        dayofyr[i] =\
-        IntJulianDayFromDate(yr,mon,dy,calendar)-IntJulianDayFromDate(yr,1,1,calendar)+1
+        dayofyr[i]=doy; dayofwk[i]=dow
 
     if calendar in ['standard', 'gregorian']:
         ind_before = np.where(julian < 2299160.5)[0]
@@ -508,18 +483,6 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     minute = minute.astype(np.int32)
     second = second.astype(np.int32)
     microsecond = microsecond.astype(np.int32)
-
-    # before noon, add one to day of week
-    dayofwk[hour < 12] += 1
-    dayofwk = np.where(dayofwk==7, 0, dayofwk)
-
-    if np.any(year_offset > 0):
-        # correct dayofwk for non-real-world calendars.
-        # 365 mod 7 = 1, so the day of the week changes by one day for
-        # every year in year_offset
-        dayofwk -= np.fmod(year_offset, 7)
-        dayofwk[dayofwk<0] += 7
-        year -= year_offset
 
     # check if input was scalar and change return accordingly
     isscalar = False

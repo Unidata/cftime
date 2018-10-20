@@ -1,6 +1,8 @@
 # Based on calcalcs http://meteora.ucsd.edu/~pierce/calcalcs by David W.
 # Pierce.
 
+import numpy as np
+
 # Following are number of Days Per Month (_dpm).
 _dpm      = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 _dpm_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
@@ -176,6 +178,13 @@ def IntJulianDayToDate(jday,calendar,skip_transition=False):
     elif calendar in ['standard','julian']:
         year = jday/366 - 4713;
 
+    # compute day of week.
+    # 0 = Sunday, 6 = Sat, valid after noon UTC
+    dow = np.fmod(jday + 1, 7)
+    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
+    dow -= 1
+    if dow == -1: dow = 6
+
     if not skip_transition and calendar == 'standard' and jday > 2299160: jday += 10
 
     # Advance years until we find the right one
@@ -193,8 +202,10 @@ def IntJulianDayToDate(jday,calendar,skip_transition=False):
         tjday = IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True)
     if is_leap(year, calendar):
         dpm2use = _dpm_leap
+        spm2use = _spm_366day
     else:
         dpm2use = _dpm
+        spm2use = _spm_365day
     month = 1
     tjday =\
     IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True)
@@ -204,7 +215,11 @@ def IntJulianDayToDate(jday,calendar,skip_transition=False):
         IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True)
     tjday = IntJulianDayFromDate(year,month,1,calendar,skip_transition=True)
     day = jday - tjday + 1
-    return year,month,day
+    if month == 1:
+        doy = day
+    else:
+        doy = spm2use[month-1]+day
+    return year,month,day,dow,doy
 
 def _IntJulianDayToDate_365day(jday):
     """Compute the year,month,day given the integer Julian day
@@ -223,7 +238,14 @@ def _IntJulianDayToDate_365day(jday):
     day = doy - _spm_365day[month-1]
     year -= yr_offset
 
-    return year,month,day
+    # compute day of week.
+    # 0 = Sunday, 6 = Sat, valid after noon UTC
+    dow = np.fmod(jday + 1, 7)
+    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
+    dow -= 1
+    if dow == -1: dow = 6
+
+    return year,month,day,dow,doy
 
 def _IntJulianDayToDate_366day(jday):
     """Compute the year,month,day given the integer Julian day
@@ -242,7 +264,14 @@ def _IntJulianDayToDate_366day(jday):
     day = doy - _spm_366day[month-1]
     year -= yr_offset
 
-    return year,month,day
+    # compute day of week.
+    # 0 = Sunday, 6 = Sat, valid after noon UTC
+    dow = np.fmod(jday + 1, 7)
+    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
+    dow -= 1
+    if dow == -1: dow = 6
+
+    return year,month,day,dow,doy
 
 def _IntJulianDayToDate_360day(jday):
     """Compute the year,month,day given the integer Julian day
@@ -259,7 +288,14 @@ def _IntJulianDayToDate_360day(jday):
     day   = doy - (month-1)*30
     year -= yr_offset
 
-    return year,month,day
+    # compute day of week.
+    # 0 = Sunday, 6 = Sat, valid after noon UTC
+    dow = np.fmod(jday + 1, 7)
+    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
+    dow -= 1
+    if dow == -1: dow = 6
+
+    return year,month,day,dow,doy
 
 if __name__ == "__main__":
     import sys
@@ -270,5 +306,7 @@ if __name__ == "__main__":
     jday = IntJulianDayFromDate(year,month,day,calendar)
     print 'Julian Day %s-%s-%s in %s calendar = %s' %\
     (year,month,day,calendar,jday)
+    yr,mon,dy,dow,doy = IntJulianDayToDate(jday,calendar)
     print 'round trip date = %s-%s-%s' %\
-    (IntJulianDayToDate(jday,calendar))
+    (yr,mon,dy)
+    print('day of week = %s, day of year %s' % (dow,doy))
