@@ -47,8 +47,13 @@ def is_leap(year, calendar):
 def IntJulianDayFromDate(year,month,day,calendar,skip_transition=False):
     """Compute integer Julian Day from year,month,day and calendar.
 
-    Allowed calendars are 'standard','julian','proleptic_gregorian','360_day',
-    '365_day' and '366_day'.
+    Allowed calendars are 'standard', 'gregorian', 'julian',
+    'proleptic_gregorian','360_day', '365_day', '366_day', 'noleap',
+    'all_leap'.
+
+    'noleap' is a synonym for '365_day'
+    'all_leap' is a synonym for '366_day'
+    'gregorian' is a synonym for 'standard'
 
     Negative years allowed back to -4714
     (proleptic_gregorian) or -4713 (standard or gregorian calendar).
@@ -137,8 +142,13 @@ def IntJulianDayToDate(jday,calendar,skip_transition=False):
     """Compute the year,month,day,dow,doy given the integer Julian day.
     and calendar. (dow = day of week with 0=Mon,6=Sun and doy is day of year).
 
-    Allowed calendars are 'standard','julian','proleptic_gregorian','360_day',
-    '365_day' and '366_day'.
+    Allowed calendars are 'standard', 'gregorian', 'julian',
+    'proleptic_gregorian','360_day', '365_day', '366_day', 'noleap',
+    'all_leap'.
+
+    'noleap' is a synonym for '365_day'
+    'all_leap' is a synonym for '366_day'
+    'gregorian' is a synonym for 'standard'
 
     optional kwarg 'skip_transition':  When True, assume a 10-day
     gap in Julian day numbers between Oct 4 and Oct 15 1582 (the transition
