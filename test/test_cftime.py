@@ -469,7 +469,7 @@ class cftimeTestCase(unittest.TestCase):
             pass
         # this should not fail (year zero allowed in 'fake' calendars)
         t = date2num(datetime(1, 1, 1), units, calendar='360_day')
-        self.assertEqual(t, 360)
+        self.assertAlmostEqual(t,360)
         d = num2date(t, units, calendar='360_day')
         self.assertEqual(d, Datetime360Day(1,1,1))
         d = num2date(0, units, calendar='360_day')
@@ -835,8 +835,8 @@ class issue584TestCase(unittest.TestCase):
         converter = self.converters["noleap"]
 
         # Pick the date corresponding to the Julian day of 1.0 to test
-        # the transision from positive to negative Julian days.
-        julian_day = converter.date2num(datetimex(-4712, 1, 2, 12))
+        # the transition from positive to negative Julian days.
+        julian_day = converter.date2num(datetimex(-4713, 1, 1, 12))
 
         old_date = converter.num2date(julian_day)
         for delta_year in range(1, 101): # 100 years cover several 7-year cycles
