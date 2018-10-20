@@ -492,14 +492,11 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
         isscalar = True
 
     is_real_dateime = False
-    if calendar in 'proleptic_gregorian':
+    if calendar == 'proleptic_gregorian':
         # datetime.datetime does not support years < 1
         #if year < 0:
         if only_use_cftime_datetimes:
-           if calendar == 'gregorian':
-              datetime_type = DatetimeGregorian
-           else:
-              datetime_type = DatetimeProlepticGregorian
+            datetime_type = DatetimeProlepticGregorian
         else:
             if (year < 0).any(): # netcdftime issue #28
                datetime_type = DatetimeProlepticGregorian
@@ -514,6 +511,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
             is_real_datetime = True
             datetime_type = real_datetime
         else:
+            is_real_datetime = False
             datetime_type = DatetimeGregorian
     elif calendar == "julian":
         datetime_type = DatetimeJulian
@@ -753,10 +751,9 @@ units to datetime objects.
             date = np.array(date)
             shape = date.shape
         if isscalar:
-            jdelta = JulianDayFromDate(date, self.calendar) - self._jd0
+            jdelta = JulianDayFromDate(date, self.calendar)-self._jd0
         else:
-            jdelta = JulianDayFromDate(
-                date.flat, self.calendar) - self._jd0
+            jdelta = JulianDayFromDate(date.flat, self.calendar)-self._jd0
         if not isscalar:
             jdelta = np.array(jdelta)
         # convert to desired units, add time zone offset.
