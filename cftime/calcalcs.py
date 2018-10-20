@@ -45,16 +45,30 @@ def is_leap(year, calendar):
     return leap
 
 def IntJulianDayFromDate(year,month,day,calendar,skip_transition=False):
-    """Compute integer Julian Day from year,month,day.
+    """Compute integer Julian Day from year,month,day and calendar.
+
+    Allowed calendars are 'standard','julian','proleptic_gregorian','360_day',
+    '365_day' and '366_day'.
+
     Negative years allowed back to -4714
     (proleptic_gregorian) or -4713 (standard or gregorian calendar).
+
     Negative year values are allowed in 360_day,365_day,366_day calendars.
+
     Integer julian day is number of days since noon UTC -4713-1-1
     in the julian or mixed julian/gregorian calendar, or noon UTC
     -4714-11-24 in the proleptic_gregorian calendar. Reference
-    date is noon UTC 0-1-1 for other calendars. There is no
-    year zero in standard (mixed), julian, or proleptic_gregorian
-    calendars. Subtract 0.5 to get 00 UTC on that day."""
+    date is noon UTC 0-1-1 for other calendars.
+
+    There is no year zero in standard (mixed), julian, or proleptic_gregorian
+    calendars.
+
+    Subtract 0.5 to get 00 UTC on that day.
+
+    optional kwarg 'skip_transition':  When True, leave a 10-day
+    gap in Julian day numbers between Oct 4 and Oct 15 1582 (the transition
+    from Julian to Gregorian calendars).  Default False, ignored
+    unless calendar = 'standard'."""
 
     # validate inputs.
     calendar = _check_calendar(calendar)
@@ -119,42 +133,17 @@ def IntJulianDayFromDate(year,month,day,calendar,skip_transition=False):
 
     return jday
 
-# private functions
-
-def _check_calendar(calendar):
-    """validate calendars, convert to subset of names to get rid of synonyms"""
-    if calendar not in _calendars:
-        raise ValueError('unsupported calendar')
-    calout = calendar
-    # remove 'gregorian','noleap','all_leap'
-    if calendar in ['gregorian','standard']:
-        calout = 'standard'
-    if calendar == 'noleap':
-        calout = '365_day'
-    if calendar == 'all_leap':
-        calout = '366_day'
-    return calout
-
-def _IntJulianDayFromDate_360day(year,month,day):
-    """Compute integer Julian Day from year,month,day in
-    360_day calendar"""
-    return year*360 + (month-1)*30 + day - 1
-
-def _IntJulianDayFromDate_365day(year,month,day):
-    """Compute integer Julian Day from year,month,day in
-    365_day calendar"""
-    if month == 2 and day == 29:
-        raise ValueError('no leap days in 365_day calendar')
-    return year*365 + _spm_365day[month-1] + day - 1
-
-def _IntJulianDayFromDate_366day(year,month,day):
-    """Compute integer Julian Day from year,month,day in
-    366_day calendar"""
-    return year*366 + _spm_366day[month-1] + day - 1
-
 def IntJulianDayToDate(jday,calendar,skip_transition=False):
-    """Compute the year,month,day given the integer Julian day
-    for (proleptic) julian, proleptic_gregorian or mixed julian/proleptic_gregorian calendars."""
+    """Compute the year,month,day,dow,doy given the integer Julian day.
+    and calendar.
+
+    Allowed calendars are 'standard','julian','proleptic_gregorian','360_day',
+    '365_day' and '366_day'.
+
+    optional kwarg 'skip_transition':  When True, assume a 10-day
+    gap in Julian day numbers between Oct 4 and Oct 15 1582 (the transition
+    from Julian to Gregorian calendars).  Default False, ignored
+    unless calendar = 'standard'."""
 
     # validate inputs.
     calendar = _check_calendar(calendar)
@@ -220,6 +209,39 @@ def IntJulianDayToDate(jday,calendar,skip_transition=False):
     else:
         doy = spm2use[month-1]+day
     return year,month,day,dow,doy
+
+# private functions
+
+def _check_calendar(calendar):
+    """validate calendars, convert to subset of names to get rid of synonyms"""
+    if calendar not in _calendars:
+        raise ValueError('unsupported calendar')
+    calout = calendar
+    # remove 'gregorian','noleap','all_leap'
+    if calendar in ['gregorian','standard']:
+        calout = 'standard'
+    if calendar == 'noleap':
+        calout = '365_day'
+    if calendar == 'all_leap':
+        calout = '366_day'
+    return calout
+
+def _IntJulianDayFromDate_360day(year,month,day):
+    """Compute integer Julian Day from year,month,day in
+    360_day calendar"""
+    return year*360 + (month-1)*30 + day - 1
+
+def _IntJulianDayFromDate_365day(year,month,day):
+    """Compute integer Julian Day from year,month,day in
+    365_day calendar"""
+    if month == 2 and day == 29:
+        raise ValueError('no leap days in 365_day calendar')
+    return year*365 + _spm_365day[month-1] + day - 1
+
+def _IntJulianDayFromDate_366day(year,month,day):
+    """Compute integer Julian Day from year,month,day in
+    366_day calendar"""
+    return year*366 + _spm_366day[month-1] + day - 1
 
 def _IntJulianDayToDate_365day(jday):
     """Compute the year,month,day given the integer Julian day
