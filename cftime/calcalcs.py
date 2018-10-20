@@ -135,7 +135,7 @@ def IntJulianDayFromDate(year,month,day,calendar,skip_transition=False):
 
 def IntJulianDayToDate(jday,calendar,skip_transition=False):
     """Compute the year,month,day,dow,doy given the integer Julian day.
-    and calendar.
+    and calendar. (dow = day of week with 0=Mon,6=Sun and doy is day of year).
 
     Allowed calendars are 'standard','julian','proleptic_gregorian','360_day',
     '365_day' and '366_day'.
