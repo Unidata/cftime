@@ -462,8 +462,8 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
         year_offset[julian<0] = -np.trunc(julian) // 360 + 1
         julian += year_offset*360
 
-    #if np.min(julian) < 0:
-    #    raise ValueError('Julian Day must be positive')
+    if np.min(julian) < 0:
+        raise ValueError('Julian Day must be positive')
 
     # 0 = Sunday, 6 = Sat, valid after noon UTC
     dayofwk = np.atleast_1d(np.int32(np.fmod(np.int32(julian) + 1, 7)))
