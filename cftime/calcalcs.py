@@ -1,8 +1,6 @@
 # Based on calcalcs http://meteora.ucsd.edu/~pierce/calcalcs by David W.
 # Pierce.
 
-import numpy as np
-
 # Following are number of Days Per Month (_dpm).
 _dpm      = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 _dpm_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
@@ -178,11 +176,7 @@ def IntJulianDayToDate(jday,calendar,skip_transition=False):
         year = jday/366 - 4713;
 
     # compute day of week.
-    # 0 = Sunday, 6 = Sat, valid after noon UTC
-    dow = np.fmod(jday + 1, 7)
-    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
-    dow -= 1
-    if dow == -1: dow = 6
+    dow = _get_dow(jday)
 
     if not skip_transition and calendar == 'standard' and jday > 2299160: jday += 10
 
@@ -221,6 +215,15 @@ def IntJulianDayToDate(jday,calendar,skip_transition=False):
     return year,month,day,dow,doy
 
 # private functions
+
+def _get_dow(jday):
+    """compute day of week.
+    0 = Sunday, 6 = Sat, valid after noon UTC"""
+    dow = (jday + 1) % 7
+    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
+    dow -= 1
+    if dow == -1: dow = 6
+    return dow
 
 def _check_calendar(calendar):
     """validate calendars, convert to subset of names to get rid of synonyms"""
@@ -271,11 +274,7 @@ def _IntJulianDayToDate_365day(jday):
     year -= yr_offset
 
     # compute day of week.
-    # 0 = Sunday, 6 = Sat, valid after noon UTC
-    dow = np.fmod(jday + 1, 7)
-    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
-    dow -= 1
-    if dow == -1: dow = 6
+    dow = _get_dow(jday)
 
     return year,month,day,dow,doy
 
@@ -297,11 +296,7 @@ def _IntJulianDayToDate_366day(jday):
     year -= yr_offset
 
     # compute day of week.
-    # 0 = Sunday, 6 = Sat, valid after noon UTC
-    dow = np.fmod(jday + 1, 7)
-    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
-    dow -= 1
-    if dow == -1: dow = 6
+    dow = _get_dow(jday)
 
     return year,month,day,dow,doy
 
@@ -321,11 +316,7 @@ def _IntJulianDayToDate_360day(jday):
     year -= yr_offset
 
     # compute day of week.
-    # 0 = Sunday, 6 = Sat, valid after noon UTC
-    dow = np.fmod(jday + 1, 7)
-    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
-    dow -= 1
-    if dow == -1: dow = 6
+    dow = _get_dow(jday)
 
     return year,month,day,dow,doy
 
