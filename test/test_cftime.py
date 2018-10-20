@@ -840,7 +840,6 @@ class issue584TestCase(unittest.TestCase):
         # should be a Tuesday
 
         old_date = converter.num2date(julian_day)
-        print old_date.dayofwk
         for delta_year in range(1, 101): # 100 years cover several 7-year cycles
             date = converter.num2date(julian_day - delta_year * 365)
 
