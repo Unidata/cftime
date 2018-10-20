@@ -9,6 +9,8 @@ _spm_365day = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
 _spm_366day = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
 # supported calendars. Includes synonyms ('standard'=='gregorian',
 # '366_day'=='all_leap','365_day'=='noleap')
+# see http://cfconventions.org/cf-conventions/cf-conventions.html#calendar 
+# for definitions.
 _calendars = ['standard', 'gregorian', 'proleptic_gregorian','mixed',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
 
