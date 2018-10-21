@@ -16,6 +16,7 @@ try:
 except ImportError:  # python 3.x
     pass
 
+# calendar operations (_IntJulianDayFromDate, _IntJulianDayToDate)
 include "_calcalcs.pyx"
 
 microsec_units = ['microseconds','microsecond', 'microsec', 'microsecs']
