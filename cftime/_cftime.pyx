@@ -374,8 +374,6 @@ def JulianDayFromDate(date, calendar='standard'):
     if calendar='julian', Julian Day follows julian calendar.
     """
 
-    # based on calcalcs by David W. Pierce
-
     # check if input was scalar and change return accordingly
     isscalar = False
     try:
@@ -441,8 +439,6 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     and the date is after 1582-10-15).  In all other cases a 'phony' datetime
     objects are used, which are actually instances of cftime.datetime.
     """
-
-    # based on calcalcs by David W. Pierce
 
     julian = np.array(JD, dtype=np.float64)
 
