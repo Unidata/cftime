@@ -116,9 +116,9 @@ def IntJulianDayFromDate(year,month,day,calendar,skip_transition=False):
     for m in range(month-1,0,-1):
         jday += dpm2use[m-1]
 
-    jday_greg = jday + 365*(year-1) + (year-1)/4 - (year-1)/100 + (year-1)/400
+    jday_greg = jday + 365*(year-1) + (year-1)//4 - (year-1)//100 + (year-1)//400
     jday_greg -= 31739 # fix year offset
-    jday_jul = jday + 365*(year-1) + (year-1)/4
+    jday_jul = jday + 365*(year-1) + (year-1)//4
     jday_jul -= 31777 # fix year offset
     if calendar == 'julian':
         return jday_jul
@@ -173,9 +173,9 @@ def IntJulianDayToDate(jday,calendar,skip_transition=False):
     # 0 occurs in year 4714 BC in the Gregorian calendar and 4713 BC in the
     # Julian calendar.
     if calendar == 'proleptic_gregorian':
-        year = jday/366 - 4714
+        year = jday//366 - 4714
     elif calendar in ['standard','julian']:
-        year = jday/366 - 4713;
+        year = jday//366 - 4713;
 
     # compute day of week.
     dow = _get_dow(jday)
@@ -264,9 +264,9 @@ def _IntJulianDayToDate_365day(jday):
 
     yr_offset = 0;
     if jday < 0:
-        yr_offset = -jday/365+1
+        yr_offset = -jday//365+1
         jday += 365*yr_offset
-    year = jday/365
+    year = jday//365
     nextra = jday - year*365
     doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
     month = 1
@@ -286,9 +286,9 @@ def _IntJulianDayToDate_366day(jday):
 
     yr_offset = 0;
     if jday < 0:
-        yr_offset = -jday/366+1
+        yr_offset = -jday//366+1
         jday += 366*yr_offset
-    year = jday/366
+    year = jday//366
     nextra = jday - year*366
     doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
     month = 1
@@ -308,12 +308,12 @@ def _IntJulianDayToDate_360day(jday):
 
     yr_offset = 0;
     if jday < 0:
-        yr_offset = -jday/360+1
+        yr_offset = -jday//360+1
         jday += 360*yr_offset
-    year = jday/360
+    year = jday//360
     nextra = jday - year*360
     doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
-    month = nextra/30 + 1
+    month = nextra//30 + 1
     day   = doy - (month-1)*30
     year -= yr_offset
 
@@ -329,9 +329,9 @@ if __name__ == "__main__":
     day = int(sys.argv[3])
     calendar = sys.argv[4]
     jday = IntJulianDayFromDate(year,month,day,calendar)
-    print 'Julian Day %s-%s-%s in %s calendar = %s' %\
-    (year,month,day,calendar,jday)
+    print('Julian Day %s-%s-%s in %s calendar = %s' %\
+    (year,month,day,calendar,jday))
     yr,mon,dy,dow,doy = IntJulianDayToDate(jday,calendar)
-    print 'round trip date = %s-%s-%s' %\
-    (yr,mon,dy)
+    print('round trip date = %s-%s-%s' %\
+    (yr,mon,dy))
     print('day of week = %s, day of year %s' % (dow,doy))
