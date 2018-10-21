@@ -3,7 +3,6 @@ Performs conversions of netCDF time coordinate data to/from datetime objects.
 """
 
 from cpython.object cimport PyObject_RichCompare
-from .calcalcs import IntJulianDayFromDate, IntJulianDayToDate, is_leap
 import cython
 import numpy as np
 import re
@@ -16,6 +15,8 @@ try:
     from itertools import izip as zip
 except ImportError:  # python 3.x
     pass
+
+include "_calcalcs.pyx"
 
 microsec_units = ['microseconds','microsecond', 'microsec', 'microsecs']
 millisec_units = ['milliseconds', 'millisecond', 'millisec', 'millisecs']
@@ -398,7 +399,7 @@ def JulianDayFromDate(date, calendar='standard'):
         minute[i] = d.minute
         second[i] = d.second
         microsecond[i] = d.microsecond
-        jd[i] = IntJulianDayFromDate(year[i],month[i],day[i],calendar)
+        jd[i] = _IntJulianDayFromDate(year[i],month[i],day[i],calendar)
 
     # at this point jd is an integer representing noon UTC on the given
     # year,month,day.
@@ -454,7 +455,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     month = year.copy()
     day = year.copy()
     for i, ijd in enumerate(Z):
-        yr,mon,dy,dow,doy = IntJulianDayToDate(ijd,calendar)
+        yr,mon,dy,dow,doy = _IntJulianDayToDate(ijd,calendar)
         year[i]=yr; month[i]=mon; day[i]=dy
         dayofyr[i]=doy; dayofwk[i]=dow
 

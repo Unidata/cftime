@@ -14,9 +14,7 @@ _spm_366day = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
 _calendars = ['standard', 'gregorian', 'proleptic_gregorian','mixed',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
 
-# public functions.
-
-def is_leap(year, calendar):
+def _is_leap(year, calendar):
     calendar = _check_calendar(calendar)
     if year == 0:
         raise ValueError('year zero does not exist in the %s calendar' %\
@@ -44,7 +42,7 @@ def is_leap(year, calendar):
         leap = False
     return leap
 
-def IntJulianDayFromDate(year,month,day,calendar,skip_transition=False):
+def _IntJulianDayFromDate(year,month,day,calendar,skip_transition=False):
     """Compute integer Julian Day from year,month,day and calendar.
 
     Allowed calendars are 'standard', 'gregorian', 'julian',
@@ -97,7 +95,7 @@ def IntJulianDayFromDate(year,month,day,calendar,skip_transition=False):
     if (calendar == 'proleptic_gregorian'         and year < -4714) or\
        (calendar in ['julian','standard']  and year < -4713):
         raise ValueError('year out of range for %s calendar' % calendar)
-    leap = is_leap(year,calendar)
+    leap = _is_leap(year,calendar)
     if not leap and month == 2 and day == 29:
         raise ValueError('%s is not a leap year' % year)
 
@@ -138,7 +136,7 @@ def IntJulianDayFromDate(year,month,day,calendar,skip_transition=False):
 
     return jday
 
-def IntJulianDayToDate(jday,calendar,skip_transition=False):
+def _IntJulianDayToDate(jday,calendar,skip_transition=False):
     """Compute the year,month,day,dow,doy given the integer Julian day.
     and calendar. (dow = day of week with 0=Mon,6=Sun and doy is day of year).
 
@@ -186,7 +184,7 @@ def IntJulianDayToDate(jday,calendar,skip_transition=False):
     yp1 = year + 1
     if yp1 == 0:
        yp1 = 1 # no year 0
-    tjday = IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True)
+    tjday = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True)
     while jday >= tjday:
         year += 1
         if year == 0:
@@ -194,8 +192,8 @@ def IntJulianDayToDate(jday,calendar,skip_transition=False):
         yp1 = year + 1
         if yp1 == 0:
             yp1 = 1
-        tjday = IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True)
-    if is_leap(year, calendar):
+        tjday = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True)
+    if _is_leap(year, calendar):
         dpm2use = _dpm_leap
         spm2use = _spm_366day
     else:
@@ -203,20 +201,18 @@ def IntJulianDayToDate(jday,calendar,skip_transition=False):
         spm2use = _spm_365day
     month = 1
     tjday =\
-    IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True)
+    _IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True)
     while jday > tjday:
         month += 1
         tjday =\
-        IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True)
-    tjday = IntJulianDayFromDate(year,month,1,calendar,skip_transition=True)
+        _IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True)
+    tjday = _IntJulianDayFromDate(year,month,1,calendar,skip_transition=True)
     day = jday - tjday + 1
     if month == 1:
         doy = day
     else:
         doy = spm2use[month-1]+day
     return year,month,day,dow,doy
-
-# private functions
 
 def _get_dow(jday):
     """compute day of week.
@@ -322,16 +318,16 @@ def _IntJulianDayToDate_360day(jday):
 
     return year,month,day,dow,doy
 
-if __name__ == "__main__":
-    import sys
-    year = int(sys.argv[1])
-    month = int(sys.argv[2])
-    day = int(sys.argv[3])
-    calendar = sys.argv[4]
-    jday = IntJulianDayFromDate(year,month,day,calendar)
-    print('Julian Day %s-%s-%s in %s calendar = %s' %\
-    (year,month,day,calendar,jday))
-    yr,mon,dy,dow,doy = IntJulianDayToDate(jday,calendar)
-    print('round trip date = %s-%s-%s' %\
-    (yr,mon,dy))
-    print('day of week = %s, day of year %s' % (dow,doy))
+#if __name__ == "__main__":
+#    import sys
+#    year = int(sys.argv[1])
+#    month = int(sys.argv[2])
+#    day = int(sys.argv[3])
+#    calendar = sys.argv[4]
+#    jday = _IntJulianDayFromDate(year,month,day,calendar)
+#    print('Julian Day %s-%s-%s in %s calendar = %s' %\
+#    (year,month,day,calendar,jday))
+#    yr,mon,dy,dow,doy = _IntJulianDayToDate(jday,calendar)
+#    print('round trip date = %s-%s-%s' %\
+#    (yr,mon,dy))
+#    print('day of week = %s, day of year %s' % (dow,doy))
