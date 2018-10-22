@@ -242,9 +242,6 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=False):
         if basedate.year == 0:
             msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
             raise ValueError(msg)
-        elif basedate.year < 0:
-            msg='negative reference year in time units, must be >= 1'
-            raise ValueError(msg)
 
     postimes =  (np.asarray(times) > 0).all() # netcdf4-python issue #659
     if only_use_cftime_datetimes:
@@ -348,9 +345,6 @@ def date2index(dates, nctime, calendar=None, select='exact'):
     if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
         if basedate.year == 0:
             msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
-            raise ValueError(msg)
-        elif basedate.year < 0:
-            msg='negative reference year in time units, must be >= 1'
             raise ValueError(msg)
 
     if (calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
@@ -706,9 +700,6 @@ units to datetime objects.
             if self.origin.year == 0:
                 msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
                 raise ValueError(msg)
-            #elif self.origin.year < 0:
-            #    msg='negative reference year in time units, must be >= 1'
-            #    raise ValueError(msg)
         self.tzoffset = tzoffset  # time zone offset in minutes
         self.units = units
         self.unit_string = unit_string
