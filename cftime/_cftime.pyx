@@ -1366,7 +1366,7 @@ but uses the "360_day" calendar.
         datetime.__init__(self, *args, **kwargs)
         self.calendar = "360_day"
         self.datetime_compatible = False
-        assert_valid_date(self, no_leap, False, has_year_zero=True)
+        assert_valid_date(self, no_leap, False, has_year_zero=True, is_360_day=True)
         # if dayofwk, dayofyr not set, calculate them.
         if self.dayofwk < 0:
             jd = JulianDayFromDate(self,calendar='360_day')
@@ -1566,17 +1566,19 @@ cdef int* month_lengths(bint (*is_leap)(int), int year):
 
 cdef void assert_valid_date(datetime dt, bint (*is_leap)(int),
                             bint julian_gregorian_mixed,
-                            bint has_year_zero=False) except *:
+                            bint has_year_zero=False,
+                            bint is_360_day=False) except *:
     cdef int[13] month_length
 
     if not has_year_zero:
         if dt.year == 0:
             raise ValueError("invalid year provided in {0!r}".format(dt))
-        month_length = month_lengths(is_leap, dt.year)
-    else:
+    if is_360_day:
         for j, N in enumerate(
                 [-1, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]):
             month_length[j] = N
+    else:
+        month_length = month_lengths(is_leap, dt.year)
 
     if dt.month < 1 or dt.month > 12:
         raise ValueError("invalid month provided in {0!r}".format(dt))
