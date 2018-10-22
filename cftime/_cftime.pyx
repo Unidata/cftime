@@ -1801,6 +1801,8 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
     from Julian to Gregorian calendars).  Default False, ignored
     unless calendar = 'standard'."""
     cdef int jday, jday_jul, jday_greg
+    cdef bint leap
+    cdef int[12] dpm2use
 
     # validate inputs.
     calendar = _check_calendar(calendar)
@@ -1882,6 +1884,8 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False):
     from Julian to Gregorian calendars).  Default False, ignored
     unless calendar = 'standard'."""
     cdef int year,month,day,dow,doy,yp1,tjday
+    cdef int[12] dpm2use
+    cdef int[13] spm2use
 
     # validate inputs.
     calendar = _check_calendar(calendar)
