@@ -393,7 +393,11 @@ def JulianDayFromDate(date, calendar='standard'):
     second = year.copy()
     microsecond = year.copy()
     jd = np.empty(year.shape, np.float64)
-    for i, d in enumerate(date):
+    cdef double[:] jd_view = jd
+    cdef Py_ssize_t i_max = len(date)
+    cdef Py_ssize_t i
+    for i in range(i_max):
+        d = date[i]
         year[i] = d.year
         month[i] = d.month
         day[i] = d.day
@@ -401,7 +405,7 @@ def JulianDayFromDate(date, calendar='standard'):
         minute[i] = d.minute
         second[i] = d.second
         microsecond[i] = d.microsecond
-        jd[i] = _IntJulianDayFromDate(<int>year[i],<int>month[i],<int>day[i],calendar)
+        jd_view[i] = <double>_IntJulianDayFromDate(<int>year[i],<int>month[i],<int>day[i],calendar)
 
     # at this point jd is an integer representing noon UTC on the given
     # year,month,day.
@@ -451,15 +455,17 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     Z = np.atleast_1d(np.int32(_round_half_up(julian)))
     F = np.atleast_1d(julian + 0.5 - Z).astype(np.float64)
 
-    year = np.empty(len(Z), dtype=np.int32)
-    dayofyr = np.zeros(len(year),dtype=year.dtype)
-    dayofwk = np.zeros(len(year),dtype=year.dtype)
-    month = year.copy()
-    day = year.copy()
-    for i, ijd in enumerate(Z):
-        yr,mon,dy,dow,doy = _IntJulianDayToDate(ijd,calendar)
-        year[i]=yr; month[i]=mon; day[i]=dy
-        dayofyr[i]=doy; dayofwk[i]=dow
+    cdef Py_ssize_t i_max = len(Z)
+    year = np.empty(i_max, dtype=np.int32)
+    month = np.empty(i_max, dtype=np.int32)
+    day = np.empty(i_max, dtype=np.int32)
+    dayofyr = np.zeros(i_max,dtype=np.int32)
+    dayofwk = np.zeros(i_max,dtype=np.int32)
+    cdef int ijd
+    cdef Py_ssize_t i
+    for i in range(i_max):
+        ijd = Z[i]
+        year[i],month[i],day[i],dayofwk[i],dayofyr[i] = _IntJulianDayToDate(ijd,calendar)
 
     if calendar in ['standard', 'gregorian']:
         ind_before = np.where(julian < 2299160.5)[0]
