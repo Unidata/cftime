@@ -16,6 +16,7 @@ try:
 except ImportError:  # python 3.x
     pass
 
+#from ._calcalcs import _IntJulianDayFromDate, _IntJulianDayToDate
 # calendar operations (_IntJulianDayFromDate, _IntJulianDayToDate)
 include "_calcalcs.pyx"
 
@@ -1321,7 +1322,7 @@ but uses the "noleap" ("365_day") calendar.
         datetime.__init__(self, *args, **kwargs)
         self.calendar = "noleap"
         self.datetime_compatible = False
-        assert_valid_date(self, no_leap, False)
+        assert_valid_date(self, no_leap, False, has_year_zero=True)
         # if dayofwk, dayofyr not set, calculate them.
         if self.dayofwk < 0:
             jd = JulianDayFromDate(self,calendar='365_day')
@@ -1343,7 +1344,7 @@ but uses the "all_leap" ("366_day") calendar.
         datetime.__init__(self, *args, **kwargs)
         self.calendar = "all_leap"
         self.datetime_compatible = False
-        assert_valid_date(self, all_leap, False)
+        assert_valid_date(self, all_leap, False, has_year_zero=True)
         # if dayofwk, dayofyr not set, calculate them.
         if self.dayofwk < 0:
             jd = JulianDayFromDate(self,calendar='366_day')
@@ -1365,7 +1366,7 @@ but uses the "360_day" calendar.
         datetime.__init__(self, *args, **kwargs)
         self.calendar = "360_day"
         self.datetime_compatible = False
-        assert_valid_date(self, no_leap, False, is_360_day=True)
+        assert_valid_date(self, no_leap, False, has_year_zero=True)
         # if dayofwk, dayofyr not set, calculate them.
         if self.dayofwk < 0:
             jd = JulianDayFromDate(self,calendar='360_day')
@@ -1565,10 +1566,10 @@ cdef int* month_lengths(bint (*is_leap)(int), int year):
 
 cdef void assert_valid_date(datetime dt, bint (*is_leap)(int),
                             bint julian_gregorian_mixed,
-                            bint is_360_day=False) except *:
+                            bint has_year_zero=False) except *:
     cdef int[13] month_length
 
-    if not is_360_day:
+    if not has_year_zero:
         if dt.year == 0:
             raise ValueError("invalid year provided in {0!r}".format(dt))
         month_length = month_lengths(is_leap, dt.year)
