@@ -16,10 +16,6 @@ try:
 except ImportError:  # python 3.x
     pass
 
-#from ._calcalcs import _IntJulianDayFromDate, _IntJulianDayToDate
-# calendar operations (_IntJulianDayFromDate, _IntJulianDayToDate)
-include "_calcalcs.pyx"
-
 microsec_units = ['microseconds','microsecond', 'microsec', 'microsecs']
 millisec_units = ['milliseconds', 'millisecond', 'millisec', 'millisecs']
 sec_units =      ['second', 'seconds', 'sec', 'secs', 's']
@@ -27,8 +23,18 @@ min_units =      ['minute', 'minutes', 'min', 'mins']
 hr_units =       ['hour', 'hours', 'hr', 'hrs', 'h']
 day_units =      ['day', 'days', 'd']
 _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
+# supported calendars. Includes synonyms ('standard'=='gregorian',
+# '366_day'=='all_leap','365_day'=='noleap')
+# see http://cfconventions.org/cf-conventions/cf-conventions.html#calendar 
+# for definitions.
 _calendars = ['standard', 'gregorian', 'proleptic_gregorian',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
+# Following are number of Days Per Month
+cdef int[12] _dpm   = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+cdef int[12] _dpm_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+# Same as above, but SUM of previous months (no leap years).
+cdef int[13] _spm_365day = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
+cdef int[13] _spm_366day = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
 
 __version__ = '1.0.2'
 
@@ -395,7 +401,7 @@ def JulianDayFromDate(date, calendar='standard'):
         minute[i] = d.minute
         second[i] = d.second
         microsecond[i] = d.microsecond
-        jd[i] = _IntJulianDayFromDate(year[i],month[i],day[i],calendar)
+        jd[i] = _IntJulianDayFromDate(<int>year[i],<int>month[i],<int>day[i],calendar)
 
     # at this point jd is an integer representing noon UTC on the given
     # year,month,day.
@@ -1731,3 +1737,301 @@ cdef tuple add_timedelta_360_day(datetime dt, delta):
 
     return (year, month, day, hour, minute, second, microsecond, -1, 1)
 
+# Calendar calculations base on calcals.c by David W. Pierce
+# http://meteora.ucsd.edu/~pierce/calcalcs 
+
+cdef _is_leap(int year, calendar):
+    cdef int tyear
+    cdef bint leap
+    calendar = _check_calendar(calendar)
+    if year == 0:
+        raise ValueError('year zero does not exist in the %s calendar' %\
+                calendar)
+    # Because there is no year 0 in the Julian calendar, years -1, -5, -9, etc
+    # are leap years.
+    if year < 0:
+        tyear = year + 1
+    else:
+        tyear = year
+    if calendar == 'proleptic_gregorian' or (calendar == 'standard' and year > 1581):
+        if tyear % 4: # not divisible by 4
+            leap = False
+        elif year % 100: # not divisible by 100
+            leap = True
+        elif year % 400: # not divisible by 400
+            leap = False
+        else:
+            leap = True
+    elif calendar == 'julian' or (calendar == 'standard' and year < 1582):
+        leap = tyear % 4 == 0
+    elif calendar == '366_day':
+        leap = True
+    else:
+        leap = False
+    return leap
+
+cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=False):
+    """Compute integer Julian Day from year,month,day and calendar.
+
+    Allowed calendars are 'standard', 'gregorian', 'julian',
+    'proleptic_gregorian','360_day', '365_day', '366_day', 'noleap',
+    'all_leap'.
+
+    'noleap' is a synonym for '365_day'
+    'all_leap' is a synonym for '366_day'
+    'gregorian' is a synonym for 'standard'
+
+    Negative years allowed back to -4714
+    (proleptic_gregorian) or -4713 (standard or gregorian calendar).
+
+    Negative year values are allowed in 360_day,365_day,366_day calendars.
+
+    Integer julian day is number of days since noon UTC -4713-1-1
+    in the julian or mixed julian/gregorian calendar, or noon UTC
+    -4714-11-24 in the proleptic_gregorian calendar. Reference
+    date is noon UTC 0-1-1 for other calendars.
+
+    There is no year zero in standard (mixed), julian, or proleptic_gregorian
+    calendars.
+
+    Subtract 0.5 to get 00 UTC on that day.
+
+    optional kwarg 'skip_transition':  When True, leave a 10-day
+    gap in Julian day numbers between Oct 4 and Oct 15 1582 (the transition
+    from Julian to Gregorian calendars).  Default False, ignored
+    unless calendar = 'standard'."""
+    cdef int jday, jday_jul, jday_greg
+
+    # validate inputs.
+    calendar = _check_calendar(calendar)
+    if month < 1 or month > 12 or day < 1 or day > 31:
+        msg = "date %04d-%02d-%02d does not exist in the %s calendar" %\
+        (year,month,day,calendar)
+        raise ValueError(msg)
+
+    # handle all calendars except standard, julian, proleptic_gregorian.
+    if calendar == '360_day':
+        return _IntJulianDayFromDate_360day(year,month,day)
+    elif calendar == '365_day':
+        return _IntJulianDayFromDate_365day(year,month,day)
+    elif calendar == '366_day':
+        return _IntJulianDayFromDate_366day(year,month,day)
+
+    # handle standard, julian, proleptic_gregorian calendars.
+    if year == 0:
+        raise ValueError('year zero does not exist in the %s calendar' %\
+                calendar)
+    if (calendar == 'proleptic_gregorian'         and year < -4714) or\
+       (calendar in ['julian','standard']  and year < -4713):
+        raise ValueError('year out of range for %s calendar' % calendar)
+    leap = _is_leap(year,calendar)
+    if not leap and month == 2 and day == 29:
+        raise ValueError('%s is not a leap year' % year)
+
+    # add year offset
+    if year < 0:
+        year += 4801
+    else:
+        year += 4800
+
+    if leap:
+        dpm2use = _dpm_leap
+    else:
+        dpm2use = _dpm
+
+    jday = day
+    for m in range(month-1,0,-1):
+        jday += dpm2use[m-1]
+
+    jday_greg = jday + 365*(year-1) + (year-1)//4 - (year-1)//100 + (year-1)//400
+    jday_greg -= 31739 # fix year offset
+    jday_jul = jday + 365*(year-1) + (year-1)//4
+    jday_jul -= 31777 # fix year offset
+    if calendar == 'julian':
+        return jday_jul
+    elif calendar == 'proleptic_gregorian':
+        return jday_greg
+    elif calendar == 'standard':
+        # check for invalid days in mixed calendar (there are 10 missing)
+        if jday_jul >= 2299161 and jday_jul < 2299171:
+            raise ValueError('invalid date in mixed calendar')
+        if jday_jul < 2299161: # 1582 October 15
+            return jday_jul
+        else:
+            if skip_transition:
+                return jday_greg+10
+            else:
+                return jday_greg
+
+    return jday
+
+cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False):
+    """Compute the year,month,day,dow,doy given the integer Julian day.
+    and calendar. (dow = day of week with 0=Mon,6=Sun and doy is day of year).
+
+    Allowed calendars are 'standard', 'gregorian', 'julian',
+    'proleptic_gregorian','360_day', '365_day', '366_day', 'noleap',
+    'all_leap'.
+
+    'noleap' is a synonym for '365_day'
+    'all_leap' is a synonym for '366_day'
+    'gregorian' is a synonym for 'standard'
+
+    optional kwarg 'skip_transition':  When True, assume a 10-day
+    gap in Julian day numbers between Oct 4 and Oct 15 1582 (the transition
+    from Julian to Gregorian calendars).  Default False, ignored
+    unless calendar = 'standard'."""
+    cdef int year,month,day,dow,doy,yp1,tjday
+
+    # validate inputs.
+    calendar = _check_calendar(calendar)
+
+    # handle all calendars except standard, julian, proleptic_gregorian.
+    if calendar == '360_day':
+        return _IntJulianDayToDate_360day(jday)
+    elif calendar == '365_day':
+        return _IntJulianDayToDate_365day(jday)
+    elif calendar == '366_day':
+        return _IntJulianDayToDate_366day(jday)
+
+    # handle standard, julian, proleptic_gregorian calendars.
+    if jday < 0:
+        raise ValueError('julian day must be a positive integer')
+    # Make first estimate for year. subtract 4714 or 4713 because Julian Day number
+    # 0 occurs in year 4714 BC in the Gregorian calendar and 4713 BC in the
+    # Julian calendar.
+    if calendar == 'proleptic_gregorian':
+        year = jday//366 - 4714
+    elif calendar in ['standard','julian']:
+        year = jday//366 - 4713;
+
+    # compute day of week.
+    dow = _get_dow(jday)
+
+    if not skip_transition and calendar == 'standard' and jday > 2299160: jday += 10
+
+    # Advance years until we find the right one
+    yp1 = year + 1
+    if yp1 == 0:
+       yp1 = 1 # no year 0
+    tjday = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True)
+    while jday >= tjday:
+        year += 1
+        if year == 0:
+            year = 1
+        yp1 = year + 1
+        if yp1 == 0:
+            yp1 = 1
+        tjday = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True)
+    if _is_leap(year, calendar):
+        dpm2use = _dpm_leap
+        spm2use = _spm_366day
+    else:
+        dpm2use = _dpm
+        spm2use = _spm_365day
+    month = 1
+    tjday =\
+    _IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True)
+    while jday > tjday:
+        month += 1
+        tjday =\
+        _IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True)
+    tjday = _IntJulianDayFromDate(year,month,1,calendar,skip_transition=True)
+    day = jday - tjday + 1
+    if month == 1:
+        doy = day
+    else:
+        doy = spm2use[month-1]+day
+    return year,month,day,dow,doy
+
+cdef _get_dow(int jday):
+    """compute day of week.
+    0 = Sunday, 6 = Sat, valid after noon UTC"""
+    dow = (jday + 1) % 7
+    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
+    dow -= 1
+    if dow == -1: dow = 6
+    return dow
+
+cdef _check_calendar(calendar):
+    """validate calendars, convert to subset of names to get rid of synonyms"""
+    if calendar not in _calendars:
+        raise ValueError('unsupported calendar')
+    calout = calendar
+    # remove 'gregorian','noleap','all_leap'
+    if calendar in ['gregorian','standard']:
+        calout = 'standard'
+    if calendar == 'noleap':
+        calout = '365_day'
+    if calendar == 'all_leap':
+        calout = '366_day'
+    return calout
+
+cdef _IntJulianDayFromDate_360day(int year,int month,int day):
+    """Compute integer Julian Day from year,month,day in
+    360_day calendar"""
+    return year*360 + (month-1)*30 + day - 1
+
+cdef _IntJulianDayFromDate_365day(int year,int month,int day):
+    """Compute integer Julian Day from year,month,day in
+    365_day calendar"""
+    if month == 2 and day == 29:
+        raise ValueError('no leap days in 365_day calendar')
+    return year*365 + _spm_365day[month-1] + day - 1
+
+cdef _IntJulianDayFromDate_366day(int year,int month,int day):
+    """Compute integer Julian Day from year,month,day in
+    366_day calendar"""
+    return year*366 + _spm_366day[month-1] + day - 1
+
+cdef _IntJulianDayToDate_365day(int jday):
+    """Compute the year,month,day given the integer Julian day
+    for 365_day calendar."""
+    cdef int year,month,day,nextra,dow
+
+    year = jday//365
+    nextra = jday - year*365
+    doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
+    month = 1
+    while doy > _spm_365day[month]:
+        month += 1
+    day = doy - _spm_365day[month-1]
+
+    # compute day of week.
+    dow = _get_dow(jday)
+
+    return year,month,day,dow,doy
+
+cdef _IntJulianDayToDate_366day(int jday):
+    """Compute the year,month,day given the integer Julian day
+    for 366_day calendar."""
+    cdef int year,month,day,nextra,dow
+
+    year = jday//366
+    nextra = jday - year*366
+    doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
+    month = 1
+    while doy > _spm_366day[month]:
+        month += 1
+    day = doy - _spm_366day[month-1]
+
+    # compute day of week.
+    dow = _get_dow(jday)
+
+    return year,month,day,dow,doy
+
+cdef _IntJulianDayToDate_360day(int jday):
+    """Compute the year,month,day given the integer Julian day
+    for 360_day calendar."""
+    cdef int year,month,day,nextra,dow
+
+    year = jday//360
+    nextra = jday - year*360
+    doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
+    month = nextra//30 + 1
+    day   = doy - (month-1)*30
+
+    # compute day of week.
+    dow = _get_dow(jday)
+
+    return year,month,day,dow,doy
