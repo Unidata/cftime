@@ -1913,7 +1913,7 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False):
     if calendar == 'proleptic_gregorian':
         year = jday//366 - 4714
     elif calendar in ['standard','julian']:
-        year = jday//366 - 4713;
+        year = jday//366 - 4713
 
     # compute day of week.
     dow = _get_dow(jday)
