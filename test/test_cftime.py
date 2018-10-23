@@ -1158,8 +1158,8 @@ def days_per_month_leap_year(date_type, month):
 
 
 def test_zero_year(date_type):
-    # Year 0 is valid in the 360 day calendar
-    if date_type is Datetime360Day:
+    # Year 0 is valid in the 360,365 and 366 day calendars
+    if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day]:
         date_type(0, 1, 1)
     else:
         with pytest.raises(ValueError):
