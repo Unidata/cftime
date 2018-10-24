@@ -416,9 +416,10 @@ def JulianDayFromDate(date, calendar='standard'):
     # Add a small offset (proportional to Julian date) for correct re-conversion.
     # This is about 45 microseconds in 2000 for Julian date starting -4712.
     # (pull request #433).
-    eps = np.finfo(float).eps
-    eps = np.maximum(eps*jd, eps)
-    jd += eps
+    if calendar not in ['all_leap','no_leap','360_day','365_day','366_day']:
+       eps = np.finfo(float).eps
+       eps = np.maximum(eps*jd, eps)
+       jd += eps
 
     if isscalar:
         return jd[0]
@@ -472,8 +473,6 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
 
     # Subtract the offset from JulianDayFromDate from the microseconds (pull
     # request #433).
-    eps = np.finfo(float).eps
-    eps = np.maximum(eps*julian, eps)
     hour = np.clip((F * 24.).astype(np.int64), 0, 23)
     F   -= hour / 24.
     minute = np.clip((F * 1440.).astype(np.int64), 0, 59)
@@ -481,7 +480,10 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     second = np.clip((F - minute / 1440.) * 86400., 0, None)
     microsecond = (second % 1)*1.e6
     # remove the offset from the microsecond calculation.
-    microsecond = np.clip(microsecond - eps*86400.*1e6, 0, 999999)
+    if calendar not in ['all_leap','no_leap','360_day','365_day','366_day']:
+        eps = np.finfo(float).eps
+        eps = np.maximum(eps*julian, eps)
+        microsecond = np.clip(microsecond - eps*86400.*1e6, 0, 999999)
 
     # convert hour, minute, second to int32
     hour = hour.astype(np.int32)
