@@ -1957,6 +1957,7 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False):
 cdef _get_dow(int jday):
     """compute day of week.
     0 = Sunday, 6 = Sat, valid after noon UTC"""
+    cdef int dow
     dow = (jday + 1) % 7
     # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
     dow -= 1
