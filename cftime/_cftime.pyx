@@ -23,10 +23,20 @@ min_units =      ['minute', 'minutes', 'min', 'mins']
 hr_units =       ['hour', 'hours', 'hr', 'hrs', 'h']
 day_units =      ['day', 'days', 'd']
 _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
+# supported calendars. Includes synonyms ('standard'=='gregorian',
+# '366_day'=='all_leap','365_day'=='noleap')
+# see http://cfconventions.org/cf-conventions/cf-conventions.html#calendar 
+# for definitions.
 _calendars = ['standard', 'gregorian', 'proleptic_gregorian',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
+# Following are number of Days Per Month
+cdef int[12] _dpm   = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+cdef int[12] _dpm_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+# Same as above, but SUM of previous months (no leap years).
+cdef int[13] _spm_365day = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
+cdef int[13] _spm_366day = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
 
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
@@ -142,9 +152,6 @@ def date2num(dates,units,calendar='standard'):
             if basedate.year == 0:
                 msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
                 raise ValueError(msg)
-            elif basedate.year < 0:
-                msg='negative reference year in time units, must be >= 1'
-                raise ValueError(msg)
 
         if (calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
            (calendar in ['gregorian','standard'] and basedate > gregorian):
@@ -241,9 +248,6 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=False):
     if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
         if basedate.year == 0:
             msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
-            raise ValueError(msg)
-        elif basedate.year < 0:
-            msg='negative reference year in time units, must be >= 1'
             raise ValueError(msg)
 
     postimes =  (np.asarray(times) > 0).all() # netcdf4-python issue #659
@@ -349,9 +353,6 @@ def date2index(dates, nctime, calendar=None, select='exact'):
         if basedate.year == 0:
             msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
             raise ValueError(msg)
-        elif basedate.year < 0:
-            msg='negative reference year in time units, must be >= 1'
-            raise ValueError(msg)
 
     if (calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
        (calendar in ['gregorian','standard'] and basedate > gregorian):
@@ -374,15 +375,7 @@ def JulianDayFromDate(date, calendar='standard'):
     if calendar='proleptic_gregorian', Julian Day follows gregorian calendar.
 
     if calendar='julian', Julian Day follows julian calendar.
-
-    Algorithm:
-
-    Meeus, Jean (1998) Astronomical Algorithms (2nd Edition). Willmann-Bell,
-    Virginia. p. 63
-
     """
-
-    # based on redate.py by David Finlayson.
 
     # check if input was scalar and change return accordingly
     isscalar = False
@@ -399,7 +392,12 @@ def JulianDayFromDate(date, calendar='standard'):
     minute = year.copy()
     second = year.copy()
     microsecond = year.copy()
-    for i, d in enumerate(date):
+    jd = np.empty(year.shape, np.float64)
+    cdef double[:] jd_view = jd
+    cdef Py_ssize_t i_max = len(date)
+    cdef Py_ssize_t i
+    for i in range(i_max):
+        d = date[i]
         year[i] = d.year
         month[i] = d.month
         day[i] = d.day
@@ -407,155 +405,26 @@ def JulianDayFromDate(date, calendar='standard'):
         minute[i] = d.minute
         second[i] = d.second
         microsecond[i] = d.microsecond
-    # convert years in BC era to astronomical years (so that 1 BC is year zero)
-    # (fixes netcdf4-python issue #596)
-    year[year < 0] = year[year < 0] + 1
-    # Convert time to fractions of a day
-    day = day + hour / 24.0 + minute / 1440.0 + (second + microsecond/1.e6) / 86400.0
+        jd_view[i] = <double>_IntJulianDayFromDate(<int>year[i],<int>month[i],<int>day[i],calendar)
 
-    # Start Meeus algorithm (variables are in his notation)
-    month_lt_3 = month < 3
-    month[month_lt_3] = month[month_lt_3] + 12
-    year[month_lt_3] = year[month_lt_3] - 1
-
-    # MC - assure array
-    # A = np.int64(year / 100)
-    A = (year / 100).astype(np.int64)
-
-    # MC
-    # jd = int(365.25 * (year + 4716)) + int(30.6001 * (month + 1)) + \
-    #      day - 1524.5
-    jd = 365. * year + np.int32(0.25 * year + 2000.) + np.int32(30.6001 * (month + 1)) + \
-        day + 1718994.5
-
-    # optionally adjust the jd for the switch from
-    # the Julian to Gregorian Calendar
-    # here assumed to have occurred the day after 1582 October 4
-    if calendar in ['standard', 'gregorian']:
-        # MC - do not have to be contiguous dates
-        # if np.min(jd) >= 2299170.5:
-        #     # 1582 October 15 (Gregorian Calendar)
-        #     B = 2 - A + np.int32(A / 4)
-        # elif np.max(jd) < 2299160.5:
-        #     # 1582 October 5 (Julian Calendar)
-        #     B = np.zeros(len(jd))
-        # else:
-        #     print(date, calendar, jd)
-        #     raise ValueError(
-        #         'impossible date (falls in gap between end of Julian calendar and beginning of Gregorian calendar')
-        if np.any((jd >= 2299160.5) & (jd < 2299170.5)): # missing days in Gregorian calendar
-            raise ValueError(
-                'impossible date (falls in gap between end of Julian calendar and beginning of Gregorian calendar')
-        B = np.zeros(len(jd))             # 1582 October 5 (Julian Calendar)
-        ii = np.where(jd >= 2299170.5)[0] # 1582 October 15 (Gregorian Calendar)
-        if ii.size>0:
-            B[ii] = 2 - A[ii] + np.int32(A[ii] / 4)
-    elif calendar == 'proleptic_gregorian':
-        B = 2 - A + np.int32(A / 4)
-    elif calendar == 'julian':
-        B = np.zeros(len(jd))
-    else:
-        raise ValueError(
-            'unknown calendar, must be one of julian,standard,gregorian,proleptic_gregorian, got %s' % calendar)
-
-    # adjust for Julian calendar if necessary
-    jd = jd + B
+    # at this point jd is an integer representing noon UTC on the given
+    # year,month,day.
+    # compute fractional day from hour,minute,second,microsecond
+    fracday = hour / 24.0 + minute / 1440.0 + (second + microsecond/1.e6) / 86400.0
+    jd = jd - 0.5 + fracday
 
     # Add a small offset (proportional to Julian date) for correct re-conversion.
     # This is about 45 microseconds in 2000 for Julian date starting -4712.
     # (pull request #433).
-    eps = np.finfo(float).eps
-    eps = np.maximum(eps*jd, eps)
-    jd += eps
+    if calendar not in ['all_leap','no_leap','360_day','365_day','366_day']:
+       eps = np.finfo(float).eps
+       eps = np.maximum(eps*jd, eps)
+       jd += eps
 
     if isscalar:
         return jd[0]
     else:
         return jd
-
-
-cdef _NoLeapDayFromDate(date):
-    """
-
-creates a Julian Day for a calendar with no leap years from a datetime
-instance.  Returns the fractional Julian Day (approximately millisecond accuracy).
-
-    """
-
-    year = date.year
-    month = date.month
-    day = date.day
-    hour = date.hour
-    minute = date.minute
-    second = date.second
-    microsecond = date.microsecond
-    # Convert time to fractions of a day
-    day = day + hour / 24.0 + minute / 1440.0 + (second + microsecond/1.e6) / 86400.0
-
-    # Start Meeus algorithm (variables are in his notation)
-    if (month < 3):
-        month = month + 12
-        year = year - 1
-
-    jd = int(365. * (year + 4716)) + int(30.6001 * (month + 1)) + \
-        day - 1524.5
-
-    return jd
-
-
-cdef _AllLeapFromDate(date):
-    """
-
-creates a Julian Day for a calendar where all years have 366 days from
-a 'datetime-like' object.
-Returns the fractional Julian Day (approximately millisecond accuracy).
-
-    """
-
-    year = date.year
-    month = date.month
-    day = date.day
-    hour = date.hour
-    minute = date.minute
-    second = date.second
-    microsecond = date.microsecond
-    # Convert time to fractions of a day
-    day = day + hour / 24.0 + minute / 1440.0 + (second + microsecond/1.e6) / 86400.0
-
-    # Start Meeus algorithm (variables are in his notation)
-    if (month < 3):
-        month = month + 12
-        year = year - 1
-
-    jd = int(366. * (year + 4716)) + int(30.6001 * (month + 1)) + \
-        day - 1524.5
-
-    return jd
-
-
-cdef _360DayFromDate(date):
-    """
-
-creates a Julian Day for a calendar where all months have 30 days from
-a 'datetime-like' object.
-Returns the fractional Julian Day (approximately millisecond accuracy).
-
-    """
-
-    year = date.year
-    month = date.month
-    day = date.day
-    hour = date.hour
-    minute = date.minute
-    second = date.second
-    microsecond = date.microsecond
-    # Convert time to fractions of a day
-    day = day + hour / 24.0 + minute / 1440.0 + (second + microsecond/1.e6) / 86400.0
-
-    jd = int(360. * (year + 4716)) + int(30. * (month - 1)) + day
-
-    return jd
-
 
 def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
                       return_tuple=False):
@@ -577,98 +446,33 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     (i.e. calendar='proleptic_gregorian', or  calendar = 'standard'/'gregorian'
     and the date is after 1582-10-15).  In all other cases a 'phony' datetime
     objects are used, which are actually instances of cftime.datetime.
-
-    Algorithm:
-
-    Meeus, Jean (1998) Astronomical Algorithms (2nd Edition). Willmann-Bell,
-    Virginia. p. 63
     """
-
-    # based on redate.py by David Finlayson.
 
     julian = np.array(JD, dtype=np.float64)
 
-    if np.min(julian) < 0:
-        raise ValueError('Julian Day must be positive')
-
-    # 0 = Sunday, 6 = Sat, valid after noon UTC
-    dayofwk = np.atleast_1d(np.int32(np.fmod(np.int32(julian) + 1, 7)))
-    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
-    dayofwk -= 1; dayofwk = np.where(dayofwk==-1, 6, dayofwk)
     # get the day (Z) and the fraction of the day (F)
     # use 'round half up' rounding instead of numpy's even rounding
     # so that 0.5 is rounded to 1.0, not 0 (cftime issue #49)
     Z = np.atleast_1d(np.int32(_round_half_up(julian)))
     F = np.atleast_1d(julian + 0.5 - Z).astype(np.float64)
+
+    cdef Py_ssize_t i_max = len(Z)
+    year = np.empty(i_max, dtype=np.int32)
+    month = np.empty(i_max, dtype=np.int32)
+    day = np.empty(i_max, dtype=np.int32)
+    dayofyr = np.zeros(i_max,dtype=np.int32)
+    dayofwk = np.zeros(i_max,dtype=np.int32)
+    cdef int ijd
+    cdef Py_ssize_t i
+    for i in range(i_max):
+        ijd = Z[i]
+        year[i],month[i],day[i],dayofwk[i],dayofyr[i] = _IntJulianDayToDate(ijd,calendar)
+
     if calendar in ['standard', 'gregorian']:
-        # MC
-        #alpha = np.int32((Z - 1867216.25)/36524.25)
-        #A = Z + 1 + alpha - np.int32(alpha/4)
-        alpha = np.int32(((Z - 1867216.) - 0.25) / 36524.25)
-        A = Z + 1 + alpha - np.int32(0.25 * alpha)
-        # check if dates before oct 5th 1582 are in the array
         ind_before = np.where(julian < 2299160.5)[0]
-        if len(ind_before) > 0:
-            A[ind_before] = Z[ind_before]
-
-    elif calendar == 'proleptic_gregorian':
-        # MC
-        # alpha = int((Z - 1867216.25)/36524.25)
-        # A = Z + 1 + alpha - int(alpha/4)
-        alpha = np.int32(((Z - 1867216.) - 0.25) / 36524.25)
-        A = Z + 1 + alpha - np.int32(0.25 * alpha)
-    elif calendar == 'julian':
-        A = Z
-    else:
-        raise ValueError(
-            'unknown calendar, must be one of julian,standard,gregorian,proleptic_gregorian, got %s' % calendar)
-
-    B = A + 1524
-    # MC
-    #C = np.atleast_1d(np.int32((B - 122.1)/365.25))
-    #D = np.atleast_1d(np.int32(365.25 * C))
-    C = np.atleast_1d(np.int32(6680. + ((B - 2439870.) - 122.1) / 365.25))
-    D = np.atleast_1d(np.int32(365 * C + np.int32(0.25 * C)))
-    E = np.atleast_1d(np.int32((B - D) / 30.6001))
-
-    # Convert to date
-    day = np.clip(B - D - np.int64(30.6001 * E) + F, 1, None)
-    nday = B - D - 123
-    dayofyr = nday - 305
-    ind_nday_before = np.where(nday <= 305)[0]
-    if len(ind_nday_before) > 0:
-        dayofyr[ind_nday_before] = nday[ind_nday_before] + 60
-    # MC
-    # if E < 14:
-    #     month = E - 1
-    # else:
-    #     month = E - 13
-
-    # if month > 2:
-    #     year = C - 4716
-    # else:
-    #     year = C - 4715
-    month = E - 1
-    month[month > 12] = month[month > 12] - 12
-    year = C - 4715
-    year[month > 2] = year[month > 2] - 1
-    year[year <= 0] = year[year <= 0] - 1
-
-    # a leap year?
-    leap = np.zeros(len(year),dtype=dayofyr.dtype)
-    leap[year % 4 == 0] = 1
-    if calendar == 'proleptic_gregorian':
-        leap[(year % 100 == 0) & (year % 400 != 0)] = 0
-    elif calendar in ['standard', 'gregorian']:
-        leap[(year % 100 == 0) & (year % 400 != 0) & (julian < 2299160.5)] = 0
-
-    inc_idx = np.where((leap == 1) & (month > 2))[0]
-    dayofyr[inc_idx] = dayofyr[inc_idx] + leap[inc_idx]
 
     # Subtract the offset from JulianDayFromDate from the microseconds (pull
     # request #433).
-    eps = np.finfo(float).eps
-    eps = np.maximum(eps*julian, eps)
     hour = np.clip((F * 24.).astype(np.int64), 0, 23)
     F   -= hour / 24.
     minute = np.clip((F * 1440.).astype(np.int64), 0, 59)
@@ -676,20 +480,16 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     second = np.clip((F - minute / 1440.) * 86400., 0, None)
     microsecond = (second % 1)*1.e6
     # remove the offset from the microsecond calculation.
-    microsecond = np.clip(microsecond - eps*86400.*1e6, 0, 999999)
+    if calendar not in ['all_leap','no_leap','360_day','365_day','366_day']:
+        eps = np.finfo(float).eps
+        eps = np.maximum(eps*julian, eps)
+        microsecond = np.clip(microsecond - eps*86400.*1e6, 0, 999999)
 
-    # convert year, month, day, hour, minute, second to int32
-    year = year.astype(np.int32)
-    month = month.astype(np.int32)
-    day = day.astype(np.int32)
+    # convert hour, minute, second to int32
     hour = hour.astype(np.int32)
     minute = minute.astype(np.int32)
     second = second.astype(np.int32)
     microsecond = microsecond.astype(np.int32)
-
-    # before noon, add one to day of week
-    dayofwk[hour < 12] += 1
-    dayofwk = np.where(dayofwk==7, 0, dayofwk)
 
     # check if input was scalar and change return accordingly
     isscalar = False
@@ -699,14 +499,11 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
         isscalar = True
 
     is_real_dateime = False
-    if calendar in 'proleptic_gregorian':
+    if calendar == 'proleptic_gregorian':
         # datetime.datetime does not support years < 1
         #if year < 0:
         if only_use_cftime_datetimes:
-           if calendar == 'gregorian':
-              datetime_type = DatetimeGregorian
-           else:
-              datetime_type = DatetimeProlepticGregorian
+            datetime_type = DatetimeProlepticGregorian
         else:
             if (year < 0).any(): # netcdftime issue #28
                datetime_type = DatetimeProlepticGregorian
@@ -721,9 +518,16 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
             is_real_datetime = True
             datetime_type = real_datetime
         else:
+            is_real_datetime = False
             datetime_type = DatetimeGregorian
     elif calendar == "julian":
         datetime_type = DatetimeJulian
+    elif calendar in ["noleap","365_day"]:
+        datetime_type = DatetimeNoLeap
+    elif calendar in ["all_leap","366_day"]:
+        datetime_type = DatetimeAllLeap
+    elif calendar == "360_day":
+        datetime_type = Datetime360Day
     else:
         raise ValueError("unsupported calendar: {0}".format(calendar))
 
@@ -757,184 +561,6 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
                 return datetime_type(year[0], month[0], day[0], hour[0],
                                      minute[0], second[0], microsecond[0],
                                      dayofwk[0], dayofyr[0])
-
-
-cdef _DateFromNoLeapDay(JD,return_tuple=False):
-    """
-
-returns a 'datetime-like' object given Julian Day for a calendar with no leap
-days. Julian Day is a fractional day with approximately millisecond accuracy.
-
-    """
-
-    # based on redate.py by David Finlayson.
-
-    if JD < 0:
-        year_offset = int(-JD) // 365 + 1
-        JD += year_offset * 365
-    else:
-        year_offset = 0
-
-    dayofwk = np.fmod(int(JD) + 1, 7)
-    # convert to 0=Monday, 6=Saturday
-    dayofwk -= 1
-    if dayofwk == -1: dayofwk = 6
-    (F, Z) = np.modf(JD + 0.5)
-    Z = int(Z)
-    A = Z
-    B = A + 1524
-    C = int((B - 122.1) / 365.)
-    D = int(365. * C)
-    E = int((B - D) / 30.6001)
-
-    # Convert to date
-    day = B - D - int(30.6001 * E) + F
-    nday = B - D - 123
-    if nday <= 305:
-        dayofyr = nday + 60
-    else:
-        dayofyr = nday - 305
-    if E < 14:
-        month = E - 1
-    else:
-        month = E - 13
-
-    if month > 2:
-        year = C - 4716
-    else:
-        year = C - 4715
-
-    # Convert fractions of a day to time
-    (dfrac, days) = np.modf(day / 1.0)
-    (hfrac, hours) = np.modf(dfrac * 24.0)
-    (mfrac, minutes) = np.modf(hfrac * 60.0)
-    (sfrac, seconds) = np.modf(mfrac * 60.0)
-    microseconds = sfrac*1.e6
-
-    # before noon, add one to day of week
-    if hours < 12:
-        dayofwk += 1
-        if dayofwk == 7: dayofwk = 0
-
-    if year_offset > 0:
-        # correct dayofwk
-
-        # 365 mod 7 = 1, so the day of the week changes by one day for
-        # every year in year_offset
-        dayofwk -= int(np.fmod(year_offset, 7))
-
-        if dayofwk < 0:
-            dayofwk += 7
-
-    if return_tuple:
-        return year-year_offset, month, int(days), int(hours), int(minutes),\
-        int(seconds), int(microseconds), dayofwk, dayofyr
-    else:
-        return DatetimeNoLeap(year-year_offset,month,int(days),int(hours),int(minutes),\
-        int(seconds), int(microseconds), dayofwk, dayofyr)
-
-
-cdef _DateFromAllLeap(JD,return_tuple=False):
-    """
-
-returns a 'datetime-like' object given Julian Day for a calendar where all
-years have 366 days.
-Julian Day is a fractional day with approximately millisecond accuracy.
-
-    """
-
-    # based on redate.py by David Finlayson.
-
-    if JD < 0:
-        raise ValueError('Julian Day must be positive')
-
-    dayofwk = np.fmod(int(JD) + 1, 7)
-    # convert to 0=Monday, 6=Saturday
-    dayofwk -= 1
-    if dayofwk == -1: dayofwk = 6
-    (F, Z) = np.modf(JD + 0.5)
-    Z = int(Z)
-    A = Z
-    B = A + 1524
-    C = int((B - 122.1) / 366.)
-    D = int(366. * C)
-    E = int((B - D) / 30.6001)
-
-    # Convert to date
-    day = B - D - int(30.6001 * E) + F
-    nday = B - D - 123
-    if nday <= 305:
-        dayofyr = nday + 60
-    else:
-        dayofyr = nday - 305
-    if E < 14:
-        month = E - 1
-    else:
-        month = E - 13
-    if month > 2:
-        dayofyr = dayofyr + 1
-
-    if month > 2:
-        year = C - 4716
-    else:
-        year = C - 4715
-
-    # Convert fractions of a day to time
-    (dfrac, days) = np.modf(day / 1.0)
-    (hfrac, hours) = np.modf(dfrac * 24.0)
-    (mfrac, minutes) = np.modf(hfrac * 60.0)
-    (sfrac, seconds) = np.modf(mfrac * 60.0)
-    microseconds = sfrac*1.e6
-
-    # before noon, add one to day of week
-    if hours < 12:
-        dayofwk += 1
-        if dayofwk == 7: dayofwk = 0
-
-    if return_tuple:
-        return year, month, int(days), int(hours), int(minutes),\
-               int(seconds), int(microseconds),dayofwk, dayofyr
-    else:
-        return DatetimeAllLeap(year, month, int(days), int(hours), int(minutes),\
-               int(seconds), int(microseconds),dayofwk, dayofyr)
-
-
-cdef _DateFrom360Day(JD,return_tuple=False):
-    """
-
-returns a 'datetime-like' object given Julian Day for a calendar where all
-months have 30 days.
-Julian Day is a fractional day with approximately millisecond accuracy.
-
-    """
-
-    if JD < 0:
-        year_offset = int(-JD) // 360 + 1
-        JD += year_offset * 360
-    else:
-        year_offset = 0
-
-    #jd = int(360. * (year + 4716)) + int(30. * (month - 1)) + day
-    (F, Z) = np.modf(JD)
-    year = int((Z - 0.5) / 360.) - 4716
-    dayofyr = Z - (year + 4716) * 360
-    month = int((dayofyr - 0.5) / 30) + 1
-    day = dayofyr - (month - 1) * 30 + F
-
-    # Convert fractions of a day to time
-    (dfrac, days) = np.modf(day / 1.0)
-    (hfrac, hours) = np.modf(dfrac * 24.0)
-    (mfrac, minutes) = np.modf(hfrac * 60.0)
-    (sfrac, seconds) = np.modf(mfrac * 60.0)
-    microseconds = sfrac*1.e6
-
-    if return_tuple:
-        return year-year_offset, month, int(days), int(hours), int(minutes),\
-               int(seconds), int(microseconds),-1, dayofyr
-    else:
-        return Datetime360Day(year-year_offset, month, int(days), int(hours), int(minutes),\
-               int(seconds), int(microseconds),-1, dayofyr)
-
 
 class utime:
 
@@ -1089,9 +715,6 @@ units to datetime objects.
             if self.origin.year == 0:
                 msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
                 raise ValueError(msg)
-            elif self.origin.year < 0:
-                msg='negative reference year in time units, must be >= 1'
-                raise ValueError(msg)
         self.tzoffset = tzoffset  # time zone offset in minutes
         self.units = units
         self.unit_string = unit_string
@@ -1101,14 +724,7 @@ units to datetime objects.
         if self.calendar == '360_day' and self.origin.day > 30:
             raise ValueError(
                 'there are only 30 days in every month with the 360_day calendar')
-        if self.calendar in ['noleap', '365_day']:
-            self._jd0 = _NoLeapDayFromDate(self.origin)
-        elif self.calendar in ['all_leap', '366_day']:
-            self._jd0 = _AllLeapFromDate(self.origin)
-        elif self.calendar == '360_day':
-            self._jd0 = _360DayFromDate(self.origin)
-        else:
-            self._jd0 = JulianDayFromDate(self.origin, calendar=self.calendar)
+        self._jd0 = JulianDayFromDate(self.origin, calendar=self.calendar)
         self.only_use_cftime_datetimes = only_use_cftime_datetimes
 
     def date2num(self, date):
@@ -1138,43 +754,10 @@ units to datetime objects.
         if not isscalar:
             date = np.array(date)
             shape = date.shape
-        if self.calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
-            if isscalar:
-                jdelta = JulianDayFromDate(date, self.calendar) - self._jd0
-            else:
-                jdelta = JulianDayFromDate(
-                    date.flat, self.calendar) - self._jd0
-        elif self.calendar in ['noleap', '365_day']:
-            if isscalar:
-                if date.month == 2 and date.day == 29:
-                    raise ValueError(
-                        'there is no leap day in the noleap calendar')
-                jdelta = _NoLeapDayFromDate(date) - self._jd0
-            else:
-                jdelta = []
-                for d in date.flat:
-                    if d.month == 2 and d.day == 29:
-                        raise ValueError(
-                            'there is no leap day in the noleap calendar')
-                    jdelta.append(_NoLeapDayFromDate(d) - self._jd0)
-        elif self.calendar in ['all_leap', '366_day']:
-            if isscalar:
-                jdelta = _AllLeapFromDate(date) - self._jd0
-            else:
-                jdelta = [_AllLeapFromDate(d) - self._jd0 for d in date.flat]
-        elif self.calendar == '360_day':
-            if isscalar:
-                if date.day > 30:
-                    raise ValueError(
-                        'there are only 30 days in every month with the 360_day calendar')
-                jdelta = _360DayFromDate(date) - self._jd0
-            else:
-                jdelta = []
-                for d in date.flat:
-                    if d.day > 30:
-                        raise ValueError(
-                            'there are only 30 days in every month with the 360_day calendar')
-                    jdelta.append(_360DayFromDate(d) - self._jd0)
+        if isscalar:
+            jdelta = JulianDayFromDate(date, self.calendar)-self._jd0
+        else:
+            jdelta = JulianDayFromDate(date.flat, self.calendar)-self._jd0
         if not isscalar:
             jdelta = np.array(jdelta)
         # convert to desired units, add time zone offset.
@@ -1247,40 +830,24 @@ units to datetime objects.
         else:
             raise ValueError('unsupported time units')
         jd = self._jd0 + jdelta
-        if self.calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
-            if not isscalar:
-                if ismasked:
-                    date = []
-                    for j, m in zip(jd.flat, mask.flat):
-                        if not m:
-                            date.append(DateFromJulianDay(j, self.calendar,
-                                                          self.only_use_cftime_datetimes))
-                        else:
-                            date.append(None)
-                else:
-                    date = DateFromJulianDay(jd.flat, self.calendar,
-                                             self.only_use_cftime_datetimes)
+        if not isscalar:
+            if ismasked:
+                date = []
+                for j, m in zip(jd.flat, mask.flat):
+                    if not m:
+                        date.append(DateFromJulianDay(j, self.calendar,
+                                                      self.only_use_cftime_datetimes))
+                    else:
+                        date.append(None)
             else:
-                if ismasked and mask.item():
-                    date = None
-                else:
-                    date = DateFromJulianDay(jd, self.calendar,
-                                             self.only_use_cftime_datetimes)
-        elif self.calendar in ['noleap', '365_day']:
-            if not isscalar:
-                date = [_DateFromNoLeapDay(j) for j in jd.flat]
+                date = DateFromJulianDay(jd.flat, self.calendar,
+                                         self.only_use_cftime_datetimes)
+        else:
+            if ismasked and mask.item():
+                date = None
             else:
-                date = _DateFromNoLeapDay(jd)
-        elif self.calendar in ['all_leap', '366_day']:
-            if not isscalar:
-                date = [_DateFromAllLeap(j) for j in jd.flat]
-            else:
-                date = _DateFromAllLeap(jd)
-        elif self.calendar == '360_day':
-            if not isscalar:
-                date = [_DateFrom360Day(j) for j in jd.flat]
-            else:
-                date = _DateFrom360Day(jd)
+                date = DateFromJulianDay(jd, self.calendar,
+                                         self.only_use_cftime_datetimes)
         if isscalar:
             return date
         else:
@@ -1769,12 +1336,12 @@ but uses the "noleap" ("365_day") calendar.
         datetime.__init__(self, *args, **kwargs)
         self.calendar = "noleap"
         self.datetime_compatible = False
-        assert_valid_date(self, no_leap, False)
+        assert_valid_date(self, no_leap, False, has_year_zero=True)
         # if dayofwk, dayofyr not set, calculate them.
         if self.dayofwk < 0:
-            jd = _NoLeapDayFromDate(self)
+            jd = JulianDayFromDate(self,calendar='365_day')
             year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            _DateFromNoLeapDay(jd,return_tuple=True)
+            DateFromJulianDay(jd,return_tuple=True,calendar='365_day')
             self.dayofwk = dayofwk
             self.dayofyr = dayofyr
 
@@ -1791,12 +1358,12 @@ but uses the "all_leap" ("366_day") calendar.
         datetime.__init__(self, *args, **kwargs)
         self.calendar = "all_leap"
         self.datetime_compatible = False
-        assert_valid_date(self, all_leap, False)
+        assert_valid_date(self, all_leap, False, has_year_zero=True)
         # if dayofwk, dayofyr not set, calculate them.
         if self.dayofwk < 0:
-            jd = _AllLeapFromDate(self)
+            jd = JulianDayFromDate(self,calendar='366_day')
             year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            _DateFromAllLeap(jd,return_tuple=True)
+            DateFromJulianDay(jd,return_tuple=True,calendar='366_day')
             self.dayofwk = dayofwk
             self.dayofyr = dayofyr
 
@@ -1813,12 +1380,12 @@ but uses the "360_day" calendar.
         datetime.__init__(self, *args, **kwargs)
         self.calendar = "360_day"
         self.datetime_compatible = False
-        assert_valid_date(self, no_leap, False, is_360_day=True)
+        assert_valid_date(self, no_leap, False, has_year_zero=True, is_360_day=True)
         # if dayofwk, dayofyr not set, calculate them.
         if self.dayofwk < 0:
-            jd = _360DayFromDate(self)
+            jd = JulianDayFromDate(self,calendar='360_day')
             year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            _DateFrom360Day(jd,return_tuple=True)
+            DateFromJulianDay(jd,return_tuple=True,calendar='360_day')
             self.dayofwk = dayofwk
             self.dayofyr = dayofyr
 
@@ -2013,17 +1580,19 @@ cdef int* month_lengths(bint (*is_leap)(int), int year):
 
 cdef void assert_valid_date(datetime dt, bint (*is_leap)(int),
                             bint julian_gregorian_mixed,
+                            bint has_year_zero=False,
                             bint is_360_day=False) except *:
     cdef int[13] month_length
 
-    if not is_360_day:
+    if not has_year_zero:
         if dt.year == 0:
             raise ValueError("invalid year provided in {0!r}".format(dt))
-        month_length = month_lengths(is_leap, dt.year)
-    else:
+    if is_360_day:
         for j, N in enumerate(
                 [-1, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]):
             month_length[j] = N
+    else:
+        month_length = month_lengths(is_leap, dt.year)
 
     if dt.month < 1 or dt.month > 12:
         raise ValueError("invalid month provided in {0!r}".format(dt))
@@ -2176,3 +1745,306 @@ cdef tuple add_timedelta_360_day(datetime dt, delta):
 
     return (year, month, day, hour, minute, second, microsecond, -1, 1)
 
+# Calendar calculations base on calcals.c by David W. Pierce
+# http://meteora.ucsd.edu/~pierce/calcalcs 
+
+cdef _is_leap(int year, calendar):
+    cdef int tyear
+    cdef bint leap
+    calendar = _check_calendar(calendar)
+    if year == 0:
+        raise ValueError('year zero does not exist in the %s calendar' %\
+                calendar)
+    # Because there is no year 0 in the Julian calendar, years -1, -5, -9, etc
+    # are leap years.
+    if year < 0:
+        tyear = year + 1
+    else:
+        tyear = year
+    if calendar == 'proleptic_gregorian' or (calendar == 'standard' and year > 1581):
+        if tyear % 4: # not divisible by 4
+            leap = False
+        elif year % 100: # not divisible by 100
+            leap = True
+        elif year % 400: # not divisible by 400
+            leap = False
+        else:
+            leap = True
+    elif calendar == 'julian' or (calendar == 'standard' and year < 1582):
+        leap = tyear % 4 == 0
+    elif calendar == '366_day':
+        leap = True
+    else:
+        leap = False
+    return leap
+
+cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=False):
+    """Compute integer Julian Day from year,month,day and calendar.
+
+    Allowed calendars are 'standard', 'gregorian', 'julian',
+    'proleptic_gregorian','360_day', '365_day', '366_day', 'noleap',
+    'all_leap'.
+
+    'noleap' is a synonym for '365_day'
+    'all_leap' is a synonym for '366_day'
+    'gregorian' is a synonym for 'standard'
+
+    Negative years allowed back to -4714
+    (proleptic_gregorian) or -4713 (standard or gregorian calendar).
+
+    Negative year values are allowed in 360_day,365_day,366_day calendars.
+
+    Integer julian day is number of days since noon UTC -4713-1-1
+    in the julian or mixed julian/gregorian calendar, or noon UTC
+    -4714-11-24 in the proleptic_gregorian calendar. Reference
+    date is noon UTC 0-1-1 for other calendars.
+
+    There is no year zero in standard (mixed), julian, or proleptic_gregorian
+    calendars.
+
+    Subtract 0.5 to get 00 UTC on that day.
+
+    optional kwarg 'skip_transition':  When True, leave a 10-day
+    gap in Julian day numbers between Oct 4 and Oct 15 1582 (the transition
+    from Julian to Gregorian calendars).  Default False, ignored
+    unless calendar = 'standard'."""
+    cdef int jday, jday_jul, jday_greg
+    cdef bint leap
+    cdef int[12] dpm2use
+
+    # validate inputs.
+    calendar = _check_calendar(calendar)
+    if month < 1 or month > 12 or day < 1 or day > 31:
+        msg = "date %04d-%02d-%02d does not exist in the %s calendar" %\
+        (year,month,day,calendar)
+        raise ValueError(msg)
+
+    # handle all calendars except standard, julian, proleptic_gregorian.
+    if calendar == '360_day':
+        return _IntJulianDayFromDate_360day(year,month,day)
+    elif calendar == '365_day':
+        return _IntJulianDayFromDate_365day(year,month,day)
+    elif calendar == '366_day':
+        return _IntJulianDayFromDate_366day(year,month,day)
+
+    # handle standard, julian, proleptic_gregorian calendars.
+    if year == 0:
+        raise ValueError('year zero does not exist in the %s calendar' %\
+                calendar)
+    if (calendar == 'proleptic_gregorian'         and year < -4714) or\
+       (calendar in ['julian','standard']  and year < -4713):
+        raise ValueError('year out of range for %s calendar' % calendar)
+    leap = _is_leap(year,calendar)
+    if not leap and month == 2 and day == 29:
+        raise ValueError('%s is not a leap year' % year)
+
+    # add year offset
+    if year < 0:
+        year += 4801
+    else:
+        year += 4800
+
+    if leap:
+        dpm2use = _dpm_leap
+    else:
+        dpm2use = _dpm
+
+    jday = day
+    for m in range(month-1,0,-1):
+        jday += dpm2use[m-1]
+
+    jday_greg = jday + 365*(year-1) + (year-1)//4 - (year-1)//100 + (year-1)//400
+    jday_greg -= 31739 # fix year offset
+    jday_jul = jday + 365*(year-1) + (year-1)//4
+    jday_jul -= 31777 # fix year offset
+    if calendar == 'julian':
+        return jday_jul
+    elif calendar == 'proleptic_gregorian':
+        return jday_greg
+    elif calendar == 'standard':
+        # check for invalid days in mixed calendar (there are 10 missing)
+        if jday_jul >= 2299161 and jday_jul < 2299171:
+            raise ValueError('invalid date in mixed calendar')
+        if jday_jul < 2299161: # 1582 October 15
+            return jday_jul
+        else:
+            if skip_transition:
+                return jday_greg+10
+            else:
+                return jday_greg
+
+    return jday
+
+cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False):
+    """Compute the year,month,day,dow,doy given the integer Julian day.
+    and calendar. (dow = day of week with 0=Mon,6=Sun and doy is day of year).
+
+    Allowed calendars are 'standard', 'gregorian', 'julian',
+    'proleptic_gregorian','360_day', '365_day', '366_day', 'noleap',
+    'all_leap'.
+
+    'noleap' is a synonym for '365_day'
+    'all_leap' is a synonym for '366_day'
+    'gregorian' is a synonym for 'standard'
+
+    optional kwarg 'skip_transition':  When True, assume a 10-day
+    gap in Julian day numbers between Oct 4 and Oct 15 1582 (the transition
+    from Julian to Gregorian calendars).  Default False, ignored
+    unless calendar = 'standard'."""
+    cdef int year,month,day,dow,doy,yp1,tjday
+    cdef int[12] dpm2use
+    cdef int[13] spm2use
+
+    # validate inputs.
+    calendar = _check_calendar(calendar)
+
+    # handle all calendars except standard, julian, proleptic_gregorian.
+    if calendar == '360_day':
+        return _IntJulianDayToDate_360day(jday)
+    elif calendar == '365_day':
+        return _IntJulianDayToDate_365day(jday)
+    elif calendar == '366_day':
+        return _IntJulianDayToDate_366day(jday)
+
+    # handle standard, julian, proleptic_gregorian calendars.
+    if jday < 0:
+        raise ValueError('julian day must be a positive integer')
+    # Make first estimate for year. subtract 4714 or 4713 because Julian Day number
+    # 0 occurs in year 4714 BC in the Gregorian calendar and 4713 BC in the
+    # Julian calendar.
+    if calendar == 'proleptic_gregorian':
+        year = jday//366 - 4714
+    elif calendar in ['standard','julian']:
+        year = jday//366 - 4713
+
+    # compute day of week.
+    dow = _get_dow(jday)
+
+    if not skip_transition and calendar == 'standard' and jday > 2299160: jday += 10
+
+    # Advance years until we find the right one
+    yp1 = year + 1
+    if yp1 == 0:
+       yp1 = 1 # no year 0
+    tjday = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True)
+    while jday >= tjday:
+        year += 1
+        if year == 0:
+            year = 1
+        yp1 = year + 1
+        if yp1 == 0:
+            yp1 = 1
+        tjday = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True)
+    if _is_leap(year, calendar):
+        dpm2use = _dpm_leap
+        spm2use = _spm_366day
+    else:
+        dpm2use = _dpm
+        spm2use = _spm_365day
+    month = 1
+    tjday =\
+    _IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True)
+    while jday > tjday:
+        month += 1
+        tjday =\
+        _IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True)
+    tjday = _IntJulianDayFromDate(year,month,1,calendar,skip_transition=True)
+    day = jday - tjday + 1
+    if month == 1:
+        doy = day
+    else:
+        doy = spm2use[month-1]+day
+    return year,month,day,dow,doy
+
+cdef _get_dow(int jday):
+    """compute day of week.
+    0 = Sunday, 6 = Sat, valid after noon UTC"""
+    cdef int dow
+    dow = (jday + 1) % 7
+    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
+    dow -= 1
+    if dow == -1: dow = 6
+    return dow
+
+cdef _check_calendar(calendar):
+    """validate calendars, convert to subset of names to get rid of synonyms"""
+    if calendar not in _calendars:
+        raise ValueError('unsupported calendar')
+    calout = calendar
+    # remove 'gregorian','noleap','all_leap'
+    if calendar in ['gregorian','standard']:
+        calout = 'standard'
+    if calendar == 'noleap':
+        calout = '365_day'
+    if calendar == 'all_leap':
+        calout = '366_day'
+    return calout
+
+cdef _IntJulianDayFromDate_360day(int year,int month,int day):
+    """Compute integer Julian Day from year,month,day in
+    360_day calendar"""
+    return year*360 + (month-1)*30 + day - 1
+
+cdef _IntJulianDayFromDate_365day(int year,int month,int day):
+    """Compute integer Julian Day from year,month,day in
+    365_day calendar"""
+    if month == 2 and day == 29:
+        raise ValueError('no leap days in 365_day calendar')
+    return year*365 + _spm_365day[month-1] + day - 1
+
+cdef _IntJulianDayFromDate_366day(int year,int month,int day):
+    """Compute integer Julian Day from year,month,day in
+    366_day calendar"""
+    return year*366 + _spm_366day[month-1] + day - 1
+
+cdef _IntJulianDayToDate_365day(int jday):
+    """Compute the year,month,day given the integer Julian day
+    for 365_day calendar."""
+    cdef int year,month,day,nextra,dow
+
+    year = jday//365
+    nextra = jday - year*365
+    doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
+    month = 1
+    while doy > _spm_365day[month]:
+        month += 1
+    day = doy - _spm_365day[month-1]
+
+    # compute day of week.
+    dow = _get_dow(jday)
+
+    return year,month,day,dow,doy
+
+cdef _IntJulianDayToDate_366day(int jday):
+    """Compute the year,month,day given the integer Julian day
+    for 366_day calendar."""
+    cdef int year,month,day,nextra,dow
+
+    year = jday//366
+    nextra = jday - year*366
+    doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
+    month = 1
+    while doy > _spm_366day[month]:
+        month += 1
+    day = doy - _spm_366day[month-1]
+
+    # compute day of week.
+    dow = _get_dow(jday)
+
+    return year,month,day,dow,doy
+
+cdef _IntJulianDayToDate_360day(int jday):
+    """Compute the year,month,day given the integer Julian day
+    for 360_day calendar."""
+    cdef int year,month,day,nextra,dow
+
+    year = jday//360
+    nextra = jday - year*360
+    doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
+    month = nextra//30 + 1
+    day   = doy - (month-1)*30
+
+    # compute day of week.
+    dow = _get_dow(jday)
+
+    return year,month,day,dow,doy

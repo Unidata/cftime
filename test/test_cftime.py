@@ -469,7 +469,7 @@ class cftimeTestCase(unittest.TestCase):
             pass
         # this should not fail (year zero allowed in 'fake' calendars)
         t = date2num(datetime(1, 1, 1), units, calendar='360_day')
-        self.assertEqual(t, 360)
+        self.assertAlmostEqual(t,360)
         d = num2date(t, units, calendar='360_day')
         self.assertEqual(d, Datetime360Day(1,1,1))
         d = num2date(0, units, calendar='360_day')
@@ -612,6 +612,16 @@ class cftimeTestCase(unittest.TestCase):
         d2 = real_datetime(1582,10,4,12)
         assert (d1.dayofwk == d2.dayofwk == 0)
         assert (d1.dayofyr == d2.dayofyr == 277)
+        # issue 71: negative reference years
+        # https://coastwatch.pfeg.noaa.gov/erddap/convert/time.html
+        # gives 2446433 (365 days more - is it counting year 0?)
+        # however http://aa.usno.navy.mil/data/docs/JulianDate.php gives
+        # 2446068, which agrees with us
+        units = "days since -4713-01-01T00:00:00Z"
+        t = date2num(datetime(1985,1,2), units, calendar="standard")
+        assert_almost_equal(t, 2446068)
+
+
 
 
 class TestDate2index(unittest.TestCase):
@@ -825,8 +835,9 @@ class issue584TestCase(unittest.TestCase):
         converter = self.converters["noleap"]
 
         # Pick the date corresponding to the Julian day of 1.0 to test
-        # the transision from positive to negative Julian days.
+        # the transition from positive to negative Julian days.
         julian_day = converter.date2num(datetimex(-4712, 1, 2, 12))
+        # should be a Tuesday
 
         old_date = converter.num2date(julian_day)
         for delta_year in range(1, 101): # 100 years cover several 7-year cycles
@@ -1147,8 +1158,8 @@ def days_per_month_leap_year(date_type, month):
 
 
 def test_zero_year(date_type):
-    # Year 0 is valid in the 360 day calendar
-    if date_type is Datetime360Day:
+    # Year 0 is valid in the 360,365 and 366 day calendars
+    if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day]:
         date_type(0, 1, 1)
     else:
         with pytest.raises(ValueError):
