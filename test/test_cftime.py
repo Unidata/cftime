@@ -1,3 +1,4 @@
+from __future__ import print_function
 import copy
 import unittest
 from collections import namedtuple
@@ -14,6 +15,7 @@ from cftime import (DateFromJulianDay, Datetime360Day, DatetimeAllLeap,
                     DatetimeProlepticGregorian, JulianDayFromDate, _parse_date,
                     date2index, date2num, num2date, utime)
 import cftime
+
 # test cftime module for netCDF time <--> python datetime conversions.
 
 dtime = namedtuple('dtime', ('values', 'units', 'calendar'))
@@ -334,73 +336,104 @@ class cftimeTestCase(unittest.TestCase):
         dateformat =  '%Y-%m-%d %H:%M:%S'
         dateref = datetime(2015,2,28,12)
         ntimes = 1001
+        verbose = False # print out error in microsecs for julian calendar.
         for calendar in calendars:
-            eps = 100.
-            units = 'microseconds since 1800-01-30 01:01:01'
+            eps = 10.
+            units = 'microseconds since 2000-01-30 01:01:01'
             microsecs1 = date2num(dateref,units,calendar=calendar)
+            maxerr = 0
             for n in range(ntimes):
                 microsecs1 += 1.
                 date1 = num2date(microsecs1, units, calendar=calendar)
                 microsecs2 = date2num(date1, units, calendar=calendar)
                 date2 = num2date(microsecs2, units, calendar=calendar)
                 err = np.abs(microsecs1 - microsecs2)
+                maxerr = max(err,maxerr)
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
+            if verbose:
+                print('calender = %s max abs err (microsecs) = %s eps = %s' % \
+                     (calendar,maxerr,eps))
             units = 'milliseconds since 1800-01-30 01:01:01'
-            eps = 0.1
+            eps = 0.01
             millisecs1 = date2num(dateref,units,calendar=calendar)
+            maxerr = 0.
             for n in range(ntimes):
                 millisecs1 += 0.001
                 date1 = num2date(millisecs1, units, calendar=calendar)
                 millisecs2 = date2num(date1, units, calendar=calendar)
                 date2 = num2date(millisecs2, units, calendar=calendar)
                 err = np.abs(millisecs1 - millisecs2)
+                maxerr = max(err,maxerr)
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
+            if verbose:
+                print('calender = %s max abs err (millisecs) = %s eps = %s' % \
+                     (calendar,maxerr,eps))
             eps = 1.e-4
             units = 'seconds since 0001-01-30 01:01:01'
             secs1 = date2num(dateref,units,calendar=calendar)
+            maxerr = 0.
             for n in range(ntimes):
                 secs1 += 0.1
                 date1 = num2date(secs1, units, calendar=calendar)
                 secs2 = date2num(date1, units, calendar=calendar)
                 date2 = num2date(secs2, units, calendar=calendar)
                 err = np.abs(secs1 - secs2)
+                maxerr = max(err,maxerr)
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
-            eps = 1.e-5
+            if verbose:
+                print('calender = %s max abs err (secs) = %s eps = %s' % \
+                     (calendar,maxerr,eps))
+            eps = 1.e-6
             units = 'minutes since 0001-01-30 01:01:01'
             mins1 = date2num(dateref,units,calendar=calendar)
+            maxerr = 0.
             for n in range(ntimes):
                 mins1 += 0.01
                 date1 = num2date(mins1, units, calendar=calendar)
                 mins2 = date2num(date1, units, calendar=calendar)
                 date2 = num2date(mins2, units, calendar=calendar)
                 err = np.abs(mins1 - mins2)
+                maxerr = max(err,maxerr)
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
-            eps = 1.e-5
+            if verbose:
+                print('calender = %s max abs err (mins) = %s eps = %s' % \
+                     (calendar,maxerr,eps))
+            eps = 1.e-7
             units = 'hours since 0001-01-30 01:01:01'
             hrs1 = date2num(dateref,units,calendar=calendar)
+            maxerr = 0.
             for n in range(ntimes):
                 hrs1 += 0.001
                 date1 = num2date(hrs1, units, calendar=calendar)
                 hrs2 = date2num(date1, units, calendar=calendar)
                 date2 = num2date(hrs2, units, calendar=calendar)
                 err = np.abs(hrs1 - hrs2)
+                maxerr = max(err,maxerr)
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
-            eps = 1.e-5
+            if verbose:
+                print('calender = %s max abs err (hours) = %s eps = %s' % \
+                     (calendar,maxerr,eps))
+            eps = 1.e-9
             units = 'days since 0001-01-30 01:01:01'
             days1 = date2num(dateref,units,calendar=calendar)
+            maxerr = 0.
             for n in range(ntimes):
                 days1 += 0.00001
                 date1 = num2date(days1, units, calendar=calendar)
                 days2 = date2num(date1, units, calendar=calendar)
                 date2 = num2date(days2, units, calendar=calendar)
                 err = np.abs(days1 - days2)
+                maxerr = max(err,maxerr)
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
+            if verbose:
+                print('calender = %s max abs err (days) = %s eps = %s' % \
+                     (calendar,maxerr,eps))
 
         # issue 353
         assert (num2date(0, 'hours since 2000-01-01 0') ==
