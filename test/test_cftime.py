@@ -336,7 +336,7 @@ class cftimeTestCase(unittest.TestCase):
         dateformat =  '%Y-%m-%d %H:%M:%S'
         dateref = datetime(2015,2,28,12)
         ntimes = 1001
-        verbose = False # print out error in microsecs for julian calendar.
+        verbose = True # print out max error diagnostics
         for calendar in calendars:
             eps = 10.
             units = 'microseconds since 2000-01-30 01:01:01'
