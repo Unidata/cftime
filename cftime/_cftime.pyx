@@ -30,8 +30,9 @@ _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 _calendars = ['standard', 'gregorian', 'proleptic_gregorian',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
 # Following are number of Days Per Month
-cdef int[12] _dpm   = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+cdef int[12] _dpm      = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 cdef int[12] _dpm_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+cdef int[12] _dpm_360  = [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
 # Same as above, but SUM of previous months (no leap years).
 cdef int[13] _spm_365day = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
 cdef int[13] _spm_366day = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
@@ -1541,18 +1542,15 @@ cdef _strftime(datetime dt, fmt):
 
 cdef bint is_leap_julian(int year):
     "Return 1 if year is a leap year in the Julian calendar, 0 otherwise."
-    cdef int y
-    y = year if year > 0 else year + 1
-    return (y % 4) == 0
+    return _is_leap(year, calendar='julian')
 
 cdef bint is_leap_proleptic_gregorian(int year):
-    "Return 1 if year is a leap year in the Gregorian calendar, 0 otherwise."
-    cdef int y
-    y = year if year > 0 else year + 1
-    return (((y % 4) == 0) and ((y % 100) != 0)) or ((y % 400) == 0)
+    "Return 1 if year is a leap year in the Proleptic Gregorian calendar, 0 otherwise."
+    return _is_leap(year, calendar='proleptic_gregorian')
 
 cdef bint is_leap_gregorian(int year):
-    return (year > 1582 and is_leap_proleptic_gregorian(year)) or (year < 1582 and is_leap_julian(year))
+    "Return 1 if year is a leap year in the Gregorian calendar, 0 otherwise."
+    return _is_leap(year, calendar='standard')
 
 cdef bint all_leap(int year):
     "Return True for all years."
@@ -1562,42 +1560,30 @@ cdef bint no_leap(int year):
     "Return False for all years."
     return False
 
-# numbers of days per month for calendars supported by add_timedelta(...)
-cdef int[13] month_lengths_365_day, month_lengths_366_day
-#                  Dummy Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
-for j,N in enumerate([-1, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]):
-    month_lengths_365_day[j] = N
-
-#                  Dummy Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
-for j,N in enumerate([-1, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]):
-    month_lengths_366_day[j] = N
-
-cdef int* month_lengths(bint (*is_leap)(int), int year):
+cdef int * month_lengths(bint (*is_leap)(int), int year):
     if is_leap(year):
-        return month_lengths_366_day
+        return _dpm_leap
     else:
-        return month_lengths_365_day
+        return _dpm
 
 cdef void assert_valid_date(datetime dt, bint (*is_leap)(int),
                             bint julian_gregorian_mixed,
                             bint has_year_zero=False,
                             bint is_360_day=False) except *:
-    cdef int[13] month_length
+    cdef int[12] month_length
 
     if not has_year_zero:
         if dt.year == 0:
             raise ValueError("invalid year provided in {0!r}".format(dt))
     if is_360_day:
-        for j, N in enumerate(
-                [-1, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]):
-            month_length[j] = N
+        month_length = _dpm_360
     else:
         month_length = month_lengths(is_leap, dt.year)
 
     if dt.month < 1 or dt.month > 12:
         raise ValueError("invalid month provided in {0!r}".format(dt))
 
-    if dt.day < 1 or dt.day > month_length[dt.month]:
+    if dt.day < 1 or dt.day > month_length[dt.month-1]:
         raise ValueError("invalid day number provided in {0!r}".format(dt))
 
     if julian_gregorian_mixed and dt.year == 1582 and dt.month == 10 and dt.day > 4 and dt.day < 15:
@@ -1678,7 +1664,7 @@ cdef tuple add_timedelta(datetime dt, delta, bint (*is_leap)(int), bint julian_g
                 if year == 0:
                     year = -1
                 month_length = month_lengths(is_leap, year)
-            day = month_length[month]
+            day = month_length[month-1]
         else:
             day += delta_days
             delta_days = 0
@@ -1686,8 +1672,8 @@ cdef tuple add_timedelta(datetime dt, delta, bint (*is_leap)(int), bint julian_g
     while delta_days > 0:
         if year == 1582 and month == 10 and day < 5 and day + delta_days > 4:
             delta_days += n_invalid_dates    # skip over invalid dates
-        if day + delta_days > month_length[month]:
-            delta_days -= month_length[month] - (day - 1)
+        if day + delta_days > month_length[month-1]:
+            delta_days -= month_length[month-1] - (day - 1)
             # increment month
             month += 1
             if month > 12:
