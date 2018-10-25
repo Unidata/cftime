@@ -143,7 +143,7 @@ def date2num(dates,units,calendar='standard'):
     Default is `'standard'`, which is a mixed Julian/Gregorian calendar.
 
     returns a numeric time value, or an array of numeric time values
-    with approximately millisecond accuracy.
+    with approximately 10 microsecond accuracy.
         """
         calendar = calendar.lower()
         basedate = _dateparse(units)
@@ -230,7 +230,7 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=False):
     subclass cftime.datetime are returned for all calendars.
 
     returns a datetime instance, or an array of datetime instances with
-    approximately millisecond accuracy.
+    approximately 10 microsecond accuracy.
 
     ***Note***: The datetime instances returned are 'real' python datetime
     objects if `calendar='proleptic_gregorian'`, or
@@ -368,7 +368,7 @@ def JulianDayFromDate(date, calendar='standard'):
     """JulianDayFromDate(date, calendar='standard')
 
     creates a Julian Day from a 'datetime-like' object.  Returns the fractional
-    Julian Day (approximately millisecond accuracy).
+    Julian Day (approximately 10 microsecond accuracy).
 
     if calendar='standard' or 'gregorian' (default), Julian day follows Julian
     Calendar on and before 1582-10-5, Gregorian calendar after 1582-10-15.
@@ -393,8 +393,8 @@ def JulianDayFromDate(date, calendar='standard'):
     minute = year.copy()
     second = year.copy()
     microsecond = year.copy()
-    jd = np.empty(year.shape, np.float64)
-    cdef double[:] jd_view = jd
+    jd = np.empty(year.shape, np.float128)
+    cdef long double[:] jd_view = jd
     cdef Py_ssize_t i_max = len(date)
     cdef Py_ssize_t i
     for i in range(i_max):
@@ -418,9 +418,9 @@ def JulianDayFromDate(date, calendar='standard'):
     # This is about 45 microseconds in 2000 for Julian date starting -4712.
     # (pull request #433).
     if calendar not in ['all_leap','no_leap','360_day','365_day','366_day']:
-       eps = np.finfo(float).eps
-       eps = np.maximum(eps*jd, eps)
-       jd += eps
+        eps = np.array(np.finfo(np.float64).eps,np.float128)
+        eps = np.maximum(eps*jd, eps)
+        jd += eps
 
     if isscalar:
         return jd[0]
@@ -432,7 +432,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     """
 
     returns a 'datetime-like' object given Julian Day. Julian Day is a
-    fractional day with approximately millisecond accuracy.
+    fractional day with approximately 10 microsecond accuracy.
 
     if calendar='standard' or 'gregorian' (default), Julian day follows Julian
     Calendar on and before 1582-10-5, Gregorian calendar after  1582-10-15.
@@ -449,13 +449,13 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     objects are used, which are actually instances of cftime.datetime.
     """
 
-    julian = np.array(JD, dtype=np.float64)
+    julian = np.array(JD, dtype=np.float128)
 
     # get the day (Z) and the fraction of the day (F)
     # use 'round half up' rounding instead of numpy's even rounding
     # so that 0.5 is rounded to 1.0, not 0 (cftime issue #49)
     Z = np.atleast_1d(np.int32(_round_half_up(julian)))
-    F = np.atleast_1d(julian + 0.5 - Z).astype(np.float64)
+    F = np.atleast_1d(julian + 0.5 - Z).astype(np.float128)
 
     cdef Py_ssize_t i_max = len(Z)
     year = np.empty(i_max, dtype=np.int32)
@@ -482,7 +482,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     microsecond = (second % 1)*1.e6
     # remove the offset from the microsecond calculation.
     if calendar not in ['all_leap','no_leap','360_day','365_day','366_day']:
-        eps = np.finfo(float).eps
+        eps = np.array(np.finfo(np.float64).eps,np.float128)
         eps = np.maximum(eps*julian, eps)
         microsecond = np.clip(microsecond - eps*86400.*1e6, 0, 999999)
 
@@ -716,7 +716,7 @@ units to datetime objects.
             if self.origin.year == 0:
                 msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
                 raise ValueError(msg)
-        self.tzoffset = tzoffset  # time zone offset in minutes
+        self.tzoffset = np.array(tzoffset,dtype=np.float128)  # time zone offset in minutes
         self.units = units
         self.unit_string = unit_string
         if self.calendar in ['noleap', '365_day'] and self.origin.month == 2 and self.origin.day == 29:
@@ -777,9 +777,9 @@ units to datetime objects.
         else:
             raise ValueError('unsupported time units')
         if isscalar:
-            return jdelta
+            return jdelta.astype(np.float64)
         else:
-            return np.reshape(jdelta, shape)
+            return np.reshape(jdelta.astype(np.float64), shape)
 
     def num2date(self, time_value):
         """
