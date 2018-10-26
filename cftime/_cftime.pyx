@@ -22,7 +22,7 @@ sec_units =      ['second', 'seconds', 'sec', 'secs', 's']
 min_units =      ['minute', 'minutes', 'min', 'mins']
 hr_units =       ['hour', 'hours', 'hr', 'hrs', 'h']
 day_units =      ['day', 'days', 'd']
-month_units =    ['month', 'months']
+month_units =    ['month', 'months'] # only allowed for 360_day calendar
 _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 # supported calendars. Includes synonyms ('standard'=='gregorian',
 # '366_day'=='all_leap','365_day'=='noleap')
@@ -137,7 +137,7 @@ def date2num(dates,units,calendar='standard'):
     **`units`**: a string of the form `<time units> since <reference time>`
     describing the time units. `<time units>` can be days, hours, minutes,
     seconds, milliseconds or microseconds. `<reference time>` is the time
-    origin.
+    origin. `months_since` is allowed *only* for the `360_day` calendar.
 
     **`calendar`**: describes the calendar used in the time calculations.
     All the values currently defined in the
@@ -220,7 +220,7 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=False):
     **`units`**: a string of the form `<time units> since <reference time>`
     describing the time units. `<time units>` can be days, hours, minutes,
     seconds, milliseconds or microseconds. `<reference time>` is the time
-    origin.
+    origin. `months_since` is allowed *only* for the `360_day` calendar.
 
     **`calendar`**: describes the calendar used in the time calculations.
     All the values currently defined in the
@@ -582,7 +582,8 @@ C{'time-units since <time-origin>'} defining the time units.
 
 Valid time-units are days, hours, minutes and seconds (the singular forms
 are also accepted). An example unit_string would be C{'hours
-since 0001-01-01 00:00:00'}.
+since 0001-01-01 00:00:00'}. months is allowed as a time unit
+*only* for the 360_day calendar.
 
 The B{C{calendar}} keyword describes the calendar used in the time calculations.
 All the values currently defined in the U{CF metadata convention
@@ -676,7 +677,8 @@ C{'time-units since <time-origin>'} defining the time units.
 
 Valid time-units are days, hours, minutes and seconds (the singular forms
 are also accepted). An example unit_string would be C{'hours
-since 0001-01-01 00:00:00'}.
+since 0001-01-01 00:00:00'}. months is allowed as a time unit
+*only* for the 360_day calendar.
 
 @keyword calendar: describes the calendar used in the time calculations.
 All the values currently defined in the U{CF metadata convention
