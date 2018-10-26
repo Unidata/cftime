@@ -654,7 +654,11 @@ class cftimeTestCase(unittest.TestCase):
         t = date2num(datetime(1985,1,2), units, calendar="standard")
         assert_almost_equal(t, 2446068)
 
-
+        # issue #68: allow months since for 360_day calendar
+        d = num2date(1, 'months since 0000-01-01 00:00:00', calendar='360_day')
+        self.assertEqual(d, Datetime360Day(0,2,1))
+        t = date2num(d, 'months since 0000-01-01 00:00:00', calendar='360_day')
+        self.assertEqual(t, 1)
 
 
 class TestDate2index(unittest.TestCase):
