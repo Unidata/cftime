@@ -38,7 +38,7 @@ cdef int[12] _dpm_360  = [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
 cdef int[13] _spm_365day = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
 cdef int[13] _spm_366day = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
 
-__version__ = '1.0.2'
+__version__ = '1.0.2.1'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
@@ -397,7 +397,7 @@ def JulianDayFromDate(date, calendar='standard'):
     minute = year.copy()
     second = year.copy()
     microsecond = year.copy()
-    jd = np.empty(year.shape, np.float128)
+    jd = np.empty(year.shape, np.longdouble)
     cdef long double[:] jd_view = jd
     cdef Py_ssize_t i_max = len(date)
     cdef Py_ssize_t i
@@ -422,7 +422,7 @@ def JulianDayFromDate(date, calendar='standard'):
     # This is about 45 microseconds in 2000 for Julian date starting -4712.
     # (pull request #433).
     if calendar not in ['all_leap','no_leap','360_day','365_day','366_day']:
-        eps = np.array(np.finfo(np.float64).eps,np.float128)
+        eps = np.array(np.finfo(np.float64).eps,np.longdouble)
         eps = np.maximum(eps*jd, eps)
         jd += eps
 
@@ -453,13 +453,13 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     objects are used, which are actually instances of cftime.datetime.
     """
 
-    julian = np.array(JD, dtype=np.float128)
+    julian = np.array(JD, dtype=np.longdouble)
 
     # get the day (Z) and the fraction of the day (F)
     # use 'round half up' rounding instead of numpy's even rounding
     # so that 0.5 is rounded to 1.0, not 0 (cftime issue #49)
     Z = np.atleast_1d(np.int32(_round_half_up(julian)))
-    F = np.atleast_1d(julian + 0.5 - Z).astype(np.float128)
+    F = np.atleast_1d(julian + 0.5 - Z).astype(np.longdouble)
 
     cdef Py_ssize_t i_max = len(Z)
     year = np.empty(i_max, dtype=np.int32)
@@ -486,7 +486,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     microsecond = (second % 1)*1.e6
     # remove the offset from the microsecond calculation.
     if calendar not in ['all_leap','no_leap','360_day','365_day','366_day']:
-        eps = np.array(np.finfo(np.float64).eps,np.float128)
+        eps = np.array(np.finfo(np.float64).eps,np.longdouble)
         eps = np.maximum(eps*julian, eps)
         microsecond = np.clip(microsecond - eps*86400.*1e6, 0, 999999)
 
@@ -723,7 +723,7 @@ units to datetime objects.
             if self.origin.year == 0:
                 msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
                 raise ValueError(msg)
-        self.tzoffset = np.array(tzoffset,dtype=np.float128)  # time zone offset in minutes
+        self.tzoffset = np.array(tzoffset,dtype=np.longdouble)  # time zone offset in minutes
         self.units = units
         self.unit_string = unit_string
         if self.calendar in ['noleap', '365_day'] and self.origin.month == 2 and self.origin.day == 29:
