@@ -6,7 +6,7 @@ Time-handling functionality from netcdf4-python
 [![PyPI package](https://badge.fury.io/py/cftime.svg)](http://python.org/pypi/cftime)
 
 ## News
-11/01/2018:  version 1.0.2 released. Improved accuracy (from approximately 1000 microseconds to 10 microseconds on x86
+10/27/2018:  version 1.0.2 released. Improved accuracy (from approximately 1000 microseconds to 10 microseconds on x86
 platforms). Refactored calendar calculations now allow for negative reference years. num2date function now more than an
 order of magnitude faster. `months since` units now allowed, but only for `360_day` calendar.
 
