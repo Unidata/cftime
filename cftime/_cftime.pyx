@@ -198,7 +198,7 @@ def date2num(dates,units,calendar='standard'):
                     else:
                         raise ValueError('unsupported time units')
             if isscalar:
-                return np.asscalar(times)
+                return times[0]
             else:
                 return np.reshape(np.array(times), shape)
         else: # use cftime module for other calendars
@@ -397,8 +397,9 @@ def JulianDayFromDate(date, calendar='standard'):
     minute = year.copy()
     second = year.copy()
     microsecond = year.copy()
-    jd = np.empty(year.shape, np.longdouble)
-    cdef long double[:] jd_view = jd
+    jd = np.empty(year.shape, np.intc)
+    jdf = np.empty(year.shape, np.longdouble)
+    cdef int[:] jd_view = jd
     cdef Py_ssize_t i_max = len(date)
     cdef Py_ssize_t i
     for i in range(i_max):
@@ -410,26 +411,26 @@ def JulianDayFromDate(date, calendar='standard'):
         minute[i] = d.minute
         second[i] = d.second
         microsecond[i] = d.microsecond
-        jd_view[i] = <double>_IntJulianDayFromDate(<int>year[i],<int>month[i],<int>day[i],calendar)
+        jd_view[i] = <int>_IntJulianDayFromDate(<int>year[i],<int>month[i],<int>day[i],calendar)
 
     # at this point jd is an integer representing noon UTC on the given
     # year,month,day.
     # compute fractional day from hour,minute,second,microsecond
     fracday = hour / 24.0 + minute / 1440.0 + (second + microsecond/1.e6) / 86400.0
-    jd = jd - 0.5 + fracday
+    jdf = fracday - 0.5
 
     # Add a small offset (proportional to Julian date) for correct re-conversion.
     # This is about 45 microseconds in 2000 for Julian date starting -4712.
     # (pull request #433).
     if calendar not in ['all_leap','no_leap','360_day','365_day','366_day']:
         eps = np.array(np.finfo(np.float64).eps,np.longdouble)
-        eps = np.maximum(eps*jd, eps)
-        jd += eps
+        eps = np.maximum(eps*(jd+jdf), eps)
+        jdf += eps
 
     if isscalar:
-        return np.asscalar(jd)
+        return np.asscalar(jd), np.asscalar(jdf)
     else:
-        return jd
+        return jd,jdf
 
 def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
                       return_tuple=False):
@@ -732,7 +733,7 @@ units to datetime objects.
         if self.calendar == '360_day' and self.origin.day > 30:
             raise ValueError(
                 'there are only 30 days in every month with the 360_day calendar')
-        self._jd0 = JulianDayFromDate(self.origin, calendar=self.calendar)
+        self._jd0, self._jd0_frac = JulianDayFromDate(self.origin, calendar=self.calendar)
         self.only_use_cftime_datetimes = only_use_cftime_datetimes
 
     def date2num(self, date):
@@ -763,32 +764,43 @@ units to datetime objects.
             date = np.array(date)
             shape = date.shape
         if isscalar:
-            jdelta = JulianDayFromDate(date, self.calendar)-self._jd0
+            jd,jdf = JulianDayFromDate(date, self.calendar)
         else:
-            jdelta = JulianDayFromDate(date.flat, self.calendar)-self._jd0
+            jd,jdf = JulianDayFromDate(date.flat, self.calendar)
+        jdelta = jd-self._jd0
+        jdelta_frac = jdf-self._jd0_frac
         if not isscalar:
             jdelta = np.array(jdelta)
+            jdelta_frac = np.array(jdelta_frac)
         # convert to desired units, add time zone offset.
         if self.units in microsec_units:
-            jdelta = jdelta * 86400. * 1.e6  + self.tzoffset * 60. * 1.e6
+            jdelta_frac = jdelta_frac * 86400. * 1.e6  + self.tzoffset * 60. * 1.e6
+            jdelta = jdelta * 86400000000
         elif self.units in millisec_units:
-            jdelta = jdelta * 86400. * 1.e3  + self.tzoffset * 60. * 1.e3
+            jdelta_frac = jdelta_frac * 86400. * 1.e3  + self.tzoffset * 60. * 1.e3
+            jdelta = jdelta * 86400000
         elif self.units in sec_units:
-            jdelta = jdelta * 86400. + self.tzoffset * 60.
+            jdelta_frac = jdelta_frac * 86400. + self.tzoffset * 60.
+            jdelta = jdelta * 86400
         elif self.units in min_units:
-            jdelta = jdelta * 1440. + self.tzoffset
+            jdelta_frac = jdelta_frac * 1440. + self.tzoffset
+            jdelta = jdelta * 1440
         elif self.units in hr_units:
-            jdelta = jdelta * 24. + self.tzoffset / 60.
+            jdelta_frac = jdelta_frac * 24. + self.tzoffset / 60.
+            jdelta = jdelta * 24
         elif self.units in day_units:
-            jdelta = jdelta + self.tzoffset / 1440.
+            jdelta_frac = jdelta_frac + self.tzoffset / 1440.
         elif self.units in month_units and self.calendar == '360_day':
-            jdelta = jdelta/30. + self.tzoffset / (30. * 1440.)
+            jdelta_frac = jdelta_frac/30. + self.tzoffset / (30. * 1440.)
+            jdelta = jdelta/30.0 # this converts to float
         else:
             raise ValueError('unsupported time units')
         if isscalar:
-            return np.asscalar(jdelta)
+            jd = np.asscalar(jdelta+jdelta_frac)
+            return float(jd)
         else:
-            return np.reshape(jdelta, shape)
+            jd = np.reshape(jdelta+jdelta_frac, shape)
+            return jd.astype(np.float64)
 
     def num2date(self, time_value):
         """
@@ -842,7 +854,7 @@ units to datetime objects.
             jdelta = time_value * 30. - self.tzoffset / 1440.
         else:
             raise ValueError('unsupported time units')
-        jd = self._jd0 + jdelta
+        jd = self._jd0 + self._jd0_frac + jdelta
         if not isscalar:
             if ismasked:
                 date = []
@@ -1352,9 +1364,9 @@ but uses the "noleap" ("365_day") calendar.
         assert_valid_date(self, no_leap, False, has_year_zero=True)
         # if dayofwk, dayofyr not set, calculate them.
         if self.dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='365_day')
+            jd,jdf = JulianDayFromDate(self,calendar='365_day')
             year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='365_day')
+            DateFromJulianDay(jd+jdf,return_tuple=True,calendar='365_day')
             self.dayofwk = dayofwk
             self.dayofyr = dayofyr
 
@@ -1374,9 +1386,9 @@ but uses the "all_leap" ("366_day") calendar.
         assert_valid_date(self, all_leap, False, has_year_zero=True)
         # if dayofwk, dayofyr not set, calculate them.
         if self.dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='366_day')
+            jd,jdf = JulianDayFromDate(self,calendar='366_day')
             year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='366_day')
+            DateFromJulianDay(jd+jdf,return_tuple=True,calendar='366_day')
             self.dayofwk = dayofwk
             self.dayofyr = dayofyr
 
@@ -1396,9 +1408,9 @@ but uses the "360_day" calendar.
         assert_valid_date(self, no_leap, False, has_year_zero=True, is_360_day=True)
         # if dayofwk, dayofyr not set, calculate them.
         if self.dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='360_day')
+            jd,jdf = JulianDayFromDate(self,calendar='360_day')
             year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='360_day')
+            DateFromJulianDay(jd+jdf,return_tuple=True,calendar='360_day')
             self.dayofwk = dayofwk
             self.dayofyr = dayofyr
 
@@ -1418,9 +1430,9 @@ but uses the "julian" calendar.
         assert_valid_date(self, is_leap_julian, False)
         # if dayofwk, dayofyr not set, calculate them.
         if self.dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='julian')
+            jd,jdf = JulianDayFromDate(self,calendar='julian')
             year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='julian')
+            DateFromJulianDay(jd+jdf,return_tuple=True,calendar='julian')
             self.dayofwk = dayofwk
             self.dayofyr = dayofyr
 
@@ -1454,9 +1466,9 @@ a datetime.datetime instance or vice versa.
         assert_valid_date(self, is_leap_gregorian, True)
         # if dayofwk, dayofyr not set, calculate them.
         if self.dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='gregorian')
+            jd,jdf = JulianDayFromDate(self,calendar='gregorian')
             year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='gregorian')
+            DateFromJulianDay(jd+jdf,return_tuple=True,calendar='gregorian')
             self.dayofwk = dayofwk
             self.dayofyr = dayofyr
 
@@ -1488,9 +1500,9 @@ format, and calendar.
         assert_valid_date(self, is_leap_proleptic_gregorian, False)
         # if dayofwk, dayofyr not set, calculate them.
         if self.dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='proleptic_gregorian')
+            jd,jdf = JulianDayFromDate(self,calendar='proleptic_gregorian')
             year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='proleptic_gregorian')
+            DateFromJulianDay(jd+jdf,return_tuple=True,calendar='proleptic_gregorian')
             self.dayofwk = dayofwk
             self.dayofyr = dayofyr
 

@@ -237,8 +237,8 @@ class cftimeTestCase(unittest.TestCase):
         self.assertTrue(str(d) == str(date))
         # test julian day from date, date from julian day
         d = datetime(1858, 11, 17)
-        mjd = JulianDayFromDate(d)
-        assert_almost_equal(mjd, 2400000.5)
+        mjd,mjdf = JulianDayFromDate(d)
+        assert_almost_equal(mjd+mjdf, 2400000.5)
         date = DateFromJulianDay(mjd)
         self.assertTrue(str(date) == str(d))
         # test iso 8601 units string
@@ -564,7 +564,8 @@ class cftimeTestCase(unittest.TestCase):
         assert (date2.hour == date1.hour)
         assert (date2.minute == date1.minute)
         assert (date2.second == date1.second)
-        assert_almost_equal(JulianDayFromDate(date1), 1721057.5)
+        jd,jdf = JulianDayFromDate(date1)
+        assert_almost_equal(jd+jdf, 1721057.5)
         # issue 596 - negative years fail in utime.num2date
         u = utime("seconds since 1-1-1", "proleptic_gregorian")
         d = u.num2date(u.date2num(datetimex(-1, 1, 1)))
