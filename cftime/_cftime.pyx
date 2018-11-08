@@ -198,7 +198,7 @@ def date2num(dates,units,calendar='standard'):
                     else:
                         raise ValueError('unsupported time units')
             if isscalar:
-                return times[0]
+                return np.asscalar(times)
             else:
                 return np.reshape(np.array(times), shape)
         else: # use cftime module for other calendars
@@ -427,7 +427,7 @@ def JulianDayFromDate(date, calendar='standard'):
         jd += eps
 
     if isscalar:
-        return jd[0]
+        return np.asscalar(jd)
     else:
         return jd
 
@@ -786,9 +786,9 @@ units to datetime objects.
         else:
             raise ValueError('unsupported time units')
         if isscalar:
-            return jdelta.astype(np.float64)
+            return np.asscalar(jdelta)
         else:
-            return np.reshape(jdelta.astype(np.float64), shape)
+            return np.reshape(jdelta, shape)
 
     def num2date(self, time_value):
         """
