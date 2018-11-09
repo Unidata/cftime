@@ -19,6 +19,7 @@ import cftime
 # test cftime module for netCDF time <--> python datetime conversions.
 
 dtime = namedtuple('dtime', ('values', 'units', 'calendar'))
+dateformat =  '%Y-%m-%d %H:%M:%S'
 
 
 class CFTimeVariable(object):
@@ -102,7 +103,7 @@ class cftimeTestCase(unittest.TestCase):
         t2 = self.cdftime_mixed.date2num(d)
         assert_almost_equal(t2, 13865688.0)
         d2 = self.cdftime_mixed.num2date(t2)
-        self.assertTrue(str(d) == str(d2))
+        self.assertTrue(d.ctime() == d2.ctime())
         # check day of year.
         ndayr = d.timetuple()[7]
         self.assertTrue(ndayr == 288)
@@ -132,7 +133,7 @@ class cftimeTestCase(unittest.TestCase):
         self.assertTrue(t1 == 62777470620.0)
         # check num2date method.
         d2 = self.cdftime_pg.num2date(t1)
-        self.assertTrue(str(d) == str(d2))
+        self.assertTrue(d.strftime(dateformat) == d2.strftime(dateformat))
         # check day of year.
         ndayr = d.timetuple()[7]
         self.assertTrue(ndayr == 125)
@@ -192,7 +193,7 @@ class cftimeTestCase(unittest.TestCase):
         d = datetime(2000, 12, 31)
         t1 = self.cdftime_mixed.date2num(d)
         d2 = self.cdftime_mixed.num2date(t1)
-        self.assertTrue(str(d) == str(d2))
+        self.assertTrue(d.strftime(dateformat) == d2.strftime(dateformat))
         ndayr = d2.timetuple()[7]
         self.assertTrue(ndayr == 366)
         # check 360_day calendar.
@@ -239,8 +240,8 @@ class cftimeTestCase(unittest.TestCase):
         d = datetime(1858, 11, 17)
         mjd,mjdf = JulianDayFromDate(d)
         assert_almost_equal(mjd+mjdf, 2400000.5)
-        date = DateFromJulianDay(mjd)
-        self.assertTrue(str(date) == str(d))
+        date = DateFromJulianDay(mjd+mjdf)
+        self.assertTrue(date.ctime() == d.ctime())
         # test iso 8601 units string
         d = datetime(1970, 1, 1, 1)
         t = self.cdftime_iso.date2num(d)
@@ -249,7 +250,6 @@ class cftimeTestCase(unittest.TestCase):
         # day goes out of range).
         t = 733499.0
         d = num2date(t, units='days since 0001-01-01 00:00:00')
-        dateformat =  '%Y-%m-%d %H:%M:%S'
         assert_equal(d.strftime(dateformat), '2009-04-01 00:00:00')
         # test edge case of issue 75 for numerical problems
         for t in (733498.999, 733498.9999, 733498.99999, 733498.999999, 733498.9999999):
@@ -333,7 +333,6 @@ class cftimeTestCase(unittest.TestCase):
         # also tests error found in issue #349
         calendars=['standard', 'gregorian', 'proleptic_gregorian', 'noleap', 'julian',\
                    'all_leap', '365_day', '366_day', '360_day']
-        dateformat =  '%Y-%m-%d %H:%M:%S'
         dateref = datetime(2015,2,28,12)
         ntimes = 1001
         verbose = True # print out max error diagnostics
@@ -357,7 +356,7 @@ class cftimeTestCase(unittest.TestCase):
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
             if verbose:
-                print('calender = %s max abs err (microsecs) = %s eps = %s' % \
+                print('calendar = %s max abs err (microsecs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
             units = 'milliseconds since 1800-01-30 01:01:01'
             eps = 0.01*fact
@@ -373,7 +372,7 @@ class cftimeTestCase(unittest.TestCase):
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
             if verbose:
-                print('calender = %s max abs err (millisecs) = %s eps = %s' % \
+                print('calendar = %s max abs err (millisecs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
             eps = 1.e-4*fact
             units = 'seconds since 0001-01-30 01:01:01'
@@ -389,7 +388,7 @@ class cftimeTestCase(unittest.TestCase):
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
             if verbose:
-                print('calender = %s max abs err (secs) = %s eps = %s' % \
+                print('calendar = %s max abs err (secs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
             eps = 1.e-6*fact
             units = 'minutes since 0001-01-30 01:01:01'
@@ -405,7 +404,7 @@ class cftimeTestCase(unittest.TestCase):
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
             if verbose:
-                print('calender = %s max abs err (mins) = %s eps = %s' % \
+                print('calendar = %s max abs err (mins) = %s eps = %s' % \
                      (calendar,maxerr,eps))
             eps = 1.e-7*fact
             units = 'hours since 0001-01-30 01:01:01'
@@ -421,7 +420,7 @@ class cftimeTestCase(unittest.TestCase):
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
             if verbose:
-                print('calender = %s max abs err (hours) = %s eps = %s' % \
+                print('calendar = %s max abs err (hours) = %s eps = %s' % \
                      (calendar,maxerr,eps))
             eps = 1.e-9*fact
             units = 'days since 0001-01-30 01:01:01'
@@ -437,7 +436,7 @@ class cftimeTestCase(unittest.TestCase):
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
             if verbose:
-                print('calender = %s max abs err (days) = %s eps = %s' % \
+                print('calendar = %s max abs err (days) = %s eps = %s' % \
                      (calendar,maxerr,eps))
 
         # issue 353

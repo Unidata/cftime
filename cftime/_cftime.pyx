@@ -797,10 +797,12 @@ units to datetime objects.
             raise ValueError('unsupported time units')
         if isscalar:
             jd = np.asscalar(jdelta+jdelta_frac)
-            return float(jd)
+            #return float(jd)
+            return jd
         else:
             jd = np.reshape(jdelta+jdelta_frac, shape)
-            return jd.astype(np.float64)
+            #return jd.astype(np.float64)
+            return jd
 
     def num2date(self, time_value):
         """
@@ -1331,7 +1333,8 @@ Gregorial calendar.
                 if dt.calendar == "":
                     raise ValueError("cannot compute the time difference between dates that are not calendar-aware")
                 converter = _converters[dt.calendar]
-                return timedelta(seconds=converter.date2num(dt) - converter.date2num(other))
+                return timedelta(seconds=float(converter.date2num(dt) -\
+                    converter.date2num(other)))
             elif isinstance(other, datetime_python):
                 # datetime - real_datetime
                 if not dt.datetime_compatible:
