@@ -471,19 +471,17 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
         else:
             ind_before = None
 
-        # Subtract the offset from JulianDayFromDate from the microseconds (pull
-        # request #433).
+        # compute hour, minute, second, microsecond, convert to int32
         hour = np.clip((F * 24.).astype(np.int64), 0, 23)
         F   -= hour / 24.
         minute = np.clip((F * 1440.).astype(np.int64), 0, 59)
-        # this is an overestimation due to added offset in JulianDayFromDate
         second = np.clip((F - minute / 1440.) * 86400., 0, None)
         microsecond = (second % 1)*1.e6
-        # convert hour, minute, second to int32
         hour = hour.astype(np.int32)
         minute = minute.astype(np.int32)
         second = second.astype(np.int32)
         microsecond = microsecond.astype(np.int32)
+
         return year,month,day,hour,minute,second,microsecond,dayofyr,dayofwk,ind_before
 
     year,month,day,hour,minute,second,microsecond,dayofyr,dayofwk,ind_before =\
