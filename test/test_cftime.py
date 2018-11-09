@@ -670,6 +670,10 @@ class cftimeTestCase(unittest.TestCase):
              1, 'months since 01-01-01',calendar='standard')
         self.assertRaises(ValueError, utime, \
             'months since 01-01-01', calendar='standard')
+        # issue #78 - extra digits due to roundoff
+        assert(cftime.date2num(cftime.datetime(1, 12, 1, 0, 0, 0, 0, -1, 1), units='days since 01-01-01',calendar='noleap')  == 334.0)
+        assert(cftime.date2num(cftime.num2date(1.0,units='days since 01-01-01',calendar='noleap'),units='days since 01-01-01',calendar='noleap') == 1.0)
+        assert(cftime.date2num(cftime.DatetimeNoLeap(1980, 1, 1, 0, 0, 0, 0, 6, 1),'days since 1970-01-01','noleap') == 3650.0)
 
 
 class TestDate2index(unittest.TestCase):
