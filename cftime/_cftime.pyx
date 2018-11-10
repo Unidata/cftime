@@ -147,7 +147,7 @@ def date2num(dates,units,calendar='standard'):
     Default is `'standard'`, which is a mixed Julian/Gregorian calendar.
 
     returns a numeric time value, or an array of numeric time values
-    with approximately 10 microsecond accuracy.
+    with approximately 100 microsecond accuracy.
         """
         calendar = calendar.lower()
         basedate = _dateparse(units)
@@ -234,7 +234,7 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=False):
     subclass cftime.datetime are returned for all calendars.
 
     returns a datetime instance, or an array of datetime instances with
-    approximately 10 microsecond accuracy.
+    approximately 100 microsecond accuracy.
 
     ***Note***: The datetime instances returned are 'real' python datetime
     objects if `calendar='proleptic_gregorian'`, or
@@ -372,7 +372,7 @@ def JulianDayFromDate(date, calendar='standard'):
     """JulianDayFromDate(date, calendar='standard')
 
     creates a Julian Day from a 'datetime-like' object.  Returns the fractional
-    Julian Day (approximately 10 microsecond accuracy).
+    Julian Day (approximately 100 microsecond accuracy).
 
     if calendar='standard' or 'gregorian' (default), Julian day follows Julian
     Calendar on and before 1582-10-5, Gregorian calendar after 1582-10-15.
@@ -428,7 +428,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     """
 
     returns a 'datetime-like' object given Julian Day. Julian Day is a
-    fractional day with approximately 10 microsecond accuracy.
+    fractional day with approximately 100 microsecond accuracy.
 
     if calendar='standard' or 'gregorian' (default), Julian day follows Julian
     Calendar on and before 1582-10-5, Gregorian calendar after  1582-10-15.
@@ -492,6 +492,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     # see netcdf4-python issue #433 and cftime issue #78
     # this is done by rounding microsends up or down, then
     # recomputing year,month,day etc
+    # ms_eps is proportional to julian day, a max of about 50ms
     ms_eps = np.array(np.finfo(np.float64).eps,np.longdouble)
     ms_eps = 86400000000.*np.maximum(ms_eps*julian, ms_eps)
     microsecond = np.where(microsecond < ms_eps, 0, microsecond)
