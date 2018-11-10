@@ -492,7 +492,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     # see netcdf4-python issue #433 and cftime issue #78
     # this is done by rounding microsends up or down, then
     # recomputing year,month,day etc
-    ms_eps = 9
+    ms_eps = 10
     microsecond = np.where(microsecond < ms_eps, 0, microsecond)
     indxms = microsecond > 1000000-ms_eps
     if indxms.any():

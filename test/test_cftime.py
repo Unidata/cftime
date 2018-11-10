@@ -343,7 +343,7 @@ class cftimeTestCase(unittest.TestCase):
         else:
             fact = 1.
         for calendar in calendars:
-            eps = 10.*fact
+            eps = 20.*fact
             units = 'microseconds since 2000-01-30 01:01:01'
             microsecs1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0
@@ -360,7 +360,7 @@ class cftimeTestCase(unittest.TestCase):
                 print('calender = %s max abs err (microsecs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
             units = 'milliseconds since 1800-01-30 01:01:01'
-            eps = 0.01*fact
+            eps = 0.02*fact
             millisecs1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0.
             for n in range(ntimes):
@@ -375,7 +375,7 @@ class cftimeTestCase(unittest.TestCase):
             if verbose:
                 print('calender = %s max abs err (millisecs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 1.e-4*fact
+            eps = 2.e-4*fact
             units = 'seconds since 0001-01-30 01:01:01'
             secs1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0.
@@ -391,7 +391,7 @@ class cftimeTestCase(unittest.TestCase):
             if verbose:
                 print('calender = %s max abs err (secs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 1.e-6*fact
+            eps = 2.e-6*fact
             units = 'minutes since 0001-01-30 01:01:01'
             mins1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0.
@@ -407,7 +407,7 @@ class cftimeTestCase(unittest.TestCase):
             if verbose:
                 print('calender = %s max abs err (mins) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 1.e-7*fact
+            eps = 2.e-7*fact
             units = 'hours since 0001-01-30 01:01:01'
             hrs1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0.
@@ -423,7 +423,7 @@ class cftimeTestCase(unittest.TestCase):
             if verbose:
                 print('calender = %s max abs err (hours) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 1.e-9*fact
+            eps = 2.e-9*fact
             units = 'days since 0001-01-30 01:01:01'
             days1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0.
