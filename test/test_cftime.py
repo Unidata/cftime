@@ -133,7 +133,6 @@ class cftimeTestCase(unittest.TestCase):
         self.assertTrue(np.around(t1) == 62777470620.0)
         # check num2date method.
         d2 = self.cdftime_pg.num2date(t1)
-        print(d,d2)
         self.assertTrue(d.strftime(dateformat) == d2.strftime(dateformat))
         # check day of year.
         ndayr = d.timetuple()[7]
@@ -337,13 +336,8 @@ class cftimeTestCase(unittest.TestCase):
         dateref = datetime(2015,2,28,12)
         ntimes = 1001
         verbose = True # print out max error diagnostics
-        precis = np.finfo(np.longdouble).precision
-        if precis < 18:
-            fact = 10
-        else:
-            fact = 1.
         for calendar in calendars:
-            eps = 20.*fact
+            eps = 100.
             units = 'microseconds since 2000-01-30 01:01:01'
             microsecs1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0
@@ -360,7 +354,7 @@ class cftimeTestCase(unittest.TestCase):
                 print('calender = %s max abs err (microsecs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
             units = 'milliseconds since 1800-01-30 01:01:01'
-            eps = 0.02*fact
+            eps = 0.1
             millisecs1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0.
             for n in range(ntimes):
@@ -375,7 +369,7 @@ class cftimeTestCase(unittest.TestCase):
             if verbose:
                 print('calender = %s max abs err (millisecs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 2.e-4*fact
+            eps = 1.e-3
             units = 'seconds since 0001-01-30 01:01:01'
             secs1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0.
@@ -391,7 +385,7 @@ class cftimeTestCase(unittest.TestCase):
             if verbose:
                 print('calender = %s max abs err (secs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 2.e-6*fact
+            eps = 1.e-5
             units = 'minutes since 0001-01-30 01:01:01'
             mins1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0.
@@ -407,7 +401,7 @@ class cftimeTestCase(unittest.TestCase):
             if verbose:
                 print('calender = %s max abs err (mins) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 2.e-7*fact
+            eps = 1.e-6
             units = 'hours since 0001-01-30 01:01:01'
             hrs1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0.
@@ -423,7 +417,7 @@ class cftimeTestCase(unittest.TestCase):
             if verbose:
                 print('calender = %s max abs err (hours) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 2.e-9*fact
+            eps = 1.e-8
             units = 'days since 0001-01-30 01:01:01'
             days1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0.
