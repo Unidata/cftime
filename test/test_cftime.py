@@ -19,6 +19,7 @@ import cftime
 # test cftime module for netCDF time <--> python datetime conversions.
 
 dtime = namedtuple('dtime', ('values', 'units', 'calendar'))
+dateformat =  '%Y-%m-%d %H:%M:%S'
 
 
 class CFTimeVariable(object):
@@ -132,7 +133,7 @@ class cftimeTestCase(unittest.TestCase):
         self.assertTrue(t1 == 62777470620.0)
         # check num2date method.
         d2 = self.cdftime_pg.num2date(t1)
-        self.assertTrue(str(d) == str(d2))
+        self.assertTrue(d.strftime(dateformat) == d2.strftime(dateformat))
         # check day of year.
         ndayr = d.timetuple()[7]
         self.assertTrue(ndayr == 125)
@@ -249,7 +250,6 @@ class cftimeTestCase(unittest.TestCase):
         # day goes out of range).
         t = 733499.0
         d = num2date(t, units='days since 0001-01-01 00:00:00')
-        dateformat =  '%Y-%m-%d %H:%M:%S'
         assert_equal(d.strftime(dateformat), '2009-04-01 00:00:00')
         # test edge case of issue 75 for numerical problems
         for t in (733498.999, 733498.9999, 733498.99999, 733498.999999, 733498.9999999):
@@ -333,7 +333,6 @@ class cftimeTestCase(unittest.TestCase):
         # also tests error found in issue #349
         calendars=['standard', 'gregorian', 'proleptic_gregorian', 'noleap', 'julian',\
                    'all_leap', '365_day', '366_day', '360_day']
-        dateformat =  '%Y-%m-%d %H:%M:%S'
         dateref = datetime(2015,2,28,12)
         ntimes = 1001
         verbose = True # print out max error diagnostics
