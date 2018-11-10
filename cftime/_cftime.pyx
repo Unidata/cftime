@@ -492,16 +492,17 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     # see netcdf4-python issue #433 and cftime issue #78
     # this is done by rounding microsends up or down, then
     # recomputing year,month,day etc
-    # ms_eps is proportional to julian day, a max of about 50ms
+    # ms_eps is proportional to julian day,
+    # about 47 microseconds in 2000 for Julian base date in -4713
     ms_eps = np.array(np.finfo(np.float64).eps,np.longdouble)
     ms_eps = 86400000000.*np.maximum(ms_eps*julian, ms_eps)
     microsecond = np.where(microsecond < ms_eps, 0, microsecond)
     indxms = microsecond > 1000000-ms_eps
     if indxms.any():
-        julian[indxms] = julian[indxms] + 2.*ms_eps/86400000000.
+        julian[indxms] = julian[indxms] + ms_eps/86400000000.
         year,month,day,hour,minute,second,microsecond,dayofyr,dayofwk,ind_before =\
         getdateinfo(julian)
-        microsecond = np.where(microsecond < 2.*ms_eps, 0, microsecond)
+        microsecond[indxms] = 0
 
     # check if input was scalar and change return accordingly
     isscalar = False
