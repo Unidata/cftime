@@ -133,7 +133,7 @@ class cftimeTestCase(unittest.TestCase):
         print(t1)
         self.assertTrue(np.around(t1) == 62777470620.0)
         # check num2date method.
-        d2 = self.cdftime_pg.num2date(np.around(t1))
+        d2 = self.cdftime_pg.num2date(t1)
         print(d,d2)
         #self.assertTrue(d.strftime(dateformat) == d2.strftime(dateformat))
         # check day of year.
