@@ -130,7 +130,7 @@ class cftimeTestCase(unittest.TestCase):
         # check date2num method.
         d = datetime(1990, 5, 5, 2, 17)
         t1 = self.cdftime_pg.date2num(d)
-        self.assertTrue(np.around(t1) == 62777470620.0)
+        self.assertTrue(t1 == 62777470620.0)
         # check num2date method.
         d2 = self.cdftime_pg.num2date(t1)
         #self.assertTrue(d.strftime(dateformat) == d2.strftime(dateformat))
