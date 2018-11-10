@@ -1,5 +1,8 @@
 from __future__ import print_function
+
 import copy
+import operator
+import sys
 import unittest
 from collections import namedtuple
 from datetime import datetime, timedelta
@@ -8,13 +11,13 @@ import numpy as np
 import pytest
 from numpy.testing import assert_almost_equal, assert_equal
 
+import cftime
 from cftime import datetime as datetimex
 from cftime import real_datetime
 from cftime import (DateFromJulianDay, Datetime360Day, DatetimeAllLeap,
                     DatetimeGregorian, DatetimeJulian, DatetimeNoLeap,
                     DatetimeProlepticGregorian, JulianDayFromDate, _parse_date,
                     date2index, date2num, num2date, utime)
-import cftime
 
 # test cftime module for netCDF time <--> python datetime conversions.
 
@@ -1106,12 +1109,75 @@ class DateTime(unittest.TestCase):
             self.datetime_date1 > self.date2_365_day
 
         def not_comparable_4():
-            "compare a datetime instance to something other than a datetime"
+            "compare a datetime instance to non-datetime"
             self.date1_365_day > 0
+
+        def not_comparable_5():
+            "compare non-datetime to a datetime instance"
+            0 < self.date_1_365_day
 
         for func in [not_comparable_1, not_comparable_2, not_comparable_3, not_comparable_4]:
             self.assertRaises(TypeError, func)
 
+    @pytest.mark.skipif(sys.version_info.major != 2,
+                        reason='python2 specific, non-comparable test')
+    def test_richcmp_py2(self):
+        class Rich(object):
+            """Dummy class with traditional rich comparison support."""
+            def __lt__(self, other):
+                raise NotImplementedError('__lt__')
+            def __le__(self, other):
+                raise NotImplementedError('__le__')
+            def __eq__(self, other):
+                raise NotImplementedError('__eq__')
+            def __ne__(self, other):
+                raise NotImplementedError('__ne__')
+            def __gt__(self, other):
+                raise NotImplementedError('__gt__')
+            def __ge__(self, other):
+                raise NotImplementedError('__ge__')
+
+        class CythonRich(object):
+            """Dummy class with spoof cython rich comparison support."""
+            def __richcmp__(self, other):
+                """
+                This method is never called. However it is introspected
+                by the cftime.datetime.__richcmp__ method, which will then
+                return NotImplemented, causing Python to call this classes
+                __cmp__ method as a back-stop, and hence spoofing the
+                cython specific rich comparison behaviour.
+                """
+                pass
+            def __cmp__(self, other):
+                raise NotImplementedError('__richcmp__')
+
+        class Pass(object):
+            """Dummy class with no rich comparison support whatsoever."""
+            pass
+
+        class Pass___cmp__(object):
+            """Dummy class that delegates all comparisons."""
+            def __cmp__(self, other):
+                return NotImplemented
+
+        # Test LHS operand comparison operator processing.
+        for op, expected in [(operator.gt, '__lt__'), (operator.ge, '__le__'),
+                             (operator.eq, '__eq__'), (operator.ne, '__ne__'),
+                             (operator.lt, '__gt__'), (operator.le, '__ge__')]:
+            with self.assertRaisesRegexp(NotImplementedError, expected):
+                op(self.date1_365_day, Rich())
+
+            with self.assertRaisesRegexp(NotImplementedError, '__richcmp__'):
+                op(self.date1_365_day, CythonRich())
+
+        # Test RHS operand comparison operator processing.
+        for op in [operator.gt, operator.ge, operator.eq, operator.ne,
+                   operator.lt, operator.le]:
+            with self.assertRaisesRegexp(TypeError, 'cannot compare'):
+                op(Pass(), self.date1_365_day)
+
+            with self.assertRaisesRegexp(TypeError, 'cannot compare'):
+                op(Pass___cmp__(), self.date1_365_day)
 
 
 class issue17TestCase(unittest.TestCase):
