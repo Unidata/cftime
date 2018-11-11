@@ -31,21 +31,15 @@ before_install:
       conda install -qy sphinx;
     fi;
 
-  # Output environment details.
-  - >
-    conda list -n ${ENV_NAME};
-    conda list -n ${ENV_NAME} --explicit;
-    conda info -a;
+  # Log the conda environment and package details.
+  - conda list -n ${ENV_NAME}
+  - conda list -n ${ENV_NAME} --explicit
+  - conda info -a
 
 install:
-  # Install cftime
-  - >
-    echo "Installing cftime...";
-    python setup.py sdist;
-    export VERSION=$(python setup.py --version);
-    pushd dist;
-    pip install cftime-${VERSION}.tar.gz;
-    popd;
+  # Install cftime.
+  - echo "Installing cftime..."
+  - pip install -e .
 
 script:
   - if [[ "${BUILD_DOCS}" == "true" ]]; then
