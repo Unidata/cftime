@@ -39,13 +39,13 @@ before_install:
 install:
   # Install cftime.
   - echo "Installing cftime..."
-  - pip install -e .
+  - CYTHON_COVERAGE=1 pip install -e .
 
 script:
   - if [[ "${BUILD_DOCS}" == "true" ]]; then
       pushd docs && make html linkcheck O=-W && popd;
     else
-      py.test -vv;
+      pytest -v;
     fi;
 
 after_success:

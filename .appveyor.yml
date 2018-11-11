@@ -41,7 +41,7 @@ install:
 build: off
 
 test_script:
-    - conda.exe create --name TEST python=%PY% numpy=%NPY% cython pip pytest
+    - conda.exe create --name TEST python=%PY% numpy=%NPY% cython pip pytest pytest-cov
     - conda activate TEST
     - python -m pip install . --no-deps --ignore-installed --no-cache-dir -vvv
     - py.test -vv test

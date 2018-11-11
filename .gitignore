@@ -1,6 +1,8 @@
 *.so
+*.py[co]
 *.c
 build/
+*.egg?
 *.egg-info
 _build/
 __pycache__
