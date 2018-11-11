@@ -1,37 +1,54 @@
 # Based on http://conda.pydata.org/docs/travis.html
-language: python
+language: minimal
+
 sudo: false # use container based build
+
 notifications:
   email: false
 
-python:
-  - 2.7
-  - 3.5
-  - 3.6
+env:
+  - PYTHON_VERSION=2.7
+  - PYTHON_VERSION=3.6
+  - PYTHON_VERSION=3.7
 
 matrix:
   include:
-    - python: 3.6
-      env: BUILD_DOCS="true"
+    - env: PYTHON_VERSION=3.7 BUILD_DOCS="true"
 
 before_install:
-  - wget http://bit.ly/miniconda -O miniconda.sh
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - conda update conda --yes --all
-  - conda config --add channels conda-forge --force
-  - conda create --yes -n TEST python=$TRAVIS_PYTHON_VERSION --file requirements.txt --file requirements-dev.txt
-  - source activate TEST
-  - if [[ $BUILD_DOCS == "true" ]]; then
+  # Build the conda testing environment.
+  - >
+    echo "Installing miniconda and cftime dependencies...";
+    wget http://bit.ly/miniconda -O miniconda.sh;
+    bash miniconda.sh -b -p $HOME/miniconda;
+    export PATH="${HOME}/miniconda/bin:${PATH}";
+    conda update conda --yes --all;
+    conda config --add channels conda-forge --force;
+    export ENV_NAME="test-environment";
+    conda create --yes -n ${ENV_NAME} python=${PYTHON_VERSION} --file requirements.txt --file requirements-dev.txt;
+    source activate ${ENV_NAME};
+    if [[ "${BUILD_DOCS}" == "true" ]]; then
       conda install -qy sphinx;
     fi;
 
-# Test source distribution.
+  # Output environment details.
+  - >
+    conda list -n ${ENV_NAME};
+    conda list -n ${ENV_NAME} --explicit;
+    conda info -a;
+
 install:
-  - python setup.py sdist && version=$(python setup.py --version) && pushd dist  && pip install cftime-${version}.tar.gz && popd
+  # Install cftime
+  - >
+    echo "Installing cftime...";
+    python setup.py sdist;
+    export VERSION=$(python setup.py --version);
+    pushd dist;
+    pip install cftime-${VERSION}.tar.gz;
+    popd;
 
 script:
-  - if [[ $BUILD_DOCS == "true" ]]; then
+  - if [[ "${BUILD_DOCS}" == "true" ]]; then
       pushd docs && make html linkcheck O=-W && popd;
     else
       py.test -vv;
@@ -42,7 +59,7 @@ after_success:
 
 before_deploy:
   # Remove unused, unminified javascript from sphinx
-  - if [[ $BUILD_DOCS == "true" ]]; then
+  - if [[ "${BUILD_DOCS}" == "true" ]]; then
       rm -f docs/build/html/_static/jquery-*.js;
       rm -f docs/build/html/_static/underscore-*.js;
       rm -f docs/build/html/.buildinfo;
@@ -54,5 +71,4 @@ deploy:
     skip_cleanup: true
     on:
       branch: master
-      python: 3.6
-      condition: '$BUILD_DOCS == "true"'
+      condition: '${PYTHON_VERSION} == 3.7 AND ${BUILD_DOCS} == "true"'
