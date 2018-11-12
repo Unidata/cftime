@@ -2,7 +2,8 @@
 Performs conversions of netCDF time coordinate data to/from datetime objects.
 """
 
-from cpython.object cimport PyObject_RichCompare
+from cpython.object cimport (PyObject_RichCompare, Py_LT, Py_LE, Py_EQ,
+                             Py_NE, Py_GT, Py_GE)
 import cython
 import numpy as np
 import re
@@ -37,6 +38,9 @@ cdef int[12] _dpm_360  = [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
 # Same as above, but SUM of previous months (no leap years).
 cdef int[13] _spm_365day = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
 cdef int[13] _spm_366day = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
+# Reverse operator lookup for datetime.__richcmp__
+_rop_lookup = {Py_LT: '__gt__', Py_LE: '__ge__', Py_EQ: '__eq__',
+               Py_GT: '__lt__', Py_GE: '__le__', Py_NE: '__ne__'}
 
 __version__ = '1.0.2.1'
 
@@ -1272,16 +1276,29 @@ Gregorial calendar.
                 raise TypeError("cannot compare {0!r} and {1!r} (different calendars)".format(self, other))
             return PyObject_RichCompare(dt.to_tuple(), to_tuple(other), op)
         else:
-            # With Python3 we can use "return NotImplemented". If the other
-            # object does not have rich comparison instructions for cftime
-            # then a TypeError is automatically raised. With Python2 in this
-            # scenario the default behaviour is to compare the object ids
-            # which will always have a result. Therefore there is no way to
-            # differentiate between objects that do or do not have legitimate
-            # comparisons, and so we cannot remove the TypeError below.
-            if sys.version_info[0] < 3:
-                raise TypeError("cannot compare {0!r} and {1!r}".format(self, other))
+            # With Python3 we can simply return NotImplemented. If the other
+            # object does not support rich comparison for cftime then a
+            # TypeError will be automatically raised. However, Python2 is not
+            # consistent with this Python3 behaviour. In Python2, we only
+            # delegate the comparison operation to the other object iff it has
+            # suitable rich comparison support available. This is deduced by
+            # introspection of the other object. Otherwise, we explicitly raise
+            # a TypeError to avoid Python2 defaulting to using either __cmp__
+            # comparision on the other object, or worst still, object ID
+            # comparison. Either way, at this point the comparision is deemed
+            # not valid from our perspective.
+            if sys.version_info.major == 2:
+                rop = _rop_lookup[op]
+                if (hasattr(other, '__richcmp__') or hasattr(other, rop)):
+                    # The other object potentially has the smarts to handle
+                    # the comparision, so allow the Python machinery to hand
+                    # the operation off to the other object.
+                    return NotImplemented
+                # Otherwise, the comparison is not valid.
+                emsg = "cannot compare {0!r} and {1!r}"
+                raise TypeError(emsg.format(self, other))
             else:
+                # Delegate responsibility of comparison to the other object.
                 return NotImplemented
 
     cdef _getstate(self):
