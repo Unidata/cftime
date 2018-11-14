@@ -4,6 +4,7 @@ Time-handling functionality from netcdf4-python
 [![Linux Build Status](https://travis-ci.org/Unidata/cftime.svg?branch=master)](https://travis-ci.org/Unidata/cftime)
 [![Windows Build Status](https://ci.appveyor.com/api/projects/status/fl9taa9je4e6wi7n/branch/master?svg=true)](https://ci.appveyor.com/project/jswhit/cftime/branch/master)
 [![PyPI package](https://badge.fury.io/py/cftime.svg)](http://python.org/pypi/cftime)
+[![Coverage Status](https://coveralls.io/repos/github/Unidata/cftime/badge.svg?branch=master)](https://coveralls.io/github/Unidata/cftime?branch=master)
 
 ## News
 10/27/2018:  version 1.0.2 released. Improved accuracy (from approximately 1000 microseconds to 10 microseconds on x86
