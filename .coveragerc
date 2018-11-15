@@ -1,0 +1,21 @@
+#
+# .coveragerc to control coverage.py
+#
+
+[run]
+branch = True
+plugins = Cython.Coverage
+include =
+    cftime/*
+omit = 
+    setup.py
+    docs/*
+    ci/*
+    test/*
+    .eggs
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if __name__ == .__main__.:
