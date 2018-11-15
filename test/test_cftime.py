@@ -22,6 +22,7 @@ from cftime import (DateFromJulianDay, Datetime360Day, DatetimeAllLeap,
 # test cftime module for netCDF time <--> python datetime conversions.
 
 dtime = namedtuple('dtime', ('values', 'units', 'calendar'))
+dateformat =  '%Y-%m-%d %H:%M:%S'
 
 
 class CFTimeVariable(object):
@@ -131,11 +132,11 @@ class cftimeTestCase(unittest.TestCase):
         self.assertTrue(self.cdftime_pg.calendar == 'proleptic_gregorian')
         # check date2num method.
         d = datetime(1990, 5, 5, 2, 17)
-        t1 = np.around(self.cdftime_pg.date2num(d))
-        self.assertTrue(t1 == 62777470620.0)
+        t1 = self.cdftime_pg.date2num(d)
+        self.assertTrue(np.around(t1) == 62777470620.0)
         # check num2date method.
         d2 = self.cdftime_pg.num2date(t1)
-        self.assertTrue(str(d) == str(d2))
+        self.assertTrue(d.strftime(dateformat) == d2.strftime(dateformat))
         # check day of year.
         ndayr = d.timetuple()[7]
         self.assertTrue(ndayr == 125)
@@ -252,7 +253,6 @@ class cftimeTestCase(unittest.TestCase):
         # day goes out of range).
         t = 733499.0
         d = num2date(t, units='days since 0001-01-01 00:00:00')
-        dateformat =  '%Y-%m-%d %H:%M:%S'
         assert_equal(d.strftime(dateformat), '2009-04-01 00:00:00')
         # test edge case of issue 75 for numerical problems
         for t in (733498.999, 733498.9999, 733498.99999, 733498.999999, 733498.9999999):
@@ -336,17 +336,11 @@ class cftimeTestCase(unittest.TestCase):
         # also tests error found in issue #349
         calendars=['standard', 'gregorian', 'proleptic_gregorian', 'noleap', 'julian',\
                    'all_leap', '365_day', '366_day', '360_day']
-        dateformat =  '%Y-%m-%d %H:%M:%S'
         dateref = datetime(2015,2,28,12)
         ntimes = 1001
         verbose = True # print out max error diagnostics
-        precis = np.finfo(np.longdouble).precision
-        if precis < 18:
-            fact = 10
-        else:
-            fact = 1.
         for calendar in calendars:
-            eps = 10.*fact
+            eps = 100.
             units = 'microseconds since 2000-01-30 01:01:01'
             microsecs1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0
@@ -363,7 +357,7 @@ class cftimeTestCase(unittest.TestCase):
                 print('calender = %s max abs err (microsecs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
             units = 'milliseconds since 1800-01-30 01:01:01'
-            eps = 0.01*fact
+            eps = 0.1
             millisecs1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0.
             for n in range(ntimes):
@@ -378,7 +372,7 @@ class cftimeTestCase(unittest.TestCase):
             if verbose:
                 print('calender = %s max abs err (millisecs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 1.e-4*fact
+            eps = 1.e-3
             units = 'seconds since 0001-01-30 01:01:01'
             secs1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0.
@@ -394,7 +388,7 @@ class cftimeTestCase(unittest.TestCase):
             if verbose:
                 print('calender = %s max abs err (secs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 1.e-6*fact
+            eps = 1.e-5
             units = 'minutes since 0001-01-30 01:01:01'
             mins1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0.
@@ -410,7 +404,7 @@ class cftimeTestCase(unittest.TestCase):
             if verbose:
                 print('calender = %s max abs err (mins) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 1.e-7*fact
+            eps = 1.e-6
             units = 'hours since 0001-01-30 01:01:01'
             hrs1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0.
@@ -426,7 +420,7 @@ class cftimeTestCase(unittest.TestCase):
             if verbose:
                 print('calender = %s max abs err (hours) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 1.e-9*fact
+            eps = 1.e-8
             units = 'days since 0001-01-30 01:01:01'
             days1 = date2num(dateref,units,calendar=calendar)
             maxerr = 0.
@@ -673,6 +667,10 @@ class cftimeTestCase(unittest.TestCase):
              1, 'months since 01-01-01',calendar='standard')
         self.assertRaises(ValueError, utime, \
             'months since 01-01-01', calendar='standard')
+        # issue #78 - extra digits due to roundoff
+        assert(cftime.date2num(cftime.datetime(1, 12, 1, 0, 0, 0, 0, -1, 1), units='days since 01-01-01',calendar='noleap')  == 334.0)
+        assert(cftime.date2num(cftime.num2date(1.0,units='days since 01-01-01',calendar='noleap'),units='days since 01-01-01',calendar='noleap') == 1.0)
+        assert(cftime.date2num(cftime.DatetimeNoLeap(1980, 1, 1, 0, 0, 0, 0, 6, 1),'days since 1970-01-01','noleap') == 3650.0)
 
 
 class TestDate2index(unittest.TestCase):
