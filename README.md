@@ -7,6 +7,8 @@ Time-handling functionality from netcdf4-python
 [![Coverage Status](https://coveralls.io/repos/github/Unidata/cftime/badge.svg?branch=master)](https://coveralls.io/github/Unidata/cftime?branch=master)
 
 ## News
+12/01/2018:  version 1.0.3 released. Test coverage with coveralls.io, improved round-tripping accuracy for non-real world calendars (like `360_day`).
+
 10/27/2018:  version 1.0.2 released. Improved accuracy (from approximately 1000 microseconds to 10 microseconds on x86
 platforms). Refactored calendar calculations now allow for negative reference years. num2date function now more than an
 order of magnitude faster. `months since` units now allowed, but only for `360_day` calendar.
