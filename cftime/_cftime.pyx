@@ -65,7 +65,7 @@ class real_datetime(datetime_python):
     @property
     def dayofyr(self):
         return self.timetuple().tm_yday
-    nanonsecond = 0 # workaround for pandas bug (cftime issue #77)
+    nanosecond = 0 # workaround for pandas bug (cftime issue #77)
 
 # start of the gregorian calendar
 gregorian = real_datetime(1582,10,15)
