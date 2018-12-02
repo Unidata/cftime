@@ -455,7 +455,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
         # get the day (Z) and the fraction of the day (F)
         # use 'round half up' rounding instead of numpy's even rounding
         # so that 0.5 is rounded to 1.0, not 0 (cftime issue #49)
-        Z = np.int32(_round_half_up(julian))
+        Z = np.atleast_1d(np.int32(_round_half_up(julian)))
         F = (julian + 0.5 - Z).astype(np.longdouble)
 
         cdef Py_ssize_t i_max = len(Z)
@@ -498,7 +498,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
     # recomputing year,month,day etc
     # ms_eps is proportional to julian day,
     # about 47 microseconds in 2000 for Julian base date in -4713
-    ms_eps = np.array(np.finfo(np.float64).eps,np.longdouble)
+    ms_eps = np.atleast_1d(np.array(np.finfo(np.float64).eps,np.longdouble))
     ms_eps = 86400000000.*np.maximum(ms_eps*julian, ms_eps)
     microsecond = np.where(microsecond < ms_eps, 0, microsecond)
     indxms = microsecond > 1000000-ms_eps

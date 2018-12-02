@@ -354,7 +354,7 @@ class cftimeTestCase(unittest.TestCase):
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
             if verbose:
-                print('calender = %s max abs err (microsecs) = %s eps = %s' % \
+                print('calendar = %s max abs err (microsecs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
             units = 'milliseconds since 1800-01-30 01:01:01'
             eps = 0.1
@@ -370,7 +370,7 @@ class cftimeTestCase(unittest.TestCase):
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
             if verbose:
-                print('calender = %s max abs err (millisecs) = %s eps = %s' % \
+                print('calendar = %s max abs err (millisecs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
             eps = 1.e-3
             units = 'seconds since 0001-01-30 01:01:01'
@@ -386,7 +386,7 @@ class cftimeTestCase(unittest.TestCase):
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
             if verbose:
-                print('calender = %s max abs err (secs) = %s eps = %s' % \
+                print('calendar = %s max abs err (secs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
             eps = 1.e-5
             units = 'minutes since 0001-01-30 01:01:01'
@@ -402,7 +402,7 @@ class cftimeTestCase(unittest.TestCase):
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
             if verbose:
-                print('calender = %s max abs err (mins) = %s eps = %s' % \
+                print('calendar = %s max abs err (mins) = %s eps = %s' % \
                      (calendar,maxerr,eps))
             eps = 1.e-6
             units = 'hours since 0001-01-30 01:01:01'
@@ -418,7 +418,7 @@ class cftimeTestCase(unittest.TestCase):
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
             if verbose:
-                print('calender = %s max abs err (hours) = %s eps = %s' % \
+                print('calendar = %s max abs err (hours) = %s eps = %s' % \
                      (calendar,maxerr,eps))
             eps = 1.e-8
             units = 'days since 0001-01-30 01:01:01'
@@ -434,7 +434,7 @@ class cftimeTestCase(unittest.TestCase):
                 assert(err < eps)
                 assert(date1.strftime(dateformat) == date2.strftime(dateformat))
             if verbose:
-                print('calender = %s max abs err (days) = %s eps = %s' % \
+                print('calendar = %s max abs err (days) = %s eps = %s' % \
                      (calendar,maxerr,eps))
 
         # issue 353
