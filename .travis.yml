@@ -45,8 +45,8 @@ script:
   - if [[ "${BUILD_DOCS}" == "true" ]]; then
       pushd docs && make html linkcheck O=-W && popd;
     else
-      pytest -v;
-    fi;
+      pytest;
+    fi
 
 after_success:
   - coveralls
@@ -65,4 +65,4 @@ deploy:
     skip_cleanup: true
     on:
       branch: master
-      condition: '${PYTHON_VERSION} == 3.7 AND ${BUILD_DOCS} == "true"'
+      condition: '${PYTHON_VERSION} == 3.7 && ${BUILD_DOCS} == "true"'
