@@ -7,10 +7,11 @@ from Cython.Build import cythonize
 from setuptools import Command, Extension, setup
 
 
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
+CMD_CLEAN = 'clean'
 COMPILER_DIRECTIVES = {}
 DEFINE_MACROS = None
 FLAG_COVERAGE = '--cython-coverage'  # custom flag enabling Cython line tracing
-BASEDIR = os.path.abspath(os.path.dirname(__file__))
 NAME = 'cftime'
 CFTIME_DIR = os.path.join(BASEDIR, NAME)
 CYTHON_FNAME = os.path.join(CFTIME_DIR, '_{}.pyx'.format(NAME))
@@ -75,9 +76,16 @@ if FLAG_COVERAGE in sys.argv or os.environ.get('CYTHON_COVERAGE', None):
         sys.argv.remove(FLAG_COVERAGE)
     print('enable: "linetrace" Cython compiler directive')
 
-extension = Extension('{}._{}'.format(NAME, NAME),
-                      sources=[CYTHON_FNAME],
-                      define_macros=DEFINE_MACROS)
+# See https://github.com/Unidata/cftime/issues/91
+if CMD_CLEAN in sys.argv:
+    ext_modules = []
+else:
+    extension = Extension('{}._{}'.format(NAME, NAME),
+                          sources=[CYTHON_FNAME],
+                          define_macros=DEFINE_MACROS)
+    ext_modules = cythonize(extension,
+                            compiler_directives=COMPILER_DIRECTIVES,
+                            language_level=2)
 
 setup(
     name=NAME,
@@ -89,9 +97,7 @@ setup(
     cmdclass={'clean_cython': CleanCython},
     packages=[NAME],
     version=extract_version(),
-    ext_modules=cythonize(extension,
-                          compiler_directives=COMPILER_DIRECTIVES,
-                          language_level=2),
+    ext_modules=ext_modules,
     setup_requires=load('setup.txt'),
     install_requires=load('requirements.txt'),
     tests_require=load('requirements-dev.txt'),
