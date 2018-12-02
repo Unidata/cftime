@@ -94,4 +94,5 @@ setup(
                           language_level=2),
     setup_requires=load('setup.txt'),
     install_requires=load('requirements.txt'),
-    tests_require=load('requirements-dev.txt'))
+    tests_require=load('requirements-dev.txt'),
+    test_suite='tests')
