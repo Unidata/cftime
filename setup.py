@@ -3,7 +3,6 @@ from __future__ import print_function
 import os
 import sys
 
-from Cython.Build import cythonize
 from setuptools import Command, Extension, setup
 
 
@@ -80,12 +79,11 @@ if FLAG_COVERAGE in sys.argv or os.environ.get('CYTHON_COVERAGE', None):
 if CMD_CLEAN in sys.argv:
     ext_modules = []
 else:
-    extension = Extension('{}._{}'.format(NAME, NAME),
-                          sources=[CYTHON_FNAME],
-                          define_macros=DEFINE_MACROS)
-    ext_modules = cythonize(extension,
-                            compiler_directives=COMPILER_DIRECTIVES,
-                            language_level=2)
+    ext_modules = [Extension('{}._{}'.format(NAME, NAME),
+                  sources=[CYTHON_FNAME],
+                  define_macros=DEFINE_MACROS,
+                  compiler_directives=COMPILER_DIRECTIVES,
+                  language_level=2)]
 
 setup(
     name=NAME,
