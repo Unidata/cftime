@@ -11,7 +11,8 @@ Time-handling functionality from netcdf4-python
 
 ## News
 12/05/2018:  version 1.0.3.1 released.  Bugfix release (fixed issue with installation
-when cython not installed, regression on 32-bit platforms).
+when cython not installed, regression on 32-bit platforms, workaround for pandas 
+compatibility).
 
 12/01/2018:  version 1.0.3 released. Test coverage with coveralls.io, improved round-tripping accuracy for non-real world calendars (like `360_day`).
 
