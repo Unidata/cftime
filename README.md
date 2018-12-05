@@ -10,6 +10,9 @@ Time-handling functionality from netcdf4-python
 [![Commits Status](https://img.shields.io/github/commits-since/UniData/cftime/latest.svg)](https://github.com/UniData/cftime/commits/master)
 
 ## News
+12/05/2018:  version 1.0.3.1 released.  Bugfix release (fixed issue with installation
+when cython not installed, regression on 32-bit platforms).
+
 12/01/2018:  version 1.0.3 released. Test coverage with coveralls.io, improved round-tripping accuracy for non-real world calendars (like `360_day`).
 
 10/27/2018:  version 1.0.2 released. Improved accuracy (from approximately 1000 microseconds to 10 microseconds on x86
