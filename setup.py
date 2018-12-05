@@ -83,7 +83,7 @@ if ((FLAG_COVERAGE in sys.argv or os.environ.get('CYTHON_COVERAGE', None))
     print('enable: "linetrace" Cython compiler directive')
 
 # See https://github.com/Unidata/cftime/issues/91
-if CMD_CLEAN or 'sdist' in sys.argv:
+if CMD_CLEAN in sys.argv or 'sdist' in sys.argv:
     ext_modules = []
 else:
     extension = Extension('{}._{}'.format(NAME, NAME),
