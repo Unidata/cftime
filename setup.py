@@ -3,8 +3,13 @@ from __future__ import print_function
 import os
 import sys
 
-from Cython.Build import cythonize
 from setuptools import Command, Extension, setup
+
+# https://github.com/Unidata/cftime/issues/34
+try:
+    from Cython.Build import cythonize
+except ImportError:
+    cythonize = False
 
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
@@ -65,7 +70,8 @@ def description():
     return result
 
 
-if FLAG_COVERAGE in sys.argv or os.environ.get('CYTHON_COVERAGE', None):
+if ((FLAG_COVERAGE in sys.argv or os.environ.get('CYTHON_COVERAGE', None))
+    and cythonize):
     COMPILER_DIRECTIVES = {'linetrace': True,
                            'warn.maybe_uninitialized': False,
                            'warn.unreachable': False,
@@ -83,9 +89,11 @@ else:
     extension = Extension('{}._{}'.format(NAME, NAME),
                           sources=[CYTHON_FNAME],
                           define_macros=DEFINE_MACROS)
-    ext_modules = cythonize(extension,
-                            compiler_directives=COMPILER_DIRECTIVES,
-                            language_level=2)
+    ext_modules = [extension]
+    if cythonize:
+        ext_modules = cythonize(extension,
+                                compiler_directives=COMPILER_DIRECTIVES,
+                                language_level=2)
 
 setup(
     name=NAME,
