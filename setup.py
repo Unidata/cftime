@@ -13,7 +13,7 @@ except ImportError:
 
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
-CMD_CLEAN = 'clean'
+CMDS_NOCYTHONIZE = ['clean','clean_cython','sdist']
 COMPILER_DIRECTIVES = {}
 DEFINE_MACROS = None
 FLAG_COVERAGE = '--cython-coverage'  # custom flag enabling Cython line tracing
@@ -83,7 +83,7 @@ if ((FLAG_COVERAGE in sys.argv or os.environ.get('CYTHON_COVERAGE', None))
     print('enable: "linetrace" Cython compiler directive')
 
 # See https://github.com/Unidata/cftime/issues/91
-if CMD_CLEAN in sys.argv or 'sdist' in sys.argv:
+if any([arg in CMDS_NOCYTHONIZE for arg in sys.argv]):
     ext_modules = []
 else:
     extension = Extension('{}._{}'.format(NAME, NAME),

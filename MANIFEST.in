@@ -3,3 +3,4 @@ include README.md
 include COPYING
 recursive-include cftime *.py
 recursive-include cftime *.pyx
+recursive-exclude cftime *.c
