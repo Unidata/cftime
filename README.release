@@ -13,7 +13,10 @@
   macos x, linux and windows). 
 * Download the binary wheels from wheels.scipy.org, put them in a
   directory called 'upload'.  Create a source tarball using 
-  'python setup.py sdist', also put in the 'upload' directory.
+   % python setup.py clean
+   % python setup.py clean_cython
+   % python setup.py sdist
+  Add the source tarball to the 'upload' directory.
 * upload the release files to pypi with twine
   (twine upload upload/*). This will require creating a ~/.pypirc
   file with your pypi login credentials.
