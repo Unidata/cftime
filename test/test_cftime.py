@@ -1440,5 +1440,11 @@ def test_dayofwk_replace(date_type):
     assert result == expected
 
 
+@pytest.mark.parametrize('argument', ['dayofyr', 'dayofwk'])
+def test_replace_dayofyr_dayofwk_error(date_type, argument):
+    with pytest.raises(ValueError):
+        date_type(1, 1, 1).replace(**{argument: 3})
+
+
 if __name__ == '__main__':
     unittest.main()
