@@ -1220,9 +1220,11 @@ Gregorial calendar.
                 "hour": self.hour,
                 "minute": self.minute,
                 "second": self.second,
-                "microsecond": self.microsecond,
-                "dayofwk": self.dayofwk,
-                "dayofyr": self.dayofyr}
+                "microsecond": self.microsecond}
+
+        if 'dayofyr' in kwargs or 'dayofwk' in kwargs:
+            raise ValueError('Replacing the dayofyr or dayofwk of a datetime is '
+                             'not supported.')
 
         for name, value in kwargs.items():
             args[name] = value
