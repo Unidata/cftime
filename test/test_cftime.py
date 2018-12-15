@@ -1426,13 +1426,13 @@ def test_repr():
     assert repr(DatetimeGregorian(2000, 1, 1)) == expected
 
 
-def test_dayofyr_replace(date_type):
+def test_dayofyr_after_replace(date_type):
     date = date_type(1, 1, 1)
     assert date.dayofyr == 1
     assert date.replace(day=2).dayofyr == 2
 
 
-def test_dayofwk_replace(date_type):
+def test_dayofwk_after_replace(date_type):
     date = date_type(1, 1, 1)
     original_dayofwk = date.dayofwk
     expected = (original_dayofwk + 1) % 7
@@ -1441,7 +1441,7 @@ def test_dayofwk_replace(date_type):
 
 
 @pytest.mark.parametrize('argument', ['dayofyr', 'dayofwk'])
-def test_replace_dayofyr_dayofwk_error(date_type, argument):
+def test_replace_dayofyr_or_dayofwk_error(date_type, argument):
     with pytest.raises(ValueError):
         date_type(1, 1, 1).replace(**{argument: 3})
 
