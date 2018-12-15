@@ -1043,8 +1043,6 @@ class DateTime(unittest.TestCase):
         self.assertEqual(self.date1_365_day.replace(minute=3).minute, 3)
         self.assertEqual(self.date1_365_day.replace(second=3).second, 3)
         self.assertEqual(self.date1_365_day.replace(microsecond=3).microsecond, 3)
-        self.assertEqual(self.date1_365_day.replace(dayofwk=3).dayofwk, 3)
-        self.assertEqual(self.date1_365_day.replace(dayofyr=3).dayofyr, 3)
 
     def test_pickling(self):
         "Test reversibility of pickling."
@@ -1426,6 +1424,20 @@ def test_repr():
     expected = 'cftime.DatetimeGregorian(2000, 1, 1, 0, 0, 0, 0, 5, 1)'
     # dayofwk, dayofyr are set
     assert repr(DatetimeGregorian(2000, 1, 1)) == expected
+
+
+def test_dayofyr_replace(date_type):
+    date = date_type(1, 1, 1)
+    assert date.dayofyr == 1
+    assert date.replace(day=2).dayofyr == 2
+
+
+def test_dayofwk_replace(date_type):
+    date = date_type(1, 1, 1)
+    original_dayofwk = date.dayofwk
+    expected = (original_dayofwk + 1) % 7
+    result = date.replace(day=2).dayofwk
+    assert result == expected
 
 
 if __name__ == '__main__':
