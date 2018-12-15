@@ -1223,6 +1223,8 @@ Gregorial calendar.
                 "dayofwk": self.dayofwk,
                 "dayofyr": self.dayofyr}
 
+        if 'dayofwk' in kwargs or 'dayofyr' in kwargs:
+            raise ValueError('cannot change dayofwk or dayofyr')
         for name, value in kwargs.items():
             args[name] = value
 # force recalculation of dayofwk,dayofyr (issue #106)

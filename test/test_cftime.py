@@ -1043,8 +1043,10 @@ class DateTime(unittest.TestCase):
         self.assertEqual(self.date1_365_day.replace(minute=3).minute, 3)
         self.assertEqual(self.date1_365_day.replace(second=3).second, 3)
         self.assertEqual(self.date1_365_day.replace(microsecond=3).microsecond, 3)
-        self.assertEqual(self.date1_365_day.replace(dayofwk=3).dayofwk, 3)
-        self.assertEqual(self.date1_365_day.replace(dayofyr=3).dayofyr, 3)
+        # issue #106: dayofwk, dayofyr now always recalculated
+        #self.assertEqual(self.date1_365_day.replace(dayofwk=3).dayofwk, 3)
+        #self.assertEqual(self.date1_365_day.replace(dayofyr=3).dayofyr, 3)
+        self.assertEqual(self.date1_365_day.replace(month=5,day=1,year=2).dayofyr,121)
 
     def test_pickling(self):
         "Test reversibility of pickling."
