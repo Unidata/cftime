@@ -1183,7 +1183,6 @@ Gregorial calendar.
 
     def __init__(self, int year, int month, int day, int hour=0, int minute=0, int second=0,
                  int microsecond=0, int dayofwk=-1, int dayofyr=1):
-        """dayofyr set to 1 by default - otherwise time.strftime will complain"""
 
         self.year = year
         self.month = month
@@ -1226,6 +1225,8 @@ Gregorial calendar.
 
         for name, value in kwargs.items():
             args[name] = value
+# force recalculation of dayofwk,dayofyr (issue #106)
+        args['dayofwk']=-1
 
         return self.__class__(**args)
 
