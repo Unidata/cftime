@@ -10,32 +10,13 @@ import re
 import sys
 import time
 from datetime import datetime as datetime_python
-from datetime import timedelta, MINYEAR, tzinfo
+from datetime import timedelta, MINYEAR
 import time                     # strftime
 try:
     from itertools import izip as zip
 except ImportError:  # python 3.x
     pass
 
-try:
-    from datetime import timezone
-    datetime_utc = timezone.utc
-except ImportError: # python 2.7
-    class UTC(tzinfo):
-        """
-	UTC adapted from 
-        https://docs.python.org/2.7/library/datetime.html#tzinfo-objects
-	"""
-        def utcoffset(self, dt):
-            return timedelta(0)
-
-        def tzname(self, dt):
-            return "UTC"
-
-        def dst(self, dt):
-            return timedelta(0)
-
-    datetime_utc = UTC()
 
 microsec_units = ['microseconds','microsecond', 'microsec', 'microsecs']
 millisec_units = ['milliseconds', 'millisecond', 'millisec', 'millisecs']
@@ -203,7 +184,7 @@ def date2num(dates,units,calendar='standard'):
             times = []
             for date in dates.flat:
                 if getattr(date, 'tzinfo') is not None:
-                    date = date.astimezone(datetime_utc).replace(tzinfo=None)
+                    date = date.replace(tzinfo=None) - date.utcoffset()
 
                 if ismasked and not date:
                     times.append(None)
@@ -432,7 +413,7 @@ def JulianDayFromDate(date, calendar='standard'):
     for i in range(i_max):
         d = date[i]
         if getattr(d, 'tzinfo', None) is not None:
-            d = d.astimezone(datetime_utc).replace(tzinfo=None)
+            d = d.replace(tzinfo=None) - d.utcoffset()
 
         year[i] = d.year
         month[i] = d.month

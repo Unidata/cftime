@@ -5,7 +5,7 @@ import operator
 import sys
 import unittest
 from collections import namedtuple
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 import numpy as np
 import pytest
@@ -18,6 +18,32 @@ from cftime import (DateFromJulianDay, Datetime360Day, DatetimeAllLeap,
                     DatetimeGregorian, DatetimeJulian, DatetimeNoLeap,
                     DatetimeProlepticGregorian, JulianDayFromDate, _parse_date,
                     date2index, date2num, num2date, utime)
+
+try:
+    from datetime import timezone
+except ImportError: # python2.7
+    class timezone(tzinfo):
+        """
+        Fixed offset in minutes east from UTC. adapted from
+        python 2.7 docs FixedOffset
+        """
+
+        def __init__(self, offset, name):
+            self.__offset = offset
+            self.__name = name
+
+        def utcoffset(self, dt):
+            return self.__offset
+
+        def tzname(self, dt):
+            return self.__name
+
+        def dst(self, dt):
+            return timedelta(hours=0)
+
+
+utc = timezone(timedelta(hours=0), 'UTC')
+est = timezone(timedelta(hours=-5), 'UTC')
 
 # test cftime module for netCDF time <--> python datetime conversions.
 
@@ -84,12 +110,9 @@ class cftimeTestCase(unittest.TestCase):
     def test_tz_aware(self):
         """testing with timezone"""
         self.assertTrue(self.cdftime_mixed.units == 'hours')
-        strp = (
-            lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S%z')
-        )
-        d1 = strp('1582-10-04 23:00:00+0000')
+        d1 = datetime(1582, 10, 4, 23, tzinfo=utc)
         t1 = self.cdftime_mixed.date2num(d1)
-        d2 = strp('1582-10-04 18:00:00-0500')
+        d2 = datetime(1582, 10, 4, 18, tzinfo=est)
         t2 = self.cdftime_mixed.date2num(d2)
         d3 = d2.replace(tzinfo=None)
         t3 = self.cdftime_mixed.date2num(d3)
@@ -752,10 +775,10 @@ class TestDate2index(unittest.TestCase):
 
     def test_tz_aware(self):
         """implicit test of date2num"""
-        dutc = datetime(1950, 2, 1, 00, tzinfo=timezone.utc)
+        dutc = datetime(1950, 2, 1, 0, tzinfo=utc)
         t1 = date2index(dutc, self.standardtime)
         assert_equal(t1, 31)
-        dest = dutc.astimezone(timezone(timedelta(hours=-5)))
+        dest = datetime(1950, 1, 31, 19, tzinfo=est)
         t2 = date2index(dest, self.standardtime)
         assert_equal(t2, 31)
 
