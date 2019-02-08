@@ -10,7 +10,7 @@ import re
 import sys
 import time
 from datetime import datetime as datetime_python
-from datetime import timedelta, MINYEAR
+from datetime import timedelta, MINYEAR, timezone
 import time                     # strftime
 try:
     from itertools import izip as zip
@@ -182,6 +182,9 @@ def date2num(dates,units,calendar='standard'):
                 ismasked = True
             times = []
             for date in dates.flat:
+                if getattr(date, 'tzinfo') is not None:
+                    date = date.astimezone(timezone.utc).replace(tzinfo=None)
+
                 if ismasked and not date:
                     times.append(None)
                 else:
@@ -408,6 +411,9 @@ def JulianDayFromDate(date, calendar='standard'):
     cdef Py_ssize_t i
     for i in range(i_max):
         d = date[i]
+        if getattr(d, 'tzinfo', None) is not None:
+            d = d.astimezone(timezone.utc).replace(tzinfo=None)
+
         year[i] = d.year
         month[i] = d.month
         day[i] = d.day

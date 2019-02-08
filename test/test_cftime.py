@@ -5,7 +5,7 @@ import operator
 import sys
 import unittest
 from collections import namedtuple
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import numpy as np
 import pytest
@@ -80,6 +80,22 @@ class cftimeTestCase(unittest.TestCase):
                                           calendar='Standard')
         self.cdftime_noleap_capcal = utime(
             'days since 1600-02-28 00:00:00', calendar='NOLEAP')
+
+    def test_tz_aware(self):
+        """testing with timezone"""
+        self.assertTrue(self.cdftime_mixed.units == 'hours')
+        strp = (
+            lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S%z')
+        )
+        d1 = strp('1582-10-04 23:00:00+0000')
+        t1 = self.cdftime_mixed.date2num(d1)
+        d2 = strp('1582-10-04 18:00:00-0500')
+        t2 = self.cdftime_mixed.date2num(d2)
+        d3 = d2.replace(tzinfo=None)
+        t3 = self.cdftime_mixed.date2num(d3)
+        assert_almost_equal(t1, 13865687.0)
+        assert_almost_equal(t2, 13865687.0)
+        assert_almost_equal(t3, 13865682.0)
 
     def runTest(self):
         """testing cftime"""
@@ -733,6 +749,15 @@ class TestDate2index(unittest.TestCase):
         self.time_vars['time3'] = CFTimeVariable(
             values=date2num(dates, units),
             units=units)
+
+    def test_tz_aware(self):
+        """implicit test of date2num"""
+        dutc = datetime(1950, 2, 1, 00, tzinfo=timezone.utc)
+        t1 = date2index(dutc, self.standardtime)
+        assert_equal(t1, 31)
+        dest = dutc.astimezone(timezone(timedelta(hours=-5)))
+        t2 = date2index(dest, self.standardtime)
+        assert_equal(t2, 31)
 
     def test_simple(self):
         t = date2index(datetime(1950, 2, 1), self.standardtime)
