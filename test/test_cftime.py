@@ -22,6 +22,7 @@ from cftime import (DateFromJulianDay, Datetime360Day, DatetimeAllLeap,
 try:
     from datetime import timezone
 except ImportError: # python2.7
+    from datetime import tzinfo
     class timezone(tzinfo):
         """
         Fixed offset in minutes east from UTC. adapted from
