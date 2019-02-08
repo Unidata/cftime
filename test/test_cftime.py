@@ -121,7 +121,7 @@ class cftimeTestCase(unittest.TestCase):
         assert_almost_equal(t2, 13865687.0)
         assert_almost_equal(t3, 13865682.0)
 
-    def runTest(self):
+    def test_tz_naive(self):
         """testing cftime"""
         # test mixed julian/gregorian calendar
         # check attributes.
