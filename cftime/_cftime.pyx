@@ -17,6 +17,7 @@ try:
 except ImportError:  # python 3.x
     pass
 
+
 microsec_units = ['microseconds','microsecond', 'microsec', 'microsecs']
 millisec_units = ['milliseconds', 'millisecond', 'millisec', 'millisecs']
 sec_units =      ['second', 'seconds', 'sec', 'secs', 's']
@@ -182,6 +183,9 @@ def date2num(dates,units,calendar='standard'):
                 ismasked = True
             times = []
             for date in dates.flat:
+                if getattr(date, 'tzinfo') is not None:
+                    date = date.replace(tzinfo=None) - date.utcoffset()
+
                 if ismasked and not date:
                     times.append(None)
                 else:
@@ -408,6 +412,9 @@ def JulianDayFromDate(date, calendar='standard'):
     cdef Py_ssize_t i
     for i in range(i_max):
         d = date[i]
+        if getattr(d, 'tzinfo', None) is not None:
+            d = d.replace(tzinfo=None) - d.utcoffset()
+
         year[i] = d.year
         month[i] = d.month
         day[i] = d.day
