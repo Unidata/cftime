@@ -19,7 +19,7 @@ except ImportError:  # python 3.x
 
 
 microsec_units = ['microseconds','microsecond', 'microsec', 'microsecs']
-millisec_units = ['milliseconds', 'millisecond', 'millisec', 'millisecs']
+millisec_units = ['milliseconds', 'millisecond', 'millisec', 'millisecs', 'msec', 'msecs', 'ms']
 sec_units =      ['second', 'seconds', 'sec', 'secs', 's']
 min_units =      ['minute', 'minutes', 'min', 'mins']
 hr_units =       ['hour', 'hours', 'hr', 'hrs', 'h']
