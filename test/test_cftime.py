@@ -1486,7 +1486,6 @@ def test_dayofwk_after_replace(date_type):
     original_dayofwk = date.dayofwk
     expected = (original_dayofwk + 1) % 7
     result = date.replace(day=2).dayofwk
-    print ('dch', repr(date), original_dayofwk, expected, result, repr(date.replace(day=2)), cftime.__file__)
     assert result == expected
 
 
