@@ -94,7 +94,7 @@ def _dateparse(timestr):
     (units, isostring) = _datesplit(timestr)
 
     # parse the date string.
-    year, month, day, hour, minute, second, utc_offset =\
+    year, month, day, hour, minute, second, microsecond, utc_offset =\
         _parse_date( isostring.strip() )
     if year >= MINYEAR:
         basedate = real_datetime(year, month, day, hour, minute, second)
@@ -122,7 +122,7 @@ cdef _parse_date_and_units(timestr,calendar='standard'):
             raise ValueError(
             "units must be one of 'seconds', 'minutes', 'hours' or 'days' (or singular version of these), got '%s'" % units)
     # parse the date string.
-    year, month, day, hour, minute, second, utc_offset = _parse_date(
+    year, month, day, hour, minute, second, microsecond, utc_offset = _parse_date(
         isostring.strip())
     return units, utc_offset, datetime(year, month, day, hour, minute, second)
 
@@ -916,7 +916,12 @@ cpdef _parse_date(datestring):
     The timezone is parsed from the date string, assuming UTC
     by default.
 
+    Note that a seconds element with a fractional component
+    (e.g. 12.5) is converted into integer seconds and integer
+    microseconds.
+
     Adapted from pyiso8601 (http://code.google.com/p/pyiso8601/)
+
     """
     if not isinstance(datestring, str) and not isinstance(datestring, unicode):
         raise ValueError("Expecting a string %r" % datestring)
@@ -931,13 +936,14 @@ cpdef _parse_date(datestring):
         groups["minute"] = 0
     if groups["second"] is None:
         groups["second"] = 0
-    # if groups["fraction"] is None:
-    #    groups["fraction"] = 0
-    # else:
-    #    groups["fraction"] = int(float("0.%s" % groups["fraction"]) * 1e6)
+    if groups["fraction"] is None:
+        groups["fraction"] = 0
+    else:
+        groups["fraction"] = int(float("0.%s" % groups["fraction"]) * 1e6)
     iyear = int(groups["year"])
     return iyear, int(groups["month"]), int(groups["day"]),\
         int(groups["hour"]), int(groups["minute"]), int(groups["second"]),\
+        int(groups["fraction"]),\
         tzoffset_mins
 
 cdef _check_index(indices, times, nctime, calendar, select):
