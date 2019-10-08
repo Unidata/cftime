@@ -1415,8 +1415,9 @@ def test_valid_julian_gregorian_mixed_dates(date_type, date_args):
 @pytest.mark.parametrize(
     'date_args',
     [(1, 2, 3, 4, 5, 6), (10, 2, 3, 4, 5, 6), (100, 2, 3, 4, 5, 6),
-     (1000, 2, 3, 4, 5, 6)],
-    ids=['1', '10', '100', '1000'])
+     (1000, 2, 3, 4, 5, 6),
+     (2000, 1, 1, 12, 34, 56, 123456)],
+    ids=['1', '10', '100', '1000', '2000'])
 def test_str_matches_datetime_str(date_type, date_args):
     assert str(date_type(*date_args)) == str(datetime(*date_args))
 
@@ -1466,13 +1467,8 @@ def test_num2date_only_use_cftime_datetimes_post_gregorian(
 
 
 def test_repr():
-    expected = 'cftime.datetime(2000, 1, 1, 0, 0, 0, 0, -1, 1)'
-    # dayofwk, dayofyr not set
+    expected = 'cftime.datetime(2000-01-01 00:00:00)'
     assert repr(datetimex(2000, 1, 1)) == expected
-
-    expected = 'cftime.DatetimeGregorian(2000, 1, 1, 0, 0, 0, 0, 5, 1)'
-    # dayofwk, dayofyr are set
-    assert repr(DatetimeGregorian(2000, 1, 1)) == expected
 
 
 def test_dayofyr_after_replace(date_type):
