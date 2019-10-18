@@ -9,6 +9,10 @@ environment:
       NPY: 1.16
       PY: 3.7
 
+    - TARGET_ARCH: x64
+      NPY: 1.16
+      PY: 3.8
+
 platform:
     - x64
 
