@@ -183,7 +183,7 @@ def date2num(dates,units,calendar='standard'):
                 ismasked = True
             times = []
             for date in dates.flat:
-                if getattr(date, 'tzinfo') is not None:
+                if getattr(date, 'tzinfo',None) is not None:
                     date = date.replace(tzinfo=None) - date.utcoffset()
 
                 if ismasked and not date:
