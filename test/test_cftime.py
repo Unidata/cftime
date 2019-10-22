@@ -711,7 +711,10 @@ class cftimeTestCase(unittest.TestCase):
         assert(cftime.date2num(cftime.datetime(1, 12, 1, 0, 0, 0, 0, -1, 1), units='days since 01-01-01',calendar='noleap')  == 334.0)
         assert(cftime.date2num(cftime.num2date(1.0,units='days since 01-01-01',calendar='noleap'),units='days since 01-01-01',calendar='noleap') == 1.0)
         assert(cftime.date2num(cftime.DatetimeNoLeap(1980, 1, 1, 0, 0, 0, 0, 6, 1),'days since 1970-01-01','noleap') == 3650.0)
-
+        # issue #126
+        d = cftime.DatetimeProlepticGregorian(1, 1, 1)
+        assert(cftime.date2num(d, 'days since 0001-01-01',\
+            'proleptic_gregorian') == 0.0)
 
 class TestDate2index(unittest.TestCase):
 
