@@ -119,4 +119,4 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Topic :: Scientific/Engineering',
-        'License :: OSI Approved :: GNU General Public License V3 (GPLV3)'])
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
