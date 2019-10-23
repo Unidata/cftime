@@ -10,7 +10,7 @@ Time-handling functionality from netcdf4-python
 [![Commits Status](https://img.shields.io/github/commits-since/UniData/cftime/latest.svg)](https://github.com/UniData/cftime/commits/master)
 
 ## News
-10/25/2019:  version 1.0.4.1 released (fix for [issue #126](https://github.com/Unidata/cftime/issues/126)).
+10/25/2019:  version 1.0.4.2 released (fix for [issue #126](https://github.com/Unidata/cftime/issues/126)).
 
 10/21/2019:  version 1.0.4 released.
 
