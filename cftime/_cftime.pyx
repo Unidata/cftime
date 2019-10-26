@@ -1368,7 +1368,12 @@ Gregorial calendar.
             elif isinstance(other, datetime_python):
                 # datetime - real_datetime
                 if not dt.datetime_compatible:
-                    raise ValueError("cannot compute the time difference between dates with different calendars")
+                    msg="""
+Cannot compute the time difference between dates with different calendars.
+One of the datetime objects may have been converted to a native python
+datetime instance.  Try using only_use_cftime_datetimes=True when creating the
+datetime object."""
+                    raise ValueError(msg)
                 return dt._to_real_datetime() - other
             elif isinstance(other, timedelta):
                 # datetime - timedelta
@@ -1379,7 +1384,12 @@ Gregorial calendar.
             if isinstance(self, datetime_python):
                 # real_datetime - datetime
                 if not other.datetime_compatible:
-                    raise ValueError("cannot compute the time difference between dates with different calendars")
+                    msg="""
+Cannot compute the time difference between dates with different calendars.
+One of the datetime objects may have been converted to a native python
+datetime instance.  Try using only_use_cftime_datetimes=True when creating the
+datetime object."""
+                    raise ValueError(msg)
                 return self - other._to_real_datetime()
             else:
                 return NotImplemented
