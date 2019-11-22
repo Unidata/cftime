@@ -1,0 +1,5 @@
+since version 1.0.4.2
+====================-
+ * make use_only_cftime_datetimes=True by default, so cftime datetime
+ instances are returned by default by num2date (instead of returning python
+ datetime instances where possible). Issue #136, PR #135.
