@@ -440,7 +440,8 @@ class cftimeTestCase(unittest.TestCase):
                 err = np.abs(mins1 - mins2)
                 maxerr = max(err,maxerr)
                 assert(err < eps)
-                assert(date1.strftime(dateformat) == date2.strftime(dateformat))
+                diff = abs(date1-date2)
+                assert(diff.microseconds < 100)
             if verbose:
                 print('calendar = %s max abs err (mins) = %s eps = %s' % \
                      (calendar,maxerr,eps))
@@ -456,7 +457,8 @@ class cftimeTestCase(unittest.TestCase):
                 err = np.abs(hrs1 - hrs2)
                 maxerr = max(err,maxerr)
                 assert(err < eps)
-                assert(date1.strftime(dateformat) == date2.strftime(dateformat))
+                diff = abs(date1-date2)
+                assert(diff.microseconds < 100)
             if verbose:
                 print('calendar = %s max abs err (hours) = %s eps = %s' % \
                      (calendar,maxerr,eps))
@@ -472,7 +474,8 @@ class cftimeTestCase(unittest.TestCase):
                 err = np.abs(days1 - days2)
                 maxerr = max(err,maxerr)
                 assert(err < eps)
-                assert(date1.strftime(dateformat) == date2.strftime(dateformat))
+                diff = abs(date1-date2)
+                assert(diff.microseconds < 100)
             if verbose:
                 print('calendar = %s max abs err (days) = %s eps = %s' % \
                      (calendar,maxerr,eps))
@@ -895,8 +898,9 @@ class TestDate2index(unittest.TestCase):
                  datetime(1995, 11, 25, 18, 7, 59, 999999)]
         times2 = date2num(dates, units)
         dates2 = num2date(times2, units)
-        for date, date2 in zip(dates, dates2):
-            assert_equal(date, date2)
+        datediff = abs(dates-dates2)
+        for diff in datediff:
+            assert(diff.microseconds < 100) # tolerance of 100 ms
 
     def test_issue444(self):
         # make sure integer overflow not causing error in
