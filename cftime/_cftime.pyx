@@ -43,7 +43,7 @@ cdef int[13] _spm_366day = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 33
 _rop_lookup = {Py_LT: '__gt__', Py_LE: '__ge__', Py_EQ: '__eq__',
                Py_GT: '__lt__', Py_GE: '__le__', Py_NE: '__ne__'}
 
-__version__ = '1.0.4.2'
+__version__ = '1.1.0'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
@@ -215,7 +215,7 @@ def date2num(dates,units,calendar='standard'):
             return cdftime.date2num(dates)
 
 
-def num2date(times,units,calendar='standard',only_use_cftime_datetimes=False):
+def num2date(times,units,calendar='standard',only_use_cftime_datetimes=True):
     """num2date(times,units,calendar='standard')
 
     Return datetime objects given numeric time values. The units
@@ -238,9 +238,9 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=False):
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'`.
     Default is `'standard'`, which is a mixed Julian/Gregorian calendar.
 
-    **`only_use_cftime_datetimes`**: if False (default), datetime.datetime
+    **`only_use_cftime_datetimes`**: if False, datetime.datetime
     objects are returned from num2date where possible; if True dates which
-    subclass cftime.datetime are returned for all calendars.
+    subclass cftime.datetime are returned for all calendars. Default is True.
 
     returns a datetime instance, or an array of datetime instances with
     approximately 100 microsecond accuracy.
@@ -435,7 +435,7 @@ def JulianDayFromDate(date, calendar='standard'):
     else:
         return jd
 
-def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=False,
+def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=True,
                       return_tuple=False):
     """
 
@@ -690,7 +690,7 @@ it should be noted that udunits treats 0 AD as identical to 1 AD."
     """
 
     def __init__(self, unit_string, calendar='standard',
-                 only_use_cftime_datetimes=False):
+                 only_use_cftime_datetimes=True):
         """
 @param unit_string: a string of the form
 C{'time-units since <time-origin>'} defining the time units.
@@ -723,9 +723,9 @@ are:
  Proleptic Julian calendar, extended to dates after 1582-10-5. A year is a
  leap year if it is divisible by 4.
 
-@keyword only_use_cftime_datetimes: if False (default), datetime.datetime
+@keyword only_use_cftime_datetimes: if False, datetime.datetime
 objects are returned from num2date where possible; if True dates which subclass
-cftime.datetime are returned for all calendars.
+cftime.datetime are returned for all calendars. Default True.
 
 @returns: A class instance which may be used for converting times from netCDF
 units to datetime objects.

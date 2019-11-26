@@ -1,0 +1,16 @@
+version 1.1.0 (not yet released)
+================================
+
+ * improved exceptions for time differences (issue #128, PR #131).
+
+ * fix intersphinx entries (issue #133, PR #133)
+
+ * make use_only_cftime_datetimes=True by default, so cftime datetime
+   instances are returned by default by num2date (instead of returning python
+   datetime instances where possible). Issue #136, PR #135.
+
+version 1.0.4.2 release
+=======================
+
+ * fix for issue #126 (date2num error when converting a DatetimeProlepticGregorian 
+   object). PR #127.
