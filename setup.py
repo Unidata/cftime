@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import os
 import sys
+import numpy
 
 from setuptools import Command, Extension, setup
 
@@ -88,7 +89,8 @@ if any([arg in CMDS_NOCYTHONIZE for arg in sys.argv]):
 else:
     extension = Extension('{}._{}'.format(NAME, NAME),
                           sources=[CYTHON_FNAME],
-                          define_macros=DEFINE_MACROS)
+                          define_macros=DEFINE_MACROS,
+                          include_dirs=[numpy.get_include(),])
     ext_modules = [extension]
     if cythonize:
         ext_modules = cythonize(extension,
