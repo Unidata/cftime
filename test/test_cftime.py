@@ -1492,6 +1492,16 @@ def test_dayofwk_after_replace(date_type):
     assert result == expected
 
 
+def test_daysinmonth_non_leap(date_type, month, days_per_month_non_leap_year):
+    date = date_type(1, month, 1)
+    assert date.daysinmonth == days_per_month_non_leap_year
+
+
+def test_daysinmonth_leap(date_type, month, days_per_month_leap_year):
+    date = date_type(2000, month, 1)
+    assert date.daysinmonth == days_per_month_leap_year
+
+
 @pytest.mark.parametrize('argument', ['dayofyr', 'dayofwk'])
 def test_replace_dayofyr_or_dayofwk_error(date_type, argument):
     with pytest.raises(ValueError):

@@ -4,6 +4,7 @@ Performs conversions of netCDF time coordinate data to/from datetime objects.
 
 from cpython.object cimport (PyObject_RichCompare, Py_LT, Py_LE, Py_EQ,
                              Py_NE, Py_GT, Py_GE)
+from numpy cimport int64_t, int32_t
 import cython
 import numpy as np
 import re
@@ -28,7 +29,7 @@ month_units =    ['month', 'months'] # only allowed for 360_day calendar
 _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 # supported calendars. Includes synonyms ('standard'=='gregorian',
 # '366_day'=='all_leap','365_day'=='noleap')
-# see http://cfconventions.org/cf-conventions/cf-conventions.html#calendar 
+# see http://cfconventions.org/cf-conventions/cf-conventions.html#calendar
 # for definitions.
 _calendars = ['standard', 'gregorian', 'proleptic_gregorian',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
@@ -39,6 +40,14 @@ cdef int[12] _dpm_360  = [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
 # Same as above, but SUM of previous months (no leap years).
 cdef int[13] _spm_365day = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
 cdef int[13] _spm_366day = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
+
+# Slightly more performant cython lookups than a 2D table
+# The first 12 entries correspond to month lengths for non-leap years.
+# The remaining 12 entries give month lengths for leap years
+cdef int32_t* days_per_month_array = [
+    31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31,
+    31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
 # Reverse operator lookup for datetime.__richcmp__
 _rop_lookup = {Py_LT: '__gt__', Py_LE: '__ge__', Py_EQ: '__eq__',
                Py_GT: '__lt__', Py_GE: '__le__', Py_NE: '__ne__'}
@@ -57,6 +66,29 @@ ISO8601_REGEX = re.compile(r"(?P<year>[+-]?[0-9]{1,4})(-(?P<month>[0-9]{1,2})(-(
 TIMEZONE_REGEX = re.compile(
     "(?P<prefix>[+-])(?P<hours>[0-9]{2})(?:(?::(?P<minutes1>[0-9]{2}))|(?P<minutes2>[0-9]{2}))?")
 
+
+# Taken from pandas ccalendar.pyx
+@cython.wraparound(False)
+@cython.boundscheck(False)
+cpdef int32_t get_days_in_month(bint isleap, int month) nogil:
+    """
+    Return the number of days in the given month of the given year.
+    Parameters
+    ----------
+    leap : int [0,1]
+    month : int
+
+    Returns
+    -------
+    days_in_month : int
+    Notes
+    -----
+    Assumes that the arguments are valid.  Passing a month not between 1 and 12
+    risks a segfault.
+    """
+    return days_per_month_array[12 * isleap + month - 1]
+
+
 class real_datetime(datetime_python):
     """add dayofwk and dayofyr attributes to python datetime instance"""
     @property
@@ -72,7 +104,7 @@ class real_datetime(datetime_python):
 gregorian = real_datetime(1582,10,15)
 
 def _datesplit(timestr):
-    """split a time string into two components, units and the remainder 
+    """split a time string into two components, units and the remainder
     after 'since'
     """
     try:
@@ -1184,7 +1216,7 @@ The base class implementing most methods of datetime classes that
 mimic datetime.datetime but support calendars other than the proleptic
 Gregorial calendar.
     """
-    cdef readonly int year, month, day, hour, minute, dayofwk, dayofyr
+    cdef readonly int year, month, day, hour, minute, dayofwk, dayofyr, daysinmonth
     cdef readonly int second, microsecond
     cdef readonly str calendar
 
@@ -1208,7 +1240,7 @@ Gregorial calendar.
         self.second = second
         self.microsecond = microsecond
         self.calendar = ""
-
+        self.daysinmonth = -1
         self.datetime_compatible = True
 
     @property
@@ -1412,6 +1444,7 @@ but uses the "noleap" ("365_day") calendar.
             DateFromJulianDay(jd,return_tuple=True,calendar='365_day')
             self.dayofwk = dayofwk
             self.dayofyr = dayofyr
+        self.daysinmonth = _dpm[self.month-1]
 
     cdef _add_timedelta(self, delta):
         return DatetimeNoLeap(*add_timedelta(self, delta, no_leap, False))
@@ -1434,6 +1467,7 @@ but uses the "all_leap" ("366_day") calendar.
             DateFromJulianDay(jd,return_tuple=True,calendar='366_day')
             self.dayofwk = dayofwk
             self.dayofyr = dayofyr
+        self.daysinmonth = _dpm_leap[self.month-1]
 
     cdef _add_timedelta(self, delta):
         return DatetimeAllLeap(*add_timedelta(self, delta, all_leap, False))
@@ -1456,6 +1490,7 @@ but uses the "360_day" calendar.
             DateFromJulianDay(jd,return_tuple=True,calendar='360_day')
             self.dayofwk = dayofwk
             self.dayofyr = dayofyr
+        self.daysinmonth = 30
 
     cdef _add_timedelta(self, delta):
         return Datetime360Day(*add_timedelta_360_day(self, delta))
@@ -1478,6 +1513,7 @@ but uses the "julian" calendar.
             DateFromJulianDay(jd,return_tuple=True,calendar='julian')
             self.dayofwk = dayofwk
             self.dayofyr = dayofyr
+        self.daysinmonth = get_days_in_month(_is_leap(self.year, self.calendar), self.month)
 
     cdef _add_timedelta(self, delta):
         return DatetimeJulian(*add_timedelta(self, delta, is_leap_julian, False))
@@ -1514,6 +1550,7 @@ a datetime.datetime instance or vice versa.
             DateFromJulianDay(jd,return_tuple=True,calendar='gregorian')
             self.dayofwk = dayofwk
             self.dayofyr = dayofyr
+        self.daysinmonth = get_days_in_month(_is_leap(self.year, self.calendar), self.month)
 
     cdef _add_timedelta(self, delta):
         return DatetimeGregorian(*add_timedelta(self, delta, is_leap_gregorian, True))
@@ -1548,6 +1585,7 @@ format, and calendar.
             DateFromJulianDay(jd,return_tuple=True,calendar='proleptic_gregorian')
             self.dayofwk = dayofwk
             self.dayofyr = dayofyr
+        self.daysinmonth = get_days_in_month(_is_leap(self.year, self.calendar), self.month)
 
     cdef _add_timedelta(self, delta):
         return DatetimeProlepticGregorian(*add_timedelta(self, delta,
@@ -1799,7 +1837,7 @@ cdef tuple add_timedelta_360_day(datetime dt, delta):
     return (year, month, day, hour, minute, second, microsecond, -1, 1)
 
 # Calendar calculations base on calcals.c by David W. Pierce
-# http://meteora.ucsd.edu/~pierce/calcalcs 
+# http://meteora.ucsd.edu/~pierce/calcalcs
 
 cdef _is_leap(int year, calendar):
     cdef int tyear
