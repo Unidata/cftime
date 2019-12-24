@@ -9,6 +9,8 @@ version 1.1.0 (not yet released)
    instances are returned by default by num2date (instead of returning python
    datetime instances where possible). Issue #136, PR #135.
 
+ * Add daysinmonth attribute (issue #137, PR #138).
+
 version 1.0.4.2 release
 =======================
 
