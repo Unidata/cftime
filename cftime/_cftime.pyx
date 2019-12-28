@@ -272,7 +272,10 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=True):
 
     **`only_use_cftime_datetimes`**: if False, datetime.datetime
     objects are returned from num2date where possible; if True dates which
-    subclass cftime.datetime are returned for all calendars. Default is True.
+    subclass cftime.datetime are returned for all calendars.
+    If None, python datetime.datetime objects are always returned and
+    an error is raised if calendar != 'proleptic_gregorian' or
+    the reference date is before year 1.
 
     returns a datetime instance, or an array of datetime instances with
     approximately 100 microsecond accuracy.
@@ -288,7 +291,11 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=True):
     contains one.
     """
     calendar = calendar.lower()
+    if only_use_cftime_datetimes is None and calendar != 'proleptic_gregorian':
+        raise ValueError('illegal calendar for only_use_cftime_datetimes=None')
     basedate = _dateparse(units)
+    if only_use_cftime_datetimes is None and basedate.year < MINYEAR:
+        raise ValueError('illegal reference date')
     (unit, ignore) = _datesplit(units)
     # real-world calendars limited to positive reference years.
     if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
@@ -296,12 +303,11 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=True):
             msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
             raise ValueError(msg)
 
-    postimes =  (np.asarray(times) > 0).all() # netcdf4-python issue #659
     if only_use_cftime_datetimes:
         cdftime = utime(units, calendar=calendar,
                         only_use_cftime_datetimes=only_use_cftime_datetimes)
         return cdftime.num2date(times)
-    elif postimes and ((calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
+    elif only_use_cftime_datetimes is None or ((calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
        (calendar in ['gregorian','standard'] and basedate > gregorian)):
         # use python datetime module,
         isscalar = False
@@ -345,7 +351,12 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=True):
                 msecs = np.round(msecsd - secs*1.e6)
                 td = timedelta(days=days,seconds=secs,microseconds=msecs)
                 # add time delta to base date.
-                date = basedate + td
+                try:
+                    date = basedate + td
+                except OverflowError:
+                    msg="""
+OverflowError in python datetime, probably because year < MINYEAR"""
+                    raise ValueError(msg)
                 dates.append(date)
         if isscalar:
             return dates[0]

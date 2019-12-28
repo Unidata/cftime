@@ -11,6 +11,10 @@ version 1.1.0 (not yet released)
 
  * Add daysinmonth attribute (issue #137, PR #138).
 
+ * If use_only_cftime_datetimes=None, only python datetime instances returned.
+   Remove positive times check, raise ValueError if python datetime
+   tries to compute a date before MINYEAR (issue #134)
+
 version 1.0.4.2 release
 =======================
 
