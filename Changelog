@@ -11,7 +11,9 @@ version 1.1.0 (not yet released)
 
  * Add daysinmonth attribute (issue #137, PR #138).
 
- * If use_only_cftime_datetimes=None, only python datetime instances returned.
+ * If use_only_python_datetimes=True and use_only_cftime_datetimes=False,
+   num2date only returns python datetime instances and raises an exception
+   if this is not possible.
    Remove positive times check, raise ValueError if python datetime
    tries to compute a date before MINYEAR (issue #134)
 

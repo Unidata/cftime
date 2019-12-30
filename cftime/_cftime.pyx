@@ -247,7 +247,8 @@ def date2num(dates,units,calendar='standard'):
             return cdftime.date2num(dates)
 
 
-def num2date(times,units,calendar='standard',only_use_cftime_datetimes=True):
+def num2date(times,units,calendar='standard',\
+             only_use_cftime_datetimes=True,only_use_python_datetimes=False):
     """num2date(times,units,calendar='standard')
 
     Return datetime objects given numeric time values. The units
@@ -273,9 +274,10 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=True):
     **`only_use_cftime_datetimes`**: if False, datetime.datetime
     objects are returned from num2date where possible; if True dates which
     subclass cftime.datetime are returned for all calendars.
-    If None, python datetime.datetime objects are always returned and
-    an error is raised if calendar != 'proleptic_gregorian' or
-    the reference date is before year 1.
+
+    **`only_use_python_datetimes`**: always return python datetime.datetime
+    objects and raise an error if this is not possible. Ignored unless
+    `only_use_cftime_datetimes=False`. Default False
 
     returns a datetime instance, or an array of datetime instances with
     approximately 100 microsecond accuracy.
@@ -291,11 +293,15 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=True):
     contains one.
     """
     calendar = calendar.lower()
-    if only_use_cftime_datetimes is None and calendar != 'proleptic_gregorian':
-        raise ValueError('illegal calendar for only_use_cftime_datetimes=None')
     basedate = _dateparse(units)
-    if only_use_cftime_datetimes is None and basedate.year < MINYEAR:
-        raise ValueError('illegal reference date')
+    if not only_use_cftime_datetimes and only_use_python_datetimes:
+        msg='illegal calendar or reference date for python datetime'
+        if calendar not in ['proleptic_gregorian','gregorian','standard']:
+            raise ValueError(msg)
+        elif calendar in ['gregorian','standard'] and basedate <= gregorian:
+            raise ValueError(msg)
+        elif calendar == 'proleptic_gregorian' and basedate.year < MINYEAR:
+            raise ValueError(msg)
     (unit, ignore) = _datesplit(units)
     # real-world calendars limited to positive reference years.
     if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
@@ -307,7 +313,8 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=True):
         cdftime = utime(units, calendar=calendar,
                         only_use_cftime_datetimes=only_use_cftime_datetimes)
         return cdftime.num2date(times)
-    elif only_use_cftime_datetimes is None or ((calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
+    elif only_use_python_datetimes or \
+      ((calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
        (calendar in ['gregorian','standard'] and basedate > gregorian)):
         # use python datetime module,
         isscalar = False
