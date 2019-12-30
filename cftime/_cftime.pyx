@@ -271,13 +271,13 @@ def num2date(times,units,calendar='standard',\
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'`.
     Default is `'standard'`, which is a mixed Julian/Gregorian calendar.
 
-    **`only_use_cftime_datetimes`**: if False, datetime.datetime
+    **`only_use_cftime_datetimes`**: if False, python datetime.datetime
     objects are returned from num2date where possible; if True dates which
-    subclass cftime.datetime are returned for all calendars.
+    subclass cftime.datetime are returned for all calendars. Default `True`.
 
     **`only_use_python_datetimes`**: always return python datetime.datetime
     objects and raise an error if this is not possible. Ignored unless
-    `only_use_cftime_datetimes=False`. Default False
+    `only_use_cftime_datetimes=False`. Default `False`.
 
     returns a datetime instance, or an array of datetime instances with
     approximately 100 microsecond accuracy.
