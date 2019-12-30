@@ -294,13 +294,12 @@ def num2date(times,units,calendar='standard',\
     """
     calendar = calendar.lower()
     basedate = _dateparse(units)
+    can_use_python_datetime=\
+      ((calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
+       (calendar in ['gregorian','standard'] and basedate > gregorian))
     if not only_use_cftime_datetimes and only_use_python_datetimes:
-        msg='illegal calendar or reference date for python datetime'
-        if calendar not in ['proleptic_gregorian','gregorian','standard']:
-            raise ValueError(msg)
-        elif calendar in ['gregorian','standard'] and basedate <= gregorian:
-            raise ValueError(msg)
-        elif calendar == 'proleptic_gregorian' and basedate.year < MINYEAR:
+        if not can_use_python_datetime:
+            msg='illegal calendar or reference date for python datetime'
             raise ValueError(msg)
     (unit, ignore) = _datesplit(units)
     # real-world calendars limited to positive reference years.
@@ -313,9 +312,7 @@ def num2date(times,units,calendar='standard',\
         cdftime = utime(units, calendar=calendar,
                         only_use_cftime_datetimes=only_use_cftime_datetimes)
         return cdftime.num2date(times)
-    elif only_use_python_datetimes or \
-      ((calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
-       (calendar in ['gregorian','standard'] and basedate > gregorian)):
+    elif only_use_python_datetimes and can_use_python_datetime:
         # use python datetime module,
         isscalar = False
         try:
