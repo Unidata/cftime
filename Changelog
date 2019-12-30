@@ -5,13 +5,13 @@ version 1.1.0 (not yet released)
 
  * fix intersphinx entries (issue #133, PR #133)
 
- * make use_only_cftime_datetimes=True by default, so cftime datetime
+ * make only_use_cftime_datetimes=True by default, so cftime datetime
    instances are returned by default by num2date (instead of returning python
    datetime instances where possible). Issue #136, PR #135.
 
  * Add daysinmonth attribute (issue #137, PR #138).
 
- * If use_only_python_datetimes=True and use_only_cftime_datetimes=False,
+ * If only_use_python_datetimes=True and only_use_cftime_datetimes=False,
    num2date only returns python datetime instances and raises an exception
    if this is not possible.
    Remove positive times check, raise ValueError if python datetime
