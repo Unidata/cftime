@@ -90,7 +90,7 @@ cpdef int32_t get_days_in_month(bint isleap, int month) nogil:
 
 
 class real_datetime(datetime_python):
-    """add dayofwk and dayofyr attributes to python datetime instance"""
+    """add dayofwk, dayofyr attributes to python datetime instance"""
     @property
     def dayofwk(self):
         # 0=Monday, 6=Sunday
@@ -282,12 +282,14 @@ def num2date(times,units,calendar='standard',\
     returns a datetime instance, or an array of datetime instances with
     approximately 100 microsecond accuracy.
 
-    ***Note***: The datetime instances returned are 'real' python datetime
+    ***Note***: If only_use_cftime_datetimes=False and
+    use_only_python_datetimes=False (Default), the datetime instances 
+    returned are 'real' python datetime
     objects if `calendar='proleptic_gregorian'`, or
     `calendar='standard'` or `'gregorian'`
     and the date is after the breakpoint between the Julian and
-    Gregorian calendars (1582-10-15). Otherwise, they are 'phony' datetime
-    objects which support some but not all the methods of 'real' python
+    Gregorian calendars (1582-10-15). Otherwise, they are ctime.datetime
+    objects which support some but not all the methods of native python
     datetime objects. The datetime instances
     do not contain a time-zone offset, even if the specified `units`
     contains one.
@@ -498,10 +500,9 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=True,
 
     If only_use_cftime_datetimes is set to True, then cftime.datetime
     objects are returned for all calendars.  Otherwise the datetime object is a
-    'real' datetime object if the date falls in the Gregorian calendar
+    native python datetime object if the date falls in the Gregorian calendar
     (i.e. calendar='proleptic_gregorian', or  calendar = 'standard'/'gregorian'
-    and the date is after 1582-10-15).  In all other cases a 'phony' datetime
-    objects are used, which are actually instances of cftime.datetime.
+    and the date is after 1582-10-15).
     """
 
     julian = np.atleast_1d(np.array(JD, dtype=np.longdouble))
@@ -687,15 +688,14 @@ leap year if it is divisible by 4.
 The C{L{num2date}} and C{L{date2num}} class methods can used to convert datetime
 instances to/from the specified time units using the specified calendar.
 
-The datetime instances returned by C{num2date} are 'real' python datetime
+The datetime instances returned by C{num2date} are native python datetime
 objects if the date falls in the Gregorian calendar (i.e.
 C{calendar='proleptic_gregorian', 'standard'} or C{'gregorian'} and
-the date is after 1582-10-15). Otherwise, they are 'phony' datetime
+the date is after 1582-10-15). Otherwise, they are native datetime
 objects which are actually instances of C{L{cftime.datetime}}.  This is
 because the python datetime module cannot handle the weird dates in some
 calendars (such as C{'360_day'} and C{'all_leap'}) which don't exist in any real
 world calendar.
-
 
 Example usage:
 
@@ -870,10 +870,10 @@ units to datetime objects.
         Works for scalars, sequences and numpy arrays.
         Returns a scalar if input is a scalar, else returns a numpy array.
 
-        The datetime instances returned by C{num2date} are 'real' python datetime
+        The datetime instances returned by C{num2date} are native python datetime
         objects if the date falls in the Gregorian calendar (i.e.
         C{calendar='proleptic_gregorian'}, or C{calendar = 'standard'/'gregorian'} and
-        the date is after 1582-10-15). Otherwise, they are 'phony' datetime
+        the date is after 1582-10-15). Otherwise, they are cftime.datetime
         objects which are actually instances of cftime.datetime.  This is
         because the python datetime module cannot handle the weird dates in some
         calendars (such as C{'360_day'} and C{'all_leap'}) which
@@ -1580,9 +1580,9 @@ Supports timedelta operations by overloading + and -.
 
 Has strftime, timetuple, replace, __repr__, and __str__ methods. The
 format of the string produced by __str__ is controlled by self.format
-(default %Y-%m-%d %H:%M:%S). Supports comparisons with other phony
+(default %Y-%m-%d %H:%M:%S). Supports comparisons with other
 datetime instances using the same calendar; comparison with
-datetime.datetime instances is possible for cftime.datetime
+native python datetime instances is possible for cftime.datetime
 instances using 'gregorian' and 'proleptic_gregorian' calendars.
 
 Instance variables are year,month,day,hour,minute,second,microsecond,dayofwk,dayofyr,
