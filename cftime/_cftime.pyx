@@ -294,6 +294,7 @@ def num2date(times,units,calendar='standard',\
     """
     calendar = calendar.lower()
     basedate = _dateparse(units)
+
     can_use_python_datetime=\
       ((calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
        (calendar in ['gregorian','standard'] and basedate > gregorian))
@@ -301,19 +302,21 @@ def num2date(times,units,calendar='standard',\
         if not can_use_python_datetime:
             msg='illegal calendar or reference date for python datetime'
             raise ValueError(msg)
+
     (unit, ignore) = _datesplit(units)
+
     # real-world calendars limited to positive reference years.
     if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
         if basedate.year == 0:
             msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
             raise ValueError(msg)
 
-    if only_use_cftime_datetimes:
+    if only_use_cftime_datetimes or not \
+       (only_use_python_datetimes and can_use_python_datetime):
         cdftime = utime(units, calendar=calendar,
                         only_use_cftime_datetimes=only_use_cftime_datetimes)
         return cdftime.num2date(times)
-    elif only_use_python_datetimes and can_use_python_datetime:
-        # use python datetime module,
+    else: # use python datetime module
         isscalar = False
         try:
             times[0]
@@ -359,16 +362,13 @@ def num2date(times,units,calendar='standard',\
                     date = basedate + td
                 except OverflowError:
                     msg="""
-OverflowError in python datetime, probably because year < MINYEAR"""
+OverflowError in python datetime, probably because year < datetime.MINYEAR"""
                     raise ValueError(msg)
                 dates.append(date)
         if isscalar:
             return dates[0]
         else:
             return np.reshape(np.array(dates), shape)
-    else: # use cftime for other calendars
-        cdftime = utime(units,calendar=calendar)
-        return cdftime.num2date(times)
 
 
 def date2index(dates, nctime, calendar=None, select='exact'):
