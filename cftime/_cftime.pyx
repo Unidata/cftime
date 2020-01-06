@@ -283,7 +283,7 @@ def num2date(times,units,calendar='standard',\
     approximately 100 microsecond accuracy.
 
     ***Note***: If only_use_cftime_datetimes=False and
-    use_only_python_datetimes=False (Default), the datetime instances 
+    use_only_python_datetimes=False, the datetime instances
     returned are 'real' python datetime
     objects if `calendar='proleptic_gregorian'`, or
     `calendar='standard'` or `'gregorian'`
