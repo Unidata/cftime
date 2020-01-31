@@ -17,7 +17,7 @@ version 1.1.0 (not yet released)
    num2date with only_use_python_datetimes=True and
    only_use_cftime_datetimes=False.
    Remove positive times check, raise ValueError if python datetime
-   tries to compute a date before MINYEAR (issue #134)
+   tries to compute a date before MINYEAR (issue #134, PR #139)
 
 version 1.0.4.2 release
 =======================
