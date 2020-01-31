@@ -13,7 +13,9 @@ version 1.1.0 (not yet released)
 
  * If only_use_python_datetimes=True and only_use_cftime_datetimes=False,
    num2date only returns python datetime instances and raises an exception
-   if this is not possible.
+   if this is not possible.  num2pydate convenience function added which just calls
+   num2date with only_use_python_datetimes=True and
+   only_use_cftime_datetimes=False.
    Remove positive times check, raise ValueError if python datetime
    tries to compute a date before MINYEAR (issue #134)
 

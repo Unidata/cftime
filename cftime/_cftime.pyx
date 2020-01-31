@@ -247,9 +247,19 @@ def date2num(dates,units,calendar='standard'):
             return cdftime.date2num(dates)
 
 
+def num2pydate(times,units,calendar='standard'):
+    """num2pydate(times,units,calendar='standard')
+    Always returns python datetime.datetime
+    objects and raise an error if this is not possible.
+
+    Same as
+    num2date(times,units,calendar',only_use_cftime_datetimes=Falsee,only_use_python_datetimes=Truee)
+    """
+    return num2date(times,units,calendar,only_use_cftime_datetimes=False,only_use_python_datetimes=True)
+
 def num2date(times,units,calendar='standard',\
              only_use_cftime_datetimes=True,only_use_python_datetimes=False):
-    """num2date(times,units,calendar='standard')
+    """num2date(times,units,calendar='standard',only_use_cftime_datetimes=True,only_use_python_datetimes=False)
 
     Return datetime objects given numeric time values. The units
     of the numeric time values are described by the `units` argument
