@@ -1,5 +1,5 @@
 environment:
-  CONDA_INSTALL_LOCN: C:\\Miniconda36-x64
+  PYTHON: "C:\\myminiconda3"
   matrix:
 
     - TARGET_ARCH: x64
@@ -10,8 +10,8 @@ environment:
       NPY: 1.17
       PY: 3.8
 
-platform:
-    - x64
+init:
+  - "ECHO %PYTHON_VERSION% %MINICONDA%"
 
 install:
   # If there is a newer build queued for the same PR, cancel this one.
