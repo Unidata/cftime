@@ -253,7 +253,7 @@ def num2pydate(times,units,calendar='standard'):
     objects and raise an error if this is not possible.
 
     Same as
-    num2date(times,units,calendar',only_use_cftime_datetimes=False,only_use_python_datetimes=True)
+    num2date(times,units,calendar,only_use_cftime_datetimes=False,only_use_python_datetimes=True)
     """
     return num2date(times,units,calendar,only_use_cftime_datetimes=False,only_use_python_datetimes=True)
 
