@@ -93,34 +93,8 @@ with approximately 100 microsecond accuracy.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="cftime.date2index">
-<code class="descclassname">cftime.</code><code class="descname">date2index</code><span class="sig-paren">(</span><em>dates</em>, <em>nctime</em>, <em>calendar=None</em>, <em>select='exact'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.date2index" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return indices of a netCDF time variable corresponding to the given dates.</p>
-<p><strong>`dates`</strong>: A datetime object or a sequence of datetime objects.
-The datetime objects should not include a time-zone offset.</p>
-<p><strong>`nctime`</strong>: A netCDF time variable object. The nctime object must have a
-<cite>units</cite> attribute.</p>
-<p><strong>`calendar`</strong>: describes the calendar used in the time calculations.
-All the values currently defined in the
-[CF metadata convention](<a class="reference external" href="http://cfconventions.org">http://cfconventions.org</a>)
-Valid calendars <cite>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
-‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</cite>.
-Default is <cite>‘standard’</cite>, which is a mixed Julian/Gregorian calendar.
-If <cite>calendar</cite> is None, its value is given by <cite>nctime.calendar</cite> or
-<cite>standard</cite> if no such attribute exists.</p>
-<p><strong>`select`</strong>: <cite>‘exact’, ‘before’, ‘after’, ‘nearest’</cite>
-The index selection method. <cite>exact</cite> will return the indices perfectly
-matching the dates given. <cite>before</cite> and <cite>after</cite> will return the indices
-corresponding to the dates just before or just after the given dates if
-an exact match cannot be found. <cite>nearest</cite> will return the indices that
-correspond to the closest dates.</p>
-<p>returns an index (indices) of the netCDF time variable corresponding
-to the given datetime object(s).</p>
-</dd></dl>
-
-<dl class="function">
 <dt id="cftime.num2date">
-<code class="descclassname">cftime.</code><code class="descname">num2date</code><span class="sig-paren">(</span><em>times</em>, <em>units</em>, <em>calendar='standard'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.num2date" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">cftime.</code><code class="descname">num2date</code><span class="sig-paren">(</span><em>times</em>, <em>units</em>, <em>calendar='standard'</em>, <em>only_use_cftime_datetimes=True</em>, <em>only_use_python_datetimes=False</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.num2date" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return datetime objects given numeric time values. The units
 of the numeric time values are described by the <cite>units</cite> argument
 and the <cite>calendar</cite> keyword. The returned datetime objects represent
@@ -146,7 +120,7 @@ objects and raise an error if this is not possible. Ignored unless
 <p>returns a datetime instance, or an array of datetime instances with
 approximately 100 microsecond accuracy.</p>
 <p><strong>*Note*</strong>: If only_use_cftime_datetimes=False and
-use_only_python_datetimes=False (Default), the datetime instances 
+use_only_python_datetimes=False, the datetime instances
 returned are ‘real’ python datetime
 objects if <cite>calendar=’proleptic_gregorian’</cite>, or
 <cite>calendar=’standard’</cite> or <cite>‘gregorian’</cite>
@@ -156,6 +130,41 @@ objects which support some but not all the methods of native python
 datetime objects. The datetime instances
 do not contain a time-zone offset, even if the specified <cite>units</cite>
 contains one.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="cftime.num2pydate">
+<code class="descclassname">cftime.</code><code class="descname">num2pydate</code><span class="sig-paren">(</span><em>times</em>, <em>units</em>, <em>calendar='standard'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.num2pydate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Always returns python datetime.datetime
+objects and raise an error if this is not possible.</p>
+<p>Same as
+num2date(times,units,calendar’,only_use_cftime_datetimes=False,only_use_python_datetimes=True)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="cftime.date2index">
+<code class="descclassname">cftime.</code><code class="descname">date2index</code><span class="sig-paren">(</span><em>dates</em>, <em>nctime</em>, <em>calendar=None</em>, <em>select='exact'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.date2index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return indices of a netCDF time variable corresponding to the given dates.</p>
+<p><strong>`dates`</strong>: A datetime object or a sequence of datetime objects.
+The datetime objects should not include a time-zone offset.</p>
+<p><strong>`nctime`</strong>: A netCDF time variable object. The nctime object must have a
+<cite>units</cite> attribute.</p>
+<p><strong>`calendar`</strong>: describes the calendar used in the time calculations.
+All the values currently defined in the
+[CF metadata convention](<a class="reference external" href="http://cfconventions.org">http://cfconventions.org</a>)
+Valid calendars <cite>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
+‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</cite>.
+Default is <cite>‘standard’</cite>, which is a mixed Julian/Gregorian calendar.
+If <cite>calendar</cite> is None, its value is given by <cite>nctime.calendar</cite> or
+<cite>standard</cite> if no such attribute exists.</p>
+<p><strong>`select`</strong>: <cite>‘exact’, ‘before’, ‘after’, ‘nearest’</cite>
+The index selection method. <cite>exact</cite> will return the indices perfectly
+matching the dates given. <cite>before</cite> and <cite>after</cite> will return the indices
+corresponding to the dates just before or just after the given dates if
+an exact match cannot be found. <cite>nearest</cite> will return the indices that
+correspond to the closest dates.</p>
+<p>returns an index (indices) of the netCDF time variable corresponding
+to the given datetime object(s).</p>
 </dd></dl>
 
 <dl class="function">
