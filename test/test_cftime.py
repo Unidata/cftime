@@ -619,6 +619,13 @@ class cftimeTestCase(unittest.TestCase):
         assert (d.month == 1)
         assert (d.day == 1)
         assert (d.hour == 0)
+        # cftime issue #134
+        d = num2date(-657071, units, calendar='proleptic_gregorian',
+                     only_use_cftime_datetimes=False,only_use_python_datetimes=True)
+        assert(d==datetime(1,1,1,0))
+        self.assertRaises(ValueError, num2date, \
+        -657072, units, calendar='proleptic_gregorian',
+                     only_use_cftime_datetimes=False,only_use_python_datetimes=True)
         # issue 685: wrong time zone conversion
         # 'The following times all refer to the same moment: "18:30Z", "22:30+04", "1130-0700", and "15:00-03:30'
         # (https://en.wikipedia.org/w/index.php?title=ISO_8601&oldid=787811367#Time_offsets_from_UTC)

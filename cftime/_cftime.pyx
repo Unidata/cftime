@@ -90,7 +90,7 @@ cpdef int32_t get_days_in_month(bint isleap, int month) nogil:
 
 
 class real_datetime(datetime_python):
-    """add dayofwk and dayofyr attributes to python datetime instance"""
+    """add dayofwk, dayofyr attributes to python datetime instance"""
     @property
     def dayofwk(self):
         # 0=Monday, 6=Sunday
@@ -247,8 +247,19 @@ def date2num(dates,units,calendar='standard'):
             return cdftime.date2num(dates)
 
 
-def num2date(times,units,calendar='standard',only_use_cftime_datetimes=True):
-    """num2date(times,units,calendar='standard')
+def num2pydate(times,units,calendar='standard'):
+    """num2pydate(times,units,calendar='standard')
+    Always returns python datetime.datetime
+    objects and raise an error if this is not possible.
+
+    Same as
+    num2date(times,units,calendar,only_use_cftime_datetimes=False,only_use_python_datetimes=True)
+    """
+    return num2date(times,units,calendar,only_use_cftime_datetimes=False,only_use_python_datetimes=True)
+
+def num2date(times,units,calendar='standard',\
+             only_use_cftime_datetimes=True,only_use_python_datetimes=False):
+    """num2date(times,units,calendar='standard',only_use_cftime_datetimes=True,only_use_python_datetimes=False)
 
     Return datetime objects given numeric time values. The units
     of the numeric time values are described by the `units` argument
@@ -270,40 +281,54 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=True):
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'`.
     Default is `'standard'`, which is a mixed Julian/Gregorian calendar.
 
-    **`only_use_cftime_datetimes`**: if False, datetime.datetime
+    **`only_use_cftime_datetimes`**: if False, python datetime.datetime
     objects are returned from num2date where possible; if True dates which
-    subclass cftime.datetime are returned for all calendars. Default is True.
+    subclass cftime.datetime are returned for all calendars. Default `True`.
+
+    **`only_use_python_datetimes`**: always return python datetime.datetime
+    objects and raise an error if this is not possible. Ignored unless
+    `only_use_cftime_datetimes=False`. Default `False`.
 
     returns a datetime instance, or an array of datetime instances with
     approximately 100 microsecond accuracy.
 
-    ***Note***: The datetime instances returned are 'real' python datetime
+    ***Note***: If only_use_cftime_datetimes=False and
+    use_only_python_datetimes=False, the datetime instances
+    returned are 'real' python datetime
     objects if `calendar='proleptic_gregorian'`, or
     `calendar='standard'` or `'gregorian'`
     and the date is after the breakpoint between the Julian and
-    Gregorian calendars (1582-10-15). Otherwise, they are 'phony' datetime
-    objects which support some but not all the methods of 'real' python
+    Gregorian calendars (1582-10-15). Otherwise, they are ctime.datetime
+    objects which support some but not all the methods of native python
     datetime objects. The datetime instances
     do not contain a time-zone offset, even if the specified `units`
     contains one.
     """
     calendar = calendar.lower()
     basedate = _dateparse(units)
+
+    can_use_python_datetime=\
+      ((calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
+       (calendar in ['gregorian','standard'] and basedate > gregorian))
+    if not only_use_cftime_datetimes and only_use_python_datetimes:
+        if not can_use_python_datetime:
+            msg='illegal calendar or reference date for python datetime'
+            raise ValueError(msg)
+
     (unit, ignore) = _datesplit(units)
+
     # real-world calendars limited to positive reference years.
     if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
         if basedate.year == 0:
             msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
             raise ValueError(msg)
 
-    postimes =  (np.asarray(times) > 0).all() # netcdf4-python issue #659
-    if only_use_cftime_datetimes:
+    if only_use_cftime_datetimes or not \
+       (only_use_python_datetimes and can_use_python_datetime):
         cdftime = utime(units, calendar=calendar,
                         only_use_cftime_datetimes=only_use_cftime_datetimes)
         return cdftime.num2date(times)
-    elif postimes and ((calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
-       (calendar in ['gregorian','standard'] and basedate > gregorian)):
-        # use python datetime module,
+    else: # use python datetime module
         isscalar = False
         try:
             times[0]
@@ -345,15 +370,17 @@ def num2date(times,units,calendar='standard',only_use_cftime_datetimes=True):
                 msecs = np.round(msecsd - secs*1.e6)
                 td = timedelta(days=days,seconds=secs,microseconds=msecs)
                 # add time delta to base date.
-                date = basedate + td
+                try:
+                    date = basedate + td
+                except OverflowError:
+                    msg="""
+OverflowError in python datetime, probably because year < datetime.MINYEAR"""
+                    raise ValueError(msg)
                 dates.append(date)
         if isscalar:
             return dates[0]
         else:
             return np.reshape(np.array(dates), shape)
-    else: # use cftime for other calendars
-        cdftime = utime(units,calendar=calendar)
-        return cdftime.num2date(times)
 
 
 def date2index(dates, nctime, calendar=None, select='exact'):
@@ -483,10 +510,9 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=True,
 
     If only_use_cftime_datetimes is set to True, then cftime.datetime
     objects are returned for all calendars.  Otherwise the datetime object is a
-    'real' datetime object if the date falls in the Gregorian calendar
+    native python datetime object if the date falls in the Gregorian calendar
     (i.e. calendar='proleptic_gregorian', or  calendar = 'standard'/'gregorian'
-    and the date is after 1582-10-15).  In all other cases a 'phony' datetime
-    objects are used, which are actually instances of cftime.datetime.
+    and the date is after 1582-10-15).
     """
 
     julian = np.atleast_1d(np.array(JD, dtype=np.longdouble))
@@ -672,15 +698,14 @@ leap year if it is divisible by 4.
 The C{L{num2date}} and C{L{date2num}} class methods can used to convert datetime
 instances to/from the specified time units using the specified calendar.
 
-The datetime instances returned by C{num2date} are 'real' python datetime
+The datetime instances returned by C{num2date} are native python datetime
 objects if the date falls in the Gregorian calendar (i.e.
 C{calendar='proleptic_gregorian', 'standard'} or C{'gregorian'} and
-the date is after 1582-10-15). Otherwise, they are 'phony' datetime
+the date is after 1582-10-15). Otherwise, they are native datetime
 objects which are actually instances of C{L{cftime.datetime}}.  This is
 because the python datetime module cannot handle the weird dates in some
 calendars (such as C{'360_day'} and C{'all_leap'}) which don't exist in any real
 world calendar.
-
 
 Example usage:
 
@@ -855,10 +880,10 @@ units to datetime objects.
         Works for scalars, sequences and numpy arrays.
         Returns a scalar if input is a scalar, else returns a numpy array.
 
-        The datetime instances returned by C{num2date} are 'real' python datetime
+        The datetime instances returned by C{num2date} are native python datetime
         objects if the date falls in the Gregorian calendar (i.e.
         C{calendar='proleptic_gregorian'}, or C{calendar = 'standard'/'gregorian'} and
-        the date is after 1582-10-15). Otherwise, they are 'phony' datetime
+        the date is after 1582-10-15). Otherwise, they are cftime.datetime
         objects which are actually instances of cftime.datetime.  This is
         because the python datetime module cannot handle the weird dates in some
         calendars (such as C{'360_day'} and C{'all_leap'}) which
@@ -1565,9 +1590,9 @@ Supports timedelta operations by overloading + and -.
 
 Has strftime, timetuple, replace, __repr__, and __str__ methods. The
 format of the string produced by __str__ is controlled by self.format
-(default %Y-%m-%d %H:%M:%S). Supports comparisons with other phony
+(default %Y-%m-%d %H:%M:%S). Supports comparisons with other
 datetime instances using the same calendar; comparison with
-datetime.datetime instances is possible for cftime.datetime
+native python datetime instances is possible for cftime.datetime
 instances using 'gregorian' and 'proleptic_gregorian' calendars.
 
 Instance variables are year,month,day,hour,minute,second,microsecond,dayofwk,dayofyr,
