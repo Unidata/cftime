@@ -725,6 +725,10 @@ class cftimeTestCase(unittest.TestCase):
         d = cftime.DatetimeProlepticGregorian(1, 1, 1)
         assert(cftime.date2num(d, 'days since 0001-01-01',\
             'proleptic_gregorian') == 0.0)
+        # issue #140 (fractional seconds in reference date)
+        d = datetime.strptime('2018-01-23 09:27:10.950000',"%Y-%m-%d %H:%M:%S.%f")
+        units = 'seconds since 2018-01-23 09:31:42.94'
+        assert(cftime.date2num(d, units) == -271.99)
 
 class TestDate2index(unittest.TestCase):
 

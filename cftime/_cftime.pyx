@@ -129,12 +129,14 @@ def _dateparse(timestr):
     year, month, day, hour, minute, second, microsecond, utc_offset =\
         _parse_date( isostring.strip() )
     if year >= MINYEAR:
-        basedate = real_datetime(year, month, day, hour, minute, second)
+        basedate = real_datetime(year, month, day, hour, minute, second,
+                microsecond)
         # subtract utc_offset from basedate time instance (which is timezone naive)
         basedate -= timedelta(days=utc_offset/1440.)
     else:
         if not utc_offset:
-            basedate = datetime(year, month, day, hour, minute, second)
+            basedate = datetime(year, month, day, hour, minute, second,
+                    microsecond)
         else:
             raise ValueError('cannot use utc_offset for reference years <= 0')
     return basedate
