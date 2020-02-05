@@ -19,6 +19,9 @@ version 1.1.0 (not yet released)
    Remove positive times check, raise ValueError if python datetime
    tries to compute a date before MINYEAR (issue #134, PR #139)
 
+ * Fix for fractional seconds in reference date in units string (issue #140,
+   PR # 141).
+
 version 1.0.4.2 release
 =======================
 
