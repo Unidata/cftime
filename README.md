@@ -13,7 +13,7 @@ Time-handling functionality from netcdf4-python
 For details on the latest updates, see the [Changelog](https://github.com/Unidata/cftime/blob/master/Changelog).
 
 2/12/2019:  version 1.1.0 released.  `cftime.datetime` instances are returned by default from `num2date`
-(instead of returning python datetime instances where possible ([issue #136](https://github.com/Unidata/cftime/issues/136)).  `num2pydate`
+(instead of returning python datetime instances where possible ([issue #136](https://github.com/Unidata/cftime/issues/136))).  `num2pydate`
 convenience function added (always returns python datetime instances, [issue #134](https://github.com/Unidata/cftime/issues/134)). Fix for
 fraction seconds in reference date string ([issue #140](https://github.com/Unidata/cftime/issues/140)). Added `daysinmonth` attribute 
 ([issue #137](https://github.com/Unidata/cftime/issues/137)).
