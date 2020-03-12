@@ -539,9 +539,10 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=True,
             year[i],month[i],day[i],dayofwk[i],dayofyr[i] = _IntJulianDayToDate(ijd,calendar)
 
         if calendar in ['standard', 'gregorian']:
-            ind_before = np.where(julian < 2299160.5)[0]
+            ind_before = np.where(julian < 2299160.5)
+            ind_before = np.asarray(ind_before).any()
         else:
-            ind_before = None
+            ind_before = False
 
         # compute hour, minute, second, microsecond, convert to int32
         hour = np.clip((F * 24.).astype(np.int64), 0, 23)
@@ -572,8 +573,8 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=True,
     indxms = microsecond > 1000000-ms_eps
     if indxms.any():
         julian[indxms] = julian[indxms] + 2*ms_eps[indxms]/86400000000.
-        year,month,day,hour,minute,second,microsecond2,dayofyr,dayofwk,ind_before =\
-        getdateinfo(julian)
+        year[indxms],month[indxms],day[indxms],hour[indxms],minute[indxms],second[indxms],microsecond2,dayofyr[indxms],dayofwk[indxms],ind_before2 =\
+        getdateinfo(julian[indxms])
         microsecond[indxms] = 0
 
     # check if input was scalar and change return accordingly
@@ -599,7 +600,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=True,
         # return a 'real' datetime instance if calendar is proleptic
         # Gregorian or Gregorian and all dates are after the
         # Julian/Gregorian transition
-        if len(ind_before) == 0 and not only_use_cftime_datetimes:
+        if ind_before and not only_use_cftime_datetimes:
             is_real_datetime = True
             datetime_type = real_datetime
         else:
