@@ -571,10 +571,10 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=True,
     microsecond = np.where(microsecond < ms_eps, 0, microsecond)
     indxms = microsecond > 1000000-ms_eps
     if indxms.any():
-         julian[indxms] = julian[indxms] + 2*ms_eps[indxms]/86400000000.
-         year,month,day,hour,minute,second,microsecond2,dayofyr,dayofwk,ind_before =\
-         getdateinfo(julian)
-         microsecond[indxms] = 0
+        julian[indxms] = julian[indxms] + 2*ms_eps[indxms]/86400000000.
+        year,month,day,hour,minute,second,microsecond2,dayofyr,dayofwk,ind_before =\
+        getdateinfo(julian)
+        microsecond[indxms] = 0
 
     # check if input was scalar and change return accordingly
     isscalar = False
