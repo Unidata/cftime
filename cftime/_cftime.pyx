@@ -569,12 +569,23 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=True,
     ms_eps = np.atleast_1d(np.array(np.finfo(np.float64).eps,np.longdouble))
     ms_eps = 86400000000.*np.maximum(ms_eps*julian, ms_eps)
     microsecond = np.where(microsecond < ms_eps, 0, microsecond)
-    indxms = microsecond > 1000000-ms_eps
-    if indxms.any():
-        julian[indxms] = julian[indxms] + 2*ms_eps[indxms]/86400000000.
-        year,month,day,hour,minute,second,microsecond,dayofyr,dayofwk,ind_before =\
-        getdateinfo(julian)
-        microsecond[indxms] = 0
+    if microsecond.ndim: # array
+        if calendar in ['standard', 'gregorian']:
+            ind_before = np.zeros(microsecond.size,dtype=np.bool)
+        for i in range(len(microsecond)):
+            if microsecond[i] > 1000000-ms_eps[i]:
+               julian[i] += 2*ms_eps[i]/86400000000.
+               year[i],month[i],day[i],hour[i],minute[i],second[i],microsecond[i],dayofyr[i],dayofwk[i],ind =\
+               getdateinfo(julian[i])
+               if calendar in ['standard', 'gregorian']:
+                   ind_before[i] = ind
+               microsecond[i] = 0
+    else: # scalar
+        if microsecond > 1000000-ms_eps:
+            julian += 2*ms_eps[indxms]/86400000000.
+            year,month,day,hour,minute,second,microsecond,dayofyr,dayofwk,ind_before =\
+            getdateinfo(julian)
+            microsecond = 0
 
     # check if input was scalar and change return accordingly
     isscalar = False
@@ -1327,7 +1338,7 @@ Gregorial calendar.
     def __str__(self):
         second = '{:02d}'.format(self.second)
         if self.microsecond:
-            second += '.{}'.format(self.microsecond)
+            second += '.{:06d}'.format(self.microsecond)
 
         return "{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{}".format(
             self.year, self.month, self.day, self.hour, self.minute, second)
