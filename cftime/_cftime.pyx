@@ -582,7 +582,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=True,
                microsecond[i] = 0
     else: # scalar
         if microsecond > 1000000-ms_eps:
-            julian += 2*ms_eps[indxms]/86400000000.
+            julian += 2*ms_eps/86400000000.
             year,month,day,hour,minute,second,microsecond,dayofyr,dayofwk,ind_before =\
             getdateinfo(julian)
             microsecond = 0
