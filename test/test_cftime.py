@@ -729,6 +729,17 @@ class cftimeTestCase(unittest.TestCase):
         d = datetime.strptime('2018-01-23 09:27:10.950000',"%Y-%m-%d %H:%M:%S.%f")
         units = 'seconds since 2018-01-23 09:31:42.94'
         assert(cftime.date2num(d, units) == -271.99)
+        # issue 143 - same answer for arrays vs scalars.
+        units = 'seconds since 1970-01-01 00:00:00'
+        times_in = [1261440000.0, 1261440001.0, 1261440002.0, 1261440003.0,
+                    1261440004.0, 1261440005.0]
+        times_out1 = cftime.num2date(times_in, units)
+        times_out2 = []
+        for time_in in times_in:
+            times_out2.append(cftime.num2date(time_in, units))
+        dates1 = [str(d) for d in times_out1]
+        dates2 = [str(d) for d in times_out2]
+        assert(dates1 == dates2)
 
 class TestDate2index(unittest.TestCase):
 
@@ -1517,7 +1528,6 @@ def test_daysinmonth_leap(date_type, month, days_per_month_leap_year):
 def test_replace_dayofyr_or_dayofwk_error(date_type, argument):
     with pytest.raises(ValueError):
         date_type(1, 1, 1).replace(**{argument: 3})
-
 
 if __name__ == '__main__':
     unittest.main()
