@@ -740,6 +740,9 @@ class cftimeTestCase(unittest.TestCase):
         dates1 = [str(d) for d in times_out1]
         dates2 = [str(d) for d in times_out2]
         assert(dates1 == dates2)
+        # issue #143 formatting of microseconds
+        d = cftime.num2date(1261440000.000099,units)
+        assert(str(d) == '2009-12-22 00:00:00.000099')
 
 class TestDate2index(unittest.TestCase):
 
