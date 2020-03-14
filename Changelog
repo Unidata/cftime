@@ -1,3 +1,9 @@
+version 1.1.1 (not yet released)
+=====================================
+
+ * fix microsecond formatting issue, ensure identical results
+   computed for arrays and scales (issue #143, PR #146).
+
 version 1.1.0 (release tag v1.1.0rel)
 =====================================
 
