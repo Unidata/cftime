@@ -108,7 +108,6 @@ setup(
     packages=[NAME],
     version=extract_version(),
     ext_modules=ext_modules,
-    setup_requires=load('setup.txt'),
     install_requires=load('requirements.txt'),
     tests_require=load('requirements-dev.txt'),
     classifiers=[
@@ -118,8 +117,10 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Scientific/Engineering',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)']
     )
