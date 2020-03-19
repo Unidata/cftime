@@ -1,3 +1,8 @@
+version 1.1.1.1 (release tag v1.1.1.1rel)
+=========================================
+ * Fix error installing with pip on python 3.8 by following 
+   PEP 517 (issue #148, PR #149)
+
 version 1.1.1 (release tag v1.1.1rel)
 =====================================
 
