@@ -1,3 +1,8 @@
+version 1.1.1.2 (release tag v1.1.1.2rel)
+=========================================
+ * include pyproject.toml in MANIFEST.in so it gets 
+   included in source tarball (issue #154).
+
 version 1.1.1.1 (release tag v1.1.1.1rel)
 =========================================
  * Fix error installing with pip on python 3.8 by following 
