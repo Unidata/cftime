@@ -1,5 +1,8 @@
+check-manifest
 coverage
 coveralls
 cython
 pytest
 pytest-cov
+twine
+wheel
