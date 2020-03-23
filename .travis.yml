@@ -45,7 +45,7 @@ install:
 
 script:
   - if [[ $TRAVIS_JOB_NAME == python-* ]]; then
-      cp -r tests/ /tmp ;
+      cp -r test/ /tmp ;
       pushd /tmp && pytest && popd ;
     fi
 
