@@ -41,11 +41,12 @@ before_install:
 install:
   # Install cftime.
   - echo "Installing cftime..."
-  - CYTHON_COVERAGE=1 pip install -e .
+  - CYTHON_COVERAGE=1 pip install -e . --no-deps --force-reinstall
 
 script:
   - if [[ $TRAVIS_JOB_NAME == python-* ]]; then
-      pytest ;
+      cp -r tests/ /tmp ;
+      pushd /tmp && pytest && popd ;
     fi
 
   - if [[ $TRAVIS_JOB_NAME == 'docs' ]]; then
