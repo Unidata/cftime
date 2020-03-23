@@ -90,7 +90,7 @@ cpdef int32_t get_days_in_month(bint isleap, int month) nogil:
 
 
 class real_datetime(datetime_python):
-    """add dayofwk, dayofyr attributes to python datetime instance"""
+    """add dayofwk, dayofyr, daysinmonth attributes to python datetime instance"""
     @property
     def dayofwk(self):
         # 0=Monday, 6=Sunday
@@ -98,6 +98,9 @@ class real_datetime(datetime_python):
     @property
     def dayofyr(self):
         return self.timetuple().tm_yday
+    @property
+    def daysinmonth(self):
+        return get_days_in_month(_is_leap(self.year,'proleptic_gregorian'), self.month)
     nanosecond = 0 # workaround for pandas bug (cftime issue #77)
 
 # start of the gregorian calendar
@@ -1286,6 +1289,10 @@ Gregorial calendar.
         else:
             return self._dayofyr
 
+    @property
+    def daysinmonth(self):
+        return get_days_in_month(_is_leap(self.year,self.calendar), self.month)
+
     def strftime(self, format=None):
         """
         Return a string representing the date, controlled by an explicit format
@@ -1537,10 +1544,6 @@ but uses the "julian" calendar.
     cdef _add_timedelta(self, delta):
         return DatetimeJulian(*add_timedelta(self, delta, is_leap_julian, False))
 
-    @property
-    def daysinmonth(self):
-        return get_days_in_month(_is_leap(self.year,self.calendar), self.month)
-
 @cython.embedsignature(True)
 cdef class DatetimeGregorian(datetime):
     """
@@ -1570,10 +1573,6 @@ a datetime.datetime instance or vice versa.
     cdef _add_timedelta(self, delta):
         return DatetimeGregorian(*add_timedelta(self, delta, is_leap_gregorian, True))
 
-    @property
-    def daysinmonth(self):
-        return get_days_in_month(_is_leap(self.year,self.calendar), self.month)
-
 @cython.embedsignature(True)
 cdef class DatetimeProlepticGregorian(datetime):
     """
@@ -1601,10 +1600,6 @@ format, and calendar.
     cdef _add_timedelta(self, delta):
         return DatetimeProlepticGregorian(*add_timedelta(self, delta,
                                                          is_leap_proleptic_gregorian, False))
-
-    @property
-    def daysinmonth(self):
-        return get_days_in_month(_is_leap(self.year,self.calendar), self.month)
 
 _illegal_s = re.compile(r"((^|[^%])(%%)*%s)")
 
