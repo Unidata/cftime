@@ -11,6 +11,7 @@
   in https://github.com/MacPython/cftime-wheels.
   Push those changes to trigger the binary wheel builds (for
   macos x, linux and windows). 
+* run check-manifest --verbose to check that source tarball will be OK.
 * Download the binary wheels from wheels.scipy.org, put them in a
   directory called 'upload'.  Create a source tarball using 
    % python setup.py clean
