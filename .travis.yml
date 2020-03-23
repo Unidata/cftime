@@ -6,15 +6,19 @@ sudo: false # use container based build
 notifications:
   email: false
 
-env:
-  - PYTHON_VERSION=2.7
-  - PYTHON_VERSION=3.7
-  - PYTHON_VERSION=3.8
-
 matrix:
+  fast_finish: true
   include:
-    - env: PYTHON_VERSION=3.7 BUILD_DOCS="true"
-    - env: PYTHON_VERSION=3.8 TARBALL="true"
+    - name: "python-2.7"
+      env: PY=2.7
+    - name: "python-3.7"
+      env: PY=3.7
+    - name: "python-3.8"
+      env: PY=3.8
+    - name: "tarball"
+      env: PY=3
+    - name: "docs"
+      env: PY=3
 
 before_install:
   # Build the conda testing environment.
@@ -26,11 +30,8 @@ before_install:
     conda update conda --yes --all;
     conda config --add channels conda-forge --force;
     export ENV_NAME="test-environment";
-    conda create --yes -n ${ENV_NAME} python=${PYTHON_VERSION} --file requirements.txt --file requirements-dev.txt;
+    conda create --yes -n ${ENV_NAME} python=${PY} --file requirements.txt --file requirements-dev.txt;
     source activate ${ENV_NAME};
-    if [[ "${BUILD_DOCS}" == "true" ]]; then
-      conda install -qy sphinx;
-    fi;
 
   # Log the conda environment and package details.
   - conda list -n ${ENV_NAME}
@@ -43,17 +44,19 @@ install:
   - CYTHON_COVERAGE=1 pip install -e .
 
 script:
-  - if [[ "${BUILD_DOCS}" == "true" ]]; then
-      pushd docs && make html linkcheck O=-W && popd;
-    else
-      pytest;
+  - if [[ $TRAVIS_JOB_NAME == python-* ]]; then
+      pytest ;
     fi
 
-  - if [[ "${TARBALL}" == "true" ]]; then
-      python setup.py --version ;
-      pip wheel . -w dist --no-deps ;
-      check-manifest --verbose ;
-      twine check dist/* ;
+  - if [[ $TRAVIS_JOB_NAME == 'docs' ]]; then
+      pushd docs && make html linkcheck O=-W && popd;
+    fi
+
+  - if [[ $TRAVIS_JOB_NAME == 'tarball' ]]; then
+     python setup.py --version ;
+     pip wheel . -w dist --no-deps ;
+     check-manifest --verbose ;
+     twine check dist/* ;
     fi
 
 after_success:
@@ -61,10 +64,11 @@ after_success:
 
 before_deploy:
   # Remove unused, unminified javascript from sphinx
-  - if [[ "${BUILD_DOCS}" == "true" ]]; then
-      rm -f docs/build/html/_static/jquery-*.js;
-      rm -f docs/build/html/_static/underscore-*.js;
-      rm -f docs/build/html/.buildinfo;
+  - |
+    if [[ $TRAVIS_JOB_NAME == 'docs' ]]; then
+      rm -f docs/build/html/_static/jquery-*.js
+      rm -f docs/build/html/_static/underscore-*.js
+      rm -f docs/build/html/.buildinfo
     fi
 
 deploy:
@@ -73,4 +77,4 @@ deploy:
     skip_cleanup: true
     on:
       branch: master
-      condition: '${PYTHON_VERSION} == 3.7 && ${BUILD_DOCS} == "true"'
+      condition: '$TRAVIS_JOB_NAME == "tarball"'

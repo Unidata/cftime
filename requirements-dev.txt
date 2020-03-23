@@ -4,5 +4,6 @@ coveralls
 cython
 pytest
 pytest-cov
+sphinx
 twine
 wheel
