@@ -1260,6 +1260,32 @@ Gregorial calendar.
     def format(self):
         return '%Y-%m-%d %H:%M:%S'
 
+    @property
+    def dayofwk(self):
+        if self._dayofwk < 0:
+            jd = JulianDayFromDate(self,calendar=self.calendar)
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            DateFromJulianDay(jd,return_tuple=True,calendar=self.calendar)
+            # cache results for dayofwk, dayofyr
+            self._dayofwk = dayofwk
+            self._dayofyr = dayofyr
+            return dayofwk
+        else:
+            return self._dayofwk
+
+    @property
+    def dayofyr(self):
+        if self._dayofyr < 0:
+            jd = JulianDayFromDate(self,calendar=self.calendar)
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            DateFromJulianDay(jd,return_tuple=True,calendar=self.calendar)
+            # cache results for dayofwk, dayofyr
+            self._dayofwk = dayofwk
+            self._dayofyr = dayofyr
+            return dayofyr
+        else:
+            return self._dayofyr
+
     def strftime(self, format=None):
         """
         Return a string representing the date, controlled by an explicit format
@@ -1458,32 +1484,6 @@ but uses the "noleap" ("365_day") calendar.
     def daysinmonth(self):
         return _dpm[self.month-1]
 
-    @property
-    def dayofwk(self):
-        if self._dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='365_day')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='365_day')
-            # cache results for dayofwk, dayofyr
-            self._dayofwk = dayofwk
-            self._dayofyr = dayofyr
-            return dayofwk
-        else:
-            return self._dayofwk
-
-    @property
-    def dayofyr(self):
-        if self._dayofyr < 0:
-            jd = JulianDayFromDate(self,calendar='365_day')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='365_day')
-            # cache results for dayofwk, dayofyr
-            self._dayofwk = dayofwk
-            self._dayofyr = dayofyr
-            return dayofyr
-        else:
-            return self._dayofyr
-
 @cython.embedsignature(True)
 cdef class DatetimeAllLeap(datetime):
     """
@@ -1502,32 +1502,6 @@ but uses the "all_leap" ("366_day") calendar.
     @property
     def daysinmonth(self):
         return _dpm_leap[self.month-1]
-
-    @property
-    def dayofwk(self):
-        if self._dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='366_day')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='366_day')
-            # cache results for dayofwk, dayofyr
-            self._dayofwk = dayofwk
-            self._dayofyr = dayofyr
-            return dayofwk
-        else:
-            return self._dayofwk
-
-    @property
-    def dayofyr(self):
-        if self._dayofyr < 0:
-            jd = JulianDayFromDate(self,calendar='366_day')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='366_day')
-            # cache results for dayofwk, dayofyr
-            self._dayofwk = dayofwk
-            self._dayofyr = dayofyr
-            return dayofyr
-        else:
-            return self._dayofyr
 
 @cython.embedsignature(True)
 cdef class Datetime360Day(datetime):
@@ -1548,32 +1522,6 @@ but uses the "360_day" calendar.
     def daysinmonth(self):
         return _dpm_360[self.month-1]
 
-    @property
-    def dayofwk(self):
-        if self._dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='360_day')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='360_day')
-            # cache results for dayofwk, dayofyr
-            self._dayofwk = dayofwk
-            self._dayofyr = dayofyr
-            return dayofwk
-        else:
-            return self._dayofwk
-
-    @property
-    def dayofyr(self):
-        if self._dayofyr < 0:
-            jd = JulianDayFromDate(self,calendar='360_day')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='360_day')
-            # cache results for dayofwk, dayofyr
-            self._dayofwk = dayofwk
-            self._dayofyr = dayofyr
-            return dayofyr
-        else:
-            return self._dayofyr
-
 @cython.embedsignature(True)
 cdef class DatetimeJulian(datetime):
     """
@@ -1592,32 +1540,6 @@ but uses the "julian" calendar.
     @property
     def daysinmonth(self):
         return get_days_in_month(_is_leap(self.year,self.calendar), self.month)
-
-    @property
-    def dayofwk(self):
-        if self._dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='julian')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='julian')
-            # cache results for dayofwk, dayofyr
-            self._dayofwk = dayofwk
-            self._dayofyr = dayofyr
-            return dayofwk
-        else:
-            return self._dayofwk
-
-    @property
-    def dayofyr(self):
-        if self._dayofyr < 0:
-            jd = JulianDayFromDate(self,calendar='julian')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='julian')
-            # cache results for dayofwk, dayofyr
-            self._dayofwk = dayofwk
-            self._dayofyr = dayofyr
-            return dayofyr
-        else:
-            return self._dayofyr
 
 @cython.embedsignature(True)
 cdef class DatetimeGregorian(datetime):
@@ -1652,32 +1574,6 @@ a datetime.datetime instance or vice versa.
     def daysinmonth(self):
         return get_days_in_month(_is_leap(self.year,self.calendar), self.month)
 
-    @property
-    def dayofwk(self):
-        if self._dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='gregorian')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='gregorian')
-            # cache results for dayofwk, dayofyr
-            self._dayofwk = dayofwk
-            self._dayofyr = dayofyr
-            return dayofwk
-        else:
-            return self._dayofwk
-
-    @property
-    def dayofyr(self):
-        if self._dayofyr < 0:
-            jd = JulianDayFromDate(self,calendar='gregorian')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='gregorian')
-            # cache results for dayofwk, dayofyr
-            self._dayofwk = dayofwk
-            self._dayofyr = dayofyr
-            return dayofyr
-        else:
-            return self._dayofyr
-
 @cython.embedsignature(True)
 cdef class DatetimeProlepticGregorian(datetime):
     """
@@ -1709,32 +1605,6 @@ format, and calendar.
     @property
     def daysinmonth(self):
         return get_days_in_month(_is_leap(self.year,self.calendar), self.month)
-
-    @property
-    def dayofwk(self):
-        if self._dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='proleptic_gregorian')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='proleptic_gregorian')
-            # cache results for dayofwk, dayofyr
-            self._dayofwk = dayofwk
-            self._dayofyr = dayofyr
-            return dayofwk
-        else:
-            return self._dayofwk
-
-    @property
-    def dayofyr(self):
-        if self._dayofyr < 0:
-            jd = JulianDayFromDate(self,calendar='proleptic_gregorian')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='proleptic_gregorian')
-            # cache results for dayofwk, dayofyr
-            self._dayofwk = dayofwk
-            self._dayofyr = dayofyr
-            return dayofyr
-        else:
-            return self._dayofyr
 
 _illegal_s = re.compile(r"((^|[^%])(%%)*%s)")
 
