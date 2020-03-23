@@ -336,7 +336,7 @@ class cftimeTestCase(unittest.TestCase):
         # check datetime hash
         d1 = datetimex(1995, 1, 1)
         d2 = datetime(1995, 1, 1)
-        d3 = datetimex(2001, 2, 30)
+        d3 = datetimex(2001, 2, 20)
         assert hash(d1) == hash(d1)
         assert hash(d1) == hash(d2)
         assert hash(d1) != hash(d3)

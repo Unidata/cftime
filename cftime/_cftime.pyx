@@ -52,7 +52,7 @@ cdef int32_t* days_per_month_array = [
 _rop_lookup = {Py_LT: '__gt__', Py_LE: '__ge__', Py_EQ: '__eq__',
                Py_GT: '__lt__', Py_GE: '__le__', Py_NE: '__ne__'}
 
-__version__ = '1.1.1.2'
+__version__ = '1.1.2'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
@@ -584,7 +584,6 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=True,
     except:
         isscalar = True
 
-    is_real_dateime = False
     if calendar == 'proleptic_gregorian':
         # datetime.datetime does not support years < 1
         #if year < 0:
@@ -594,17 +593,14 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=True,
             if (year < 0).any(): # netcdftime issue #28
                datetime_type = DatetimeProlepticGregorian
             else:
-               is_real_datetime = True
                datetime_type = real_datetime
     elif calendar in ('standard', 'gregorian'):
         # return a 'real' datetime instance if calendar is proleptic
         # Gregorian or Gregorian and all dates are after the
         # Julian/Gregorian transition
         if ind_before and not only_use_cftime_datetimes:
-            is_real_datetime = True
             datetime_type = real_datetime
         else:
-            is_real_datetime = False
             datetime_type = DatetimeGregorian
     elif calendar == "julian":
         datetime_type = DatetimeJulian
@@ -623,16 +619,10 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=True,
                             zip(year, month, day, hour, minute, second,
                                 microsecond,dayofwk,dayofyr)])
         else:
-            if is_real_datetime:
-                return np.array([datetime_type(*args)
-                                 for args in
-                                 zip(year, month, day, hour, minute, second,
-                                     microsecond)])
-            else:
-                return np.array([datetime_type(*args)
-                                 for args in
-                                 zip(year, month, day, hour, minute, second,
-                                     microsecond,dayofwk,dayofyr)])
+            return np.array([datetime_type(*args)
+                             for args in
+                             zip(year, month, day, hour, minute, second,
+                                 microsecond)])
 
     else:
         if return_tuple:
@@ -640,13 +630,8 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=True,
                     minute[0], second[0], microsecond[0],
                     dayofwk[0], dayofyr[0])
         else:
-            if is_real_datetime:
-                return datetime_type(year[0], month[0], day[0], hour[0],
-                                     minute[0], second[0], microsecond[0])
-            else:
-                return datetime_type(year[0], month[0], day[0], hour[0],
-                                     minute[0], second[0], microsecond[0],
-                                     dayofwk[0], dayofyr[0])
+            return datetime_type(year[0], month[0], day[0], hour[0],
+                                 minute[0], second[0], microsecond[0])
 
 class utime:
 
@@ -1244,9 +1229,10 @@ The base class implementing most methods of datetime classes that
 mimic datetime.datetime but support calendars other than the proleptic
 Gregorial calendar.
     """
-    cdef readonly int year, month, day, hour, minute, dayofwk, dayofyr, daysinmonth
+    cdef readonly int year, month, day, hour, minute
     cdef readonly int second, microsecond
     cdef readonly str calendar
+    cdef readonly int _dayofwk, _dayofyr
 
     # Python's datetime.datetime uses the proleptic Gregorian
     # calendar. This boolean is used to decide whether a
@@ -1254,22 +1240,21 @@ Gregorial calendar.
     # datetime.datetime.
     cdef readonly bint datetime_compatible
 
-    def __init__(self, int year, int month, int day, int hour=0, int minute=0, int second=0,
-                 int microsecond=0, int dayofwk=-1, int dayofyr=1):
-        """dayofyr set to 1 by default - otherwise time.strftime will complain"""
+    def __init__(self, int year, int month, int day, int hour=0, int minute=0,
+                       int second=0, int microsecond=0, int dayofwk=-1, 
+                       int dayofyr = -1):
 
         self.year = year
         self.month = month
         self.day = day
         self.hour = hour
         self.minute = minute
-        self.dayofwk = dayofwk # 0 is Monday, 6 is Sunday
-        self.dayofyr = dayofyr
         self.second = second
         self.microsecond = microsecond
         self.calendar = ""
-        self.daysinmonth = -1
         self.datetime_compatible = True
+        self._dayofwk = dayofwk
+        self._dayofyr = dayofyr
 
     @property
     def format(self):
@@ -1392,7 +1377,7 @@ Gregorial calendar.
     cdef _getstate(self):
         return (self.year, self.month, self.day, self.hour,
                 self.minute, self.second, self.microsecond,
-                self.dayofwk, self.dayofyr)
+                self._dayofwk, self._dayofyr)
 
     def __reduce__(self):
         """special method that allows instance to be pickled"""
@@ -1465,17 +1450,39 @@ but uses the "noleap" ("365_day") calendar.
         self.calendar = "noleap"
         self.datetime_compatible = False
         assert_valid_date(self, no_leap, False, has_year_zero=True)
-        # if dayofwk, dayofyr not set, calculate them.
-        if self.dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='365_day')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='365_day')
-            self.dayofwk = dayofwk
-            self.dayofyr = dayofyr
-        self.daysinmonth = _dpm[self.month-1]
 
     cdef _add_timedelta(self, delta):
         return DatetimeNoLeap(*add_timedelta(self, delta, no_leap, False))
+
+    @property
+    def daysinmonth(self):
+        return _dpm[self.month-1]
+
+    @property
+    def dayofwk(self):
+        if self._dayofwk < 0:
+            jd = JulianDayFromDate(self,calendar='365_day')
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            DateFromJulianDay(jd,return_tuple=True,calendar='365_day')
+            # cache results for dayofwk, dayofyr
+            self._dayofwk = dayofwk
+            self._dayofyr = dayofyr
+            return dayofwk
+        else:
+            return self._dayofwk
+
+    @property
+    def dayofyr(self):
+        if self._dayofyr < 0:
+            jd = JulianDayFromDate(self,calendar='365_day')
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            DateFromJulianDay(jd,return_tuple=True,calendar='365_day')
+            # cache results for dayofwk, dayofyr
+            self._dayofwk = dayofwk
+            self._dayofyr = dayofyr
+            return dayofyr
+        else:
+            return self._dayofyr
 
 @cython.embedsignature(True)
 cdef class DatetimeAllLeap(datetime):
@@ -1488,17 +1495,39 @@ but uses the "all_leap" ("366_day") calendar.
         self.calendar = "all_leap"
         self.datetime_compatible = False
         assert_valid_date(self, all_leap, False, has_year_zero=True)
-        # if dayofwk, dayofyr not set, calculate them.
-        if self.dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='366_day')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='366_day')
-            self.dayofwk = dayofwk
-            self.dayofyr = dayofyr
-        self.daysinmonth = _dpm_leap[self.month-1]
 
     cdef _add_timedelta(self, delta):
         return DatetimeAllLeap(*add_timedelta(self, delta, all_leap, False))
+
+    @property
+    def daysinmonth(self):
+        return _dpm_leap[self.month-1]
+
+    @property
+    def dayofwk(self):
+        if self._dayofwk < 0:
+            jd = JulianDayFromDate(self,calendar='366_day')
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            DateFromJulianDay(jd,return_tuple=True,calendar='366_day')
+            # cache results for dayofwk, dayofyr
+            self._dayofwk = dayofwk
+            self._dayofyr = dayofyr
+            return dayofwk
+        else:
+            return self._dayofwk
+
+    @property
+    def dayofyr(self):
+        if self._dayofyr < 0:
+            jd = JulianDayFromDate(self,calendar='366_day')
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            DateFromJulianDay(jd,return_tuple=True,calendar='366_day')
+            # cache results for dayofwk, dayofyr
+            self._dayofwk = dayofwk
+            self._dayofyr = dayofyr
+            return dayofyr
+        else:
+            return self._dayofyr
 
 @cython.embedsignature(True)
 cdef class Datetime360Day(datetime):
@@ -1511,17 +1540,39 @@ but uses the "360_day" calendar.
         self.calendar = "360_day"
         self.datetime_compatible = False
         assert_valid_date(self, no_leap, False, has_year_zero=True, is_360_day=True)
-        # if dayofwk, dayofyr not set, calculate them.
-        if self.dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='360_day')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='360_day')
-            self.dayofwk = dayofwk
-            self.dayofyr = dayofyr
-        self.daysinmonth = 30
 
     cdef _add_timedelta(self, delta):
         return Datetime360Day(*add_timedelta_360_day(self, delta))
+
+    @property
+    def daysinmonth(self):
+        return _dpm_360[self.month-1]
+
+    @property
+    def dayofwk(self):
+        if self._dayofwk < 0:
+            jd = JulianDayFromDate(self,calendar='360_day')
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            DateFromJulianDay(jd,return_tuple=True,calendar='360_day')
+            # cache results for dayofwk, dayofyr
+            self._dayofwk = dayofwk
+            self._dayofyr = dayofyr
+            return dayofwk
+        else:
+            return self._dayofwk
+
+    @property
+    def dayofyr(self):
+        if self._dayofyr < 0:
+            jd = JulianDayFromDate(self,calendar='360_day')
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            DateFromJulianDay(jd,return_tuple=True,calendar='360_day')
+            # cache results for dayofwk, dayofyr
+            self._dayofwk = dayofwk
+            self._dayofyr = dayofyr
+            return dayofyr
+        else:
+            return self._dayofyr
 
 @cython.embedsignature(True)
 cdef class DatetimeJulian(datetime):
@@ -1534,17 +1585,39 @@ but uses the "julian" calendar.
         self.calendar = "julian"
         self.datetime_compatible = False
         assert_valid_date(self, is_leap_julian, False)
-        # if dayofwk, dayofyr not set, calculate them.
-        if self.dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='julian')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='julian')
-            self.dayofwk = dayofwk
-            self.dayofyr = dayofyr
-        self.daysinmonth = get_days_in_month(_is_leap(self.year, self.calendar), self.month)
 
     cdef _add_timedelta(self, delta):
         return DatetimeJulian(*add_timedelta(self, delta, is_leap_julian, False))
+
+    @property
+    def daysinmonth(self):
+        return get_days_in_month(_is_leap(self.year,self.calendar), self.month)
+
+    @property
+    def dayofwk(self):
+        if self._dayofwk < 0:
+            jd = JulianDayFromDate(self,calendar='julian')
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            DateFromJulianDay(jd,return_tuple=True,calendar='julian')
+            # cache results for dayofwk, dayofyr
+            self._dayofwk = dayofwk
+            self._dayofyr = dayofyr
+            return dayofwk
+        else:
+            return self._dayofwk
+
+    @property
+    def dayofyr(self):
+        if self._dayofyr < 0:
+            jd = JulianDayFromDate(self,calendar='julian')
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            DateFromJulianDay(jd,return_tuple=True,calendar='julian')
+            # cache results for dayofwk, dayofyr
+            self._dayofwk = dayofwk
+            self._dayofyr = dayofyr
+            return dayofyr
+        else:
+            return self._dayofyr
 
 @cython.embedsignature(True)
 cdef class DatetimeGregorian(datetime):
@@ -1571,17 +1644,39 @@ a datetime.datetime instance or vice versa.
         else:
             self.datetime_compatible = False
         assert_valid_date(self, is_leap_gregorian, True)
-        # if dayofwk, dayofyr not set, calculate them.
-        if self.dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='gregorian')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='gregorian')
-            self.dayofwk = dayofwk
-            self.dayofyr = dayofyr
-        self.daysinmonth = get_days_in_month(_is_leap(self.year, self.calendar), self.month)
 
     cdef _add_timedelta(self, delta):
         return DatetimeGregorian(*add_timedelta(self, delta, is_leap_gregorian, True))
+
+    @property
+    def daysinmonth(self):
+        return get_days_in_month(_is_leap(self.year,self.calendar), self.month)
+
+    @property
+    def dayofwk(self):
+        if self._dayofwk < 0:
+            jd = JulianDayFromDate(self,calendar='gregorian')
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            DateFromJulianDay(jd,return_tuple=True,calendar='gregorian')
+            # cache results for dayofwk, dayofyr
+            self._dayofwk = dayofwk
+            self._dayofyr = dayofyr
+            return dayofwk
+        else:
+            return self._dayofwk
+
+    @property
+    def dayofyr(self):
+        if self._dayofyr < 0:
+            jd = JulianDayFromDate(self,calendar='gregorian')
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            DateFromJulianDay(jd,return_tuple=True,calendar='gregorian')
+            # cache results for dayofwk, dayofyr
+            self._dayofwk = dayofwk
+            self._dayofyr = dayofyr
+            return dayofyr
+        else:
+            return self._dayofyr
 
 @cython.embedsignature(True)
 cdef class DatetimeProlepticGregorian(datetime):
@@ -1606,18 +1701,40 @@ format, and calendar.
         self.calendar = "proleptic_gregorian"
         self.datetime_compatible = True
         assert_valid_date(self, is_leap_proleptic_gregorian, False)
-        # if dayofwk, dayofyr not set, calculate them.
-        if self.dayofwk < 0:
-            jd = JulianDayFromDate(self,calendar='proleptic_gregorian')
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar='proleptic_gregorian')
-            self.dayofwk = dayofwk
-            self.dayofyr = dayofyr
-        self.daysinmonth = get_days_in_month(_is_leap(self.year, self.calendar), self.month)
 
     cdef _add_timedelta(self, delta):
         return DatetimeProlepticGregorian(*add_timedelta(self, delta,
                                                          is_leap_proleptic_gregorian, False))
+
+    @property
+    def daysinmonth(self):
+        return get_days_in_month(_is_leap(self.year,self.calendar), self.month)
+
+    @property
+    def dayofwk(self):
+        if self._dayofwk < 0:
+            jd = JulianDayFromDate(self,calendar='proleptic_gregorian')
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            DateFromJulianDay(jd,return_tuple=True,calendar='proleptic_gregorian')
+            # cache results for dayofwk, dayofyr
+            self._dayofwk = dayofwk
+            self._dayofyr = dayofyr
+            return dayofwk
+        else:
+            return self._dayofwk
+
+    @property
+    def dayofyr(self):
+        if self._dayofyr < 0:
+            jd = JulianDayFromDate(self,calendar='proleptic_gregorian')
+            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
+            DateFromJulianDay(jd,return_tuple=True,calendar='proleptic_gregorian')
+            # cache results for dayofwk, dayofyr
+            self._dayofwk = dayofwk
+            self._dayofyr = dayofyr
+            return dayofyr
+        else:
+            return self._dayofyr
 
 _illegal_s = re.compile(r"((^|[^%])(%%)*%s)")
 
