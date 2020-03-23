@@ -2,6 +2,8 @@ include *.txt
 include README.md
 include COPYING
 include pyproject.toml
+include *.release
+include Changelog
 recursive-include cftime *.py
 recursive-include cftime *.pyx
 recursive-exclude cftime *.c
