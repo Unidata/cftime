@@ -12,10 +12,7 @@ matrix:
     - name: "python-2.7"
       env: PY=2.7
     - name: "python-3.5"
-      env:
-        - PY=3.5
-        - NP_BUILD_DEP="numpy==1.17.3"
-        - NP_TEST_DEP="numpy==1.17.3"
+      env: PY=3.5
     - name: "python-3.6"
       env: PY=3.6
     - name: "python-3.7"
