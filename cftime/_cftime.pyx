@@ -1802,7 +1802,7 @@ cdef tuple add_timedelta(datetime dt, delta, bint (*is_leap)(int), bint julian_g
             day += delta_days
             delta_days = 0
 
-    return (year, month, day, hour, minute, second, microsecond, -1, 1)
+    return (year, month, day, hour, minute, second, microsecond, -1, -1)
 
 # Add a datetime.timedelta to a cftime.datetime instance with the 360_day calendar.
 #
@@ -1844,7 +1844,7 @@ cdef tuple add_timedelta_360_day(datetime dt, delta):
     year += (month - 1) // 12
     month = (month - 1) % 12 + 1
 
-    return (year, month, day, hour, minute, second, microsecond, -1, 1)
+    return (year, month, day, hour, minute, second, microsecond, -1, -1)
 
 # Calendar calculations base on calcals.c by David W. Pierce
 # http://meteora.ucsd.edu/~pierce/calcalcs
