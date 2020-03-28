@@ -1533,5 +1533,13 @@ def test_replace_dayofyr_or_dayofwk_error(date_type, argument):
     with pytest.raises(ValueError):
         date_type(1, 1, 1).replace(**{argument: 3})
 
+
+def test_dayofyr_after_timedelta_addition(date_type):
+    initial_date = date_type(1, 1, 2)
+    date_after_timedelta_addition = initial_date + timedelta(days=1)
+    assert initial_date.dayofyr == 2
+    assert date_after_timedelta_addition.dayofyr == 3
+
+
 if __name__ == '__main__':
     unittest.main()
