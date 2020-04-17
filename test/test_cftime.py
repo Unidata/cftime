@@ -744,6 +744,9 @@ class cftimeTestCase(unittest.TestCase):
         d = cftime.num2date(1261440000.015625,units)
         # on windows only 100 ms precision
         assert(str(d)[0:24] == '2009-12-22 00:00:00.0156')
+        # issue #165: make sure python datetime returned
+        d=num2date(0,units="seconds since 2000-01-01 00:00:00",only_use_cftime_datetimes=False)
+        assert isinstance(d, datetime)
 
 class TestDate2index(unittest.TestCase):
 
