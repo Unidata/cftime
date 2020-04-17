@@ -330,8 +330,11 @@ def num2date(times,units,calendar='standard',\
 
     use_python_datetime = False
     if only_use_python_datetimes and not only_use_cftime_datetimes:
+        # only_use_cftime_datetimes takes precendence
         use_python_datetime = True
     if not only_use_python_datetimes and not only_use_cftime_datetimes and can_use_python_datetime:
+        # if only_use_cftimes_datetimes and only_use_python_datetimes are False
+        # return python datetime if possible.
         use_python_datetime = True
 
     if use_python_datetime: # use python datetime module
