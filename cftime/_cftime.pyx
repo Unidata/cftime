@@ -328,12 +328,16 @@ def num2date(times,units,calendar='standard',\
             msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
             raise ValueError(msg)
 
-    if only_use_cftime_datetimes or not \
-       (only_use_python_datetimes and can_use_python_datetime):
-        cdftime = utime(units, calendar=calendar,
-                        only_use_cftime_datetimes=only_use_cftime_datetimes)
-        return cdftime.num2date(times)
-    else: # use python datetime module
+    use_python_datetime = False
+    if only_use_python_datetimes and not only_use_cftime_datetimes:
+        # only_use_cftime_datetimes takes precendence
+        use_python_datetime = True
+    if not only_use_python_datetimes and not only_use_cftime_datetimes and can_use_python_datetime:
+        # if only_use_cftimes_datetimes and only_use_python_datetimes are False
+        # return python datetime if possible.
+        use_python_datetime = True
+
+    if use_python_datetime: # use python datetime module
         isscalar = False
         try:
             times[0]
@@ -386,6 +390,11 @@ OverflowError in python datetime, probably because year < datetime.MINYEAR"""
             return dates[0]
         else:
             return np.reshape(np.array(dates), shape)
+    else: # use cftime datetime
+        cdftime = utime(units, calendar=calendar,
+                        only_use_cftime_datetimes=only_use_cftime_datetimes)
+        return cdftime.num2date(times)
+
 
 
 def date2index(dates, nctime, calendar=None, select='exact'):
