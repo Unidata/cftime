@@ -1,5 +1,5 @@
-version 1.1.2 (not yet released)
-================================
+version 1.1.2 (release tag v1.1.2rel)
+=====================================
  * change dayofwk and dayofyr attributes into properties (issue #158)
  * fix for issue #165 (python datetime should be returned when
    only_use_cftime_datimes=False).
