@@ -12,7 +12,8 @@ Time-handling functionality from netcdf4-python
 ## News
 For details on the latest updates, see the [Changelog](https://github.com/Unidata/cftime/blob/master/Changelog).
 
-4/20/2020:  version 1.1.2 released.  Code optimization, fix logic so `only_use_cftime_datimes=False` works as expected (issues #158 and #165).
+4/20/2020:  version 1.1.2 released.  Code optimization, fix logic so `only_use_cftime_datimes=False` works as 
+ expected (issues [#158](https://github.com/Unidata/cftime/issues/158) and [#165](https://github.com/Unidata/cftime/issues/165)).
 
 3/16/2020:  version 1.1.1 released.  Fix bug in microsecond formatting, ensure identical num2date results if input is an array of times, or a single scalar ([issue #143](https://github.com/Unidata/cftime/issues/143)).
 
