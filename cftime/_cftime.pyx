@@ -1353,9 +1353,9 @@ Gregorial calendar.
                                      str(self))
 
     def __str__(self):
-        return self.isoformat()
+        return self.isoformat(' ')
 
-    def isoformat(self,sep=' ',timespec='auto'):
+    def isoformat(self,sep='T',timespec='auto'):
         second = ":%02i" %self.second
         if (timespec == 'auto' and self.microsecond) or timespec == 'microseconds':
             second += ".%06i" % self.microsecond

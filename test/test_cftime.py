@@ -748,7 +748,7 @@ class cftimeTestCase(unittest.TestCase):
         d=num2date(0,units="seconds since 2000-01-01 00:00:00",only_use_cftime_datetimes=False)
         assert isinstance(d, datetime)
         # issue #152 add isoformat()
-        assert(d.isoformat()[0:24] == '2009-12-22 00:00:00.0156')
+        assert(d.isoformat()[0:24] == '2009-12-22T00:00:00.0156')
         assert(d.isoformat(sep=' ')[0:24] == '2009-12-22 00:00:00.0156')
         assert(d.isoformat(sep=' ',timespec='milliseconds') == '2009-12-22 00:00:00.015')
         assert(d.isoformat(sep=' ',timespec='seconds') == '2009-12-22 00:00:00')
