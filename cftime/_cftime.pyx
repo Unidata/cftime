@@ -1353,12 +1353,29 @@ Gregorial calendar.
                                      str(self))
 
     def __str__(self):
-        second = '{:02d}'.format(self.second)
-        if self.microsecond:
-            second += '.{:06d}'.format(self.microsecond)
+        return self.isoformat(' ')
 
-        return "{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{}".format(
-            self.year, self.month, self.day, self.hour, self.minute, second)
+    def isoformat(self,sep='T',timespec='auto'):
+        second = ":%02i" %self.second
+        if (timespec == 'auto' and self.microsecond) or timespec == 'microseconds':
+            second += ".%06i" % self.microsecond
+        if timespec == 'milliseconds':
+            millisecs = self.microsecond/1000
+            second += ".%03i" % millisecs
+        if timespec in ['auto', 'microseconds', 'milliseconds']:
+            return "%04i-%02i-%02i%s%02i:%02i%s" %\
+            (self.year, self.month, self.day, sep, self.hour, self.minute, second)
+        elif timespec == 'seconds':
+            return "%04i-%02i-%02i%s%02i:%02i:%02i" %\
+            (self.year, self.month, self.day, sep, self.hour, self.minute, self.second)
+        elif timespec == 'minutes':
+            return "%04i-%02i-%02i%s%02i:%02i" %\
+            (self.year, self.month, self.day, sep, self.hour, self.minute)
+        elif timespec == 'hours':
+            return "%04i-%02i-%02i%s%02i" %\
+            (self.year, self.month, self.day, sep, self.hour)
+        else:
+            raise ValueError('illegal timespec')
 
     def __hash__(self):
         try:
