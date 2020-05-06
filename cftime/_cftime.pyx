@@ -1254,7 +1254,7 @@ Gregorial calendar.
 
     def __init__(self, int year, int month, int day, int hour=0, int minute=0,
                        int second=0, int microsecond=0, int dayofwk=-1, 
-                       int dayofyr = -1):
+                       int dayofyr = -1, calendar='proleptic_gregorian'):
 
         self.year = year
         self.month = month
@@ -1263,7 +1263,7 @@ Gregorial calendar.
         self.minute = minute
         self.second = second
         self.microsecond = microsecond
-        self.calendar = ""
+        self.calendar = calendar
         self.datetime_compatible = True
         self._dayofwk = dayofwk
         self._dayofyr = dayofyr
