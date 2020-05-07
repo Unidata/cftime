@@ -161,7 +161,7 @@ cdef _parse_date_and_units(timestr,calendar='standard'):
     # parse the date string.
     year, month, day, hour, minute, second, microsecond, utc_offset = _parse_date(
         isostring.strip())
-    return units, utc_offset, datetime(year, month, day, hour, minute, second)
+    return units, utc_offset, datetime(year, month, day, hour, minute, second, calendar=calendar)
 
 
 def date2num(dates,units,calendar='standard'):
