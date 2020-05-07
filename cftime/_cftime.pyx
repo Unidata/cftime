@@ -52,7 +52,7 @@ cdef int32_t* days_per_month_array = [
 _rop_lookup = {Py_LT: '__gt__', Py_LE: '__ge__', Py_EQ: '__eq__',
                Py_GT: '__lt__', Py_GE: '__le__', Py_NE: '__ne__'}
 
-__version__ = '1.1.2'
+__version__ = '1.1.3'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
@@ -161,7 +161,7 @@ cdef _parse_date_and_units(timestr,calendar='standard'):
     # parse the date string.
     year, month, day, hour, minute, second, microsecond, utc_offset = _parse_date(
         isostring.strip())
-    return units, utc_offset, datetime(year, month, day, hour, minute, second)
+    return units, utc_offset, datetime(year, month, day, hour, minute, second, calendar=calendar)
 
 
 def date2num(dates,units,calendar='standard'):
@@ -1254,7 +1254,7 @@ Gregorial calendar.
 
     def __init__(self, int year, int month, int day, int hour=0, int minute=0,
                        int second=0, int microsecond=0, int dayofwk=-1, 
-                       int dayofyr = -1):
+                       int dayofyr = -1, calendar='standard'):
 
         self.year = year
         self.month = month
@@ -1263,7 +1263,7 @@ Gregorial calendar.
         self.minute = minute
         self.second = second
         self.microsecond = microsecond
-        self.calendar = ""
+        self.calendar = calendar
         self.datetime_compatible = True
         self._dayofwk = dayofwk
         self._dayofyr = dayofyr

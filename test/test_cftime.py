@@ -754,6 +754,10 @@ class cftimeTestCase(unittest.TestCase):
         # issue #165: make sure python datetime returned
         d=num2date(0,units="seconds since 2000-01-01 00:00:00",only_use_cftime_datetimes=False)
         assert isinstance(d, datetime)
+        # issue #169: cftime.datetime has no calendar attribute, causing dayofwk,dayofyr methods
+        # to fail.
+        c = cftime.datetime(*cftime._parse_date('7480-01-01 00:00:00'))
+        assert(c.strftime() == '7480-01-01 00:00:00')
 
 class TestDate2index(unittest.TestCase):
 
