@@ -13,7 +13,7 @@ Time-handling functionality from netcdf4-python
 For details on the latest updates, see the [Changelog](https://github.com/Unidata/cftime/blob/master/Changelog).
 
 5/12/2020:  version 1.1.3 released.  Add isoformat method for compatibility with python datetime (issue #152).
- Make 'proleptic_gregorian' default calendar for cftime.datetime so that dayofwk,dayofyr methods don't fail (issue #169).
+ Make 'standard' default calendar for cftime.datetime so that dayofwk,dayofyr methods don't fail (issue #169).
 
 4/20/2020:  version 1.1.2 released.  Code optimization, fix logic so `only_use_cftime_datimes=False` works as 
  expected (issues [#158](https://github.com/Unidata/cftime/issues/158) and [#165](https://github.com/Unidata/cftime/issues/165)).
