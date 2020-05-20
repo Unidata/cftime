@@ -1274,7 +1274,7 @@ Gregorial calendar.
 
     @property
     def dayofwk(self):
-        if self._dayofwk < 0:
+        if self._dayofwk < 0 and self.calendar != '':
             jd = JulianDayFromDate(self,calendar=self.calendar)
             year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
             DateFromJulianDay(jd,return_tuple=True,calendar=self.calendar)
@@ -1287,7 +1287,7 @@ Gregorial calendar.
 
     @property
     def dayofyr(self):
-        if self._dayofyr < 0:
+        if self._dayofyr < 0 and self.calendar != '':
             jd = JulianDayFromDate(self,calendar=self.calendar)
             year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
             DateFromJulianDay(jd,return_tuple=True,calendar=self.calendar)
