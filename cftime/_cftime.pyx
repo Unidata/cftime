@@ -1326,6 +1326,10 @@ Gregorial calendar.
             raise ValueError('Replacing the dayofyr or dayofwk of a datetime is '
                              'not supported.')
 
+        if 'calendar' in kwargs:
+            raise ValueError('Replacing the calendar of a datetime is '
+                             'not supported.')
+
         for name, value in kwargs.items():
             args[name] = value
 
