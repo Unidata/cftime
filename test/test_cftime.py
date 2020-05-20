@@ -698,12 +698,18 @@ class cftimeTestCase(unittest.TestCase):
         assert (d1.dayofwk == d2.dayofwk == 0)
         assert (d1.dayofyr == d2.dayofyr == 277)
 
-        # issue 173: Return -1 from dayofwk and dayofyr when calendar
-        # is ''
+        # issue 173: Return the default values of dayofwk and dayofyr
+        # when calendar is ''
         d1 = datetimex(1582, 10, 4, 12, calendar='')
         assert (d1.dayofwk == d1.dayofyr == -1)
         d1 = datetimex(2020, 5, 20, calendar='')
         assert (d1.dayofwk == d1.dayofyr == -1)
+        d1 = datetimex(2020, 5, 20, dayofwk=-2, dayofyr=-3, calendar='')
+        assert (d1.dayofwk == -2)
+        assert (d1.dayofyr == -3)
+        d1 = datetimex(2020, 5, 20, dayofwk=8, dayofyr=9, calendar='')
+        assert (d1.dayofwk == 8)
+        assert (d1.dayofyr == 9)
         
         # issue 71: negative reference years
         # https://coastwatch.pfeg.noaa.gov/erddap/convert/time.html
