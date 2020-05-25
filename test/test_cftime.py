@@ -1690,7 +1690,7 @@ def test_num2date_exact_month_units(calendar, unit, shape, dtype):
 
 
 def test_num2date_exact_only_use_python_datetimes(calendar, shape, dtype):
-    date_type = datetime
+    date_type = real_datetime
     expected = np.array([date_type(2000, 1, 2, 0, 0, 0, 0),
                          date_type(2000, 1, 3, 0, 0, 0, 0),
                          date_type(2000, 1, 4, 0, 0, 0, 0),
@@ -1710,11 +1710,10 @@ def test_num2date_exact_only_use_python_datetimes(calendar, shape, dtype):
 
 
 def test_num2date_exact_use_pydatetime_if_possible(calendar, shape, dtype):
-    date_type = datetime
     if calendar not in _STANDARD_CALENDARS:
         date_type = _EXPECTED_DATE_TYPES[calendar]
     else:
-        date_type = datetime
+        date_type = real_datetime
 
     expected = np.array([date_type(2000, 1, 2, 0, 0, 0, 0),
                          date_type(2000, 1, 3, 0, 0, 0, 0),

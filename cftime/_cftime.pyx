@@ -474,7 +474,51 @@ def num2date_exact(
     only_use_cftime_datetimes=True,
     only_use_python_datetimes=False
 ):
-    """Decode times exactly with timedelta arithmetic."""
+    """Decode times exactly with timedelta arithmetic.
+
+    Return datetime objects given numeric time values. The units
+    of the numeric time values are described by the `units` argument
+    and the `calendar` keyword. The returned datetime objects represent
+    UTC with no time-zone offset, even if the specified
+    `units` contain a time-zone offset.
+
+    **`times`**: numeric time values.
+
+    **`units`**: a string of the form `<time units> since <reference time>`
+    describing the time units. `<time units>` can be days, hours, minutes,
+    seconds, milliseconds or microseconds. `<reference time>` is the time
+    origin. `months_since` is allowed *only* for the `360_day` calendar.
+
+    **`calendar`**: describes the calendar used in the time calculations.
+    All the values currently defined in the
+    [CF metadata convention](http://cfconventions.org)
+    Valid calendars `'standard', 'gregorian', 'proleptic_gregorian'
+    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'`.
+    Default is `'standard'`, which is a mixed Julian/Gregorian calendar.
+
+    **`only_use_cftime_datetimes`**: if False, python datetime.datetime
+    objects are returned from num2date where possible; if True dates which
+    subclass cftime.datetime are returned for all calendars. Default `True`.
+
+    **`only_use_python_datetimes`**: always return python datetime.datetime
+    objects and raise an error if this is not possible. Ignored unless
+    `only_use_cftime_datetimes=False`. Default `False`.
+
+    returns a datetime instance, or an array of datetime instances with
+    microsecond accuracy, if possible.
+
+    ***Note***: If only_use_cftime_datetimes=False and
+    use_only_python_datetimes=False, the datetime instances
+    returned are 'real' python datetime
+    objects if `calendar='proleptic_gregorian'`, or
+    `calendar='standard'` or `'gregorian'`
+    and the date is after the breakpoint between the Julian and
+    Gregorian calendars (1582-10-15). Otherwise, they are ctime.datetime
+    objects which support some but not all the methods of native python
+    datetime objects. The datetime instances
+    do not contain a time-zone offset, even if the specified `units`
+    contains one.
+    """
     calendar = calendar.lower()
     basedate = _dateparse(units)
 
@@ -504,7 +548,7 @@ def num2date_exact(
         use_python_datetime = True
 
     if use_python_datetime:
-        basedate = datetime_python(
+        basedate = real_datetime(
             basedate.year,
             basedate.month,
             basedate.day,
