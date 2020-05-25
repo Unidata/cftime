@@ -517,7 +517,7 @@ def num2date_exact(
         basedate = to_calendar_specific_datetime(basedate, calendar)
 
     if unit not in UNIT_CONVERSION_FACTORS:
-        raise ValueError("Invalid units provided.")
+        raise ValueError(f"Unsupported time units provided, '{unit}'.")
 
     if unit in ["months", "month"] and calendar != "360_day":
         raise ValueError("Units of months only valid for 360_day calendar.")
