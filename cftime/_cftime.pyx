@@ -7,8 +7,6 @@ from cpython.object cimport (PyObject_RichCompare, Py_LT, Py_LE, Py_EQ,
 from numpy cimport int64_t, int32_t
 import cython
 import numpy as np
-cimport numpy as np
-cimport cpython.datetime
 import re
 import sys
 import time
