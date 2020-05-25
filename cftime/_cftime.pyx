@@ -7,12 +7,15 @@ from cpython.object cimport (PyObject_RichCompare, Py_LT, Py_LE, Py_EQ,
 from numpy cimport int64_t, int32_t
 import cython
 import numpy as np
+cimport numpy as np
+cimport cpython.datetime
 import re
 import sys
 import time
 from datetime import datetime as datetime_python
 from datetime import timedelta, MINYEAR
 import time                     # strftime
+import warnings
 try:
     from itertools import izip as zip
 except ImportError:  # python 3.x
@@ -395,6 +398,146 @@ OverflowError in python datetime, probably because year < datetime.MINYEAR"""
                         only_use_cftime_datetimes=only_use_cftime_datetimes)
         return cdftime.num2date(times)
 
+
+UNIT_CONVERSION_FACTORS = {
+    "microseconds": 1,
+    "microsecond": 1,
+    "microsec": 1,
+    "microsecs": 1,
+    "milliseconds": 1000,
+    "millisecond": 1000,
+    "millisec": 1000,
+    "millisecs": 1000,
+    "msec": 1000,
+    "msecs": 1000,
+    "ms": 1000,
+    "seconds": 1000000,
+    "second": 1000000,
+    "sec": 1000000,
+    "secs": 1000000,
+    "s": 1000000,
+    "minutes": 60 * 1000000,
+    "minute": 60 * 1000000,
+    "min": 60 * 1000000,
+    "mins": 60 * 1000000,
+    "hours": 3600 * 1000000,
+    "hour": 3600 * 1000000,
+    "hr": 3600 * 1000000,
+    "hrs": 3600 * 1000000,
+    "h": 3600 * 1000000,
+    "day": 86400 * 1000000,
+    "days": 86400 * 1000000,
+    "d": 86400 * 1000000,
+    "month": 30 * 86400 * 1000000,  # Only allowed for 360_day calendar
+    "months": 30 * 86400 * 1000000
+}
+
+
+DATE_TYPES = {
+    "proleptic_gregorian": DatetimeProlepticGregorian,
+    "standard": DatetimeGregorian,
+    "noleap": DatetimeNoLeap,
+    "365_day": DatetimeNoLeap,
+    "all_leap": DatetimeAllLeap,
+    "366_day": DatetimeAllLeap,
+    "julian": DatetimeJulian,
+    "360_day": Datetime360Day,
+    "gregorian": DatetimeGregorian
+}
+
+
+def to_calendar_specific_datetime(datetime, calendar):
+    return DATE_TYPES[calendar](
+        datetime.year,
+        datetime.month,
+        datetime.day,
+        datetime.hour,
+        datetime.minute,
+        datetime.second,
+        datetime.microsecond
+    )
+
+
+def cast_to_int_if_safe(num):
+    """Copied from xarray.coding.times.py"""
+    if isinstance(num, np.ma.core.MaskedArray):
+        int_num = np.ma.masked_array(num, dtype=np.int64)
+    else:
+        int_num = np.array(num, dtype=np.int64)
+    if (num == int_num).all():
+        num = int_num
+    return num
+
+
+def num2date_exact(
+    times,
+    units,
+    calendar='standard',
+    only_use_cftime_datetimes=True,
+    only_use_python_datetimes=False
+):
+    """Decode times exactly with timedelta arithmetic."""
+    calendar = calendar.lower()
+    basedate = _dateparse(units)
+
+    can_use_python_datetime=\
+      ((calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
+       (calendar in ['gregorian','standard'] and basedate > gregorian))
+    if not only_use_cftime_datetimes and only_use_python_datetimes:
+        if not can_use_python_datetime:
+            msg='illegal calendar or reference date for python datetime'
+            raise ValueError(msg)
+
+    unit, ignore = _datesplit(units)
+
+    # real-world calendars limited to positive reference years.
+    if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
+        if basedate.year == 0:
+            msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
+            raise ValueError(msg)
+
+    use_python_datetime = False
+    if only_use_python_datetimes and not only_use_cftime_datetimes:
+        # only_use_cftime_datetimes takes precendence
+        use_python_datetime = True
+    if not only_use_python_datetimes and not only_use_cftime_datetimes and can_use_python_datetime:
+        # if only_use_cftimes_datetimes and only_use_python_datetimes are False
+        # return python datetime if possible.
+        use_python_datetime = True
+
+    if use_python_datetime:
+        basedate = datetime_python(
+            basedate.year,
+            basedate.month,
+            basedate.day,
+            basedate.hour,
+            basedate.minute,
+            basedate.second,
+            basedate.microsecond
+        )
+    else:
+        basedate = to_calendar_specific_datetime(basedate, calendar)
+
+    if unit not in UNIT_CONVERSION_FACTORS:
+        raise ValueError("Invalid units provided.")
+
+    if unit in ["months", "month"] and calendar != "360_day":
+        raise ValueError("Units of months only valid for 360_day calendar.")
+
+    factor = UNIT_CONVERSION_FACTORS[unit]
+    scaled_times = factor * times
+
+    scaled_times = cast_to_int_if_safe(scaled_times)
+    if not np.issubdtype(scaled_times.dtype, np.integer):
+        warnings.warn(
+            "times must have integer dtype or be able to be safely cast to an "
+            "integer dtype to be decoded exactly.  Falling back to the "
+            "inexact version of the num2date function.")
+        return num2date(times, units, calendar, only_use_cftime_datetimes, only_use_python_datetimes)
+
+    shape = scaled_times.shape
+    deltas = scaled_times.astype("timedelta64[us]").astype(timedelta)
+    return basedate + deltas
 
 
 def date2index(dates, nctime, calendar=None, select='exact'):
