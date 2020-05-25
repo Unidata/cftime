@@ -457,7 +457,7 @@ def to_calendar_specific_datetime(datetime, calendar):
 
 
 def cast_to_int_if_safe(num):
-    """Copied from xarray.coding.times.py"""
+    """Adapted from xarray.coding.times.py"""
     if isinstance(num, np.ma.core.MaskedArray):
         int_num = np.ma.masked_array(num, dtype=np.int64)
     else:
