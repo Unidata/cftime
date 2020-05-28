@@ -1696,7 +1696,7 @@ def test_num2date_exact_only_use_python_datetimes(calendar, shape, dtype):
                          date_type(2000, 1, 4, 0, 0, 0, 0),
                          date_type(2000, 1, 5, 0, 0, 0, 0)]).reshape(shape)
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
-    units = f"days since 2000-01-01"
+    units = "days since 2000-01-01"
     if calendar not in _STANDARD_CALENDARS:
         with pytest.raises(ValueError):
             num2date_exact(numeric_times, units=units, calendar=calendar,
@@ -1720,7 +1720,7 @@ def test_num2date_exact_use_pydatetime_if_possible(calendar, shape, dtype):
                          date_type(2000, 1, 4, 0, 0, 0, 0),
                          date_type(2000, 1, 5, 0, 0, 0, 0)]).reshape(shape)
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
-    units = f"days since 2000-01-01"
+    units = "days since 2000-01-01"
     result = num2date_exact(numeric_times, units=units, calendar=calendar,
                             only_use_python_datetimes=False,
                             only_use_cftime_datetimes=False)
@@ -1729,7 +1729,7 @@ def test_num2date_exact_use_pydatetime_if_possible(calendar, shape, dtype):
 
 @pytest.mark.parametrize(
     ["standard_calendar", "breakpoint"],
-    [("proleptic_gregorian", f"{MINYEAR - 1}-12-31T23:59:59.999999"),
+    [("proleptic_gregorian", "{}-12-31T23:59:59.999999".format(MINYEAR - 1),
      ("gregorian", "1582-10-15"),
      ("standard", "1582-10-15")]
 )
@@ -1784,7 +1784,7 @@ def test_num2date_exact_masked_array(calendar):
     mask = [False, False, True, False]
     expected = np.ma.masked_array(expected, mask=mask)
     numeric_times = np.ma.masked_array([1, 2, 3, 4], mask=mask)
-    units = f"hours since 2000-01-01"
+    units = "hours since 2000-01-01"
     result = num2date_exact(numeric_times, units=units, calendar=calendar)
     np.testing.assert_equal(result, expected)
 
