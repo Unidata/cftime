@@ -52,7 +52,7 @@ cdef int32_t* days_per_month_array = [
 _rop_lookup = {Py_LT: '__gt__', Py_LE: '__ge__', Py_EQ: '__eq__',
                Py_GT: '__lt__', Py_GE: '__le__', Py_NE: '__ne__'}
 
-__version__ = '1.1.3'
+__version__ = '1.1.4'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
@@ -209,15 +209,15 @@ def date2num(dates,units,calendar='standard'):
                 dates[0]
             except:
                 isscalar = True
+            ismasked = False
+            if np.ma.isMA(dates) and np.ma.is_masked(dates):
+                mask = dates.mask
+                ismasked = True
             if isscalar:
                 dates = np.array([dates])
             else:
                 dates = np.array(dates)
                 shape = dates.shape
-            ismasked = False
-            if np.ma.isMA(dates) and np.ma.is_masked(dates):
-                mask = dates.mask
-                ismasked = True
             times = []
             for date in dates.flat:
                 if getattr(date, 'tzinfo',None) is not None:
@@ -343,18 +343,19 @@ def num2date(times,units,calendar='standard',\
             times[0]
         except:
             isscalar = True
+        ismasked = False
+        if np.ma.isMA(times) and np.ma.is_masked(times):
+            mask = times.mask
+            ismasked = True
         if isscalar:
             times = np.array([times],dtype='d')
         else:
             times = np.array(times, dtype='d')
             shape = times.shape
-        ismasked = False
-        if np.ma.isMA(times) and np.ma.is_masked(times):
-            mask = times.mask
-            ismasked = True
         dates = []
+        n = 0
         for time in times.flat:
-            if ismasked and not time:
+            if ismasked and mask.flat[n]:
                 dates.append(None)
             else:
                 # convert to total seconds
@@ -386,6 +387,7 @@ def num2date(times,units,calendar='standard',\
 OverflowError in python datetime, probably because year < datetime.MINYEAR"""
                     raise ValueError(msg)
                 dates.append(date)
+            n += 1
         if isscalar:
             return dates[0]
         else:
