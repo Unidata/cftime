@@ -1601,7 +1601,7 @@ def test_num2date_exact_microsecond_units(calendar, unit, shape, dtype):
                          date_type(2000, 1, 1, 0, 0, 0, 3),
                          date_type(2000, 1, 1, 0, 0, 0, 4)]).reshape(shape)
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
-    units = f"{unit} since 2000-01-01"
+    units = "{} since 2000-01-01".format(unit)
     result = num2date_exact(numeric_times, units=units, calendar=calendar)
     np.testing.assert_equal(result, expected)
 
@@ -1614,7 +1614,7 @@ def test_num2date_exact_millisecond_units(calendar, unit, shape, dtype):
                          date_type(2000, 1, 1, 0, 0, 0, 3000),
                          date_type(2000, 1, 1, 0, 0, 0, 4000)]).reshape(shape)
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
-    units = f"{unit} since 2000-01-01"
+    units = "{} since 2000-01-01".format(unit)
     result = num2date_exact(numeric_times, units=units, calendar=calendar)
     np.testing.assert_equal(result, expected)
 
@@ -1627,7 +1627,7 @@ def test_num2date_exact_second_units(calendar, unit, shape, dtype):
                          date_type(2000, 1, 1, 0, 0, 3, 0),
                          date_type(2000, 1, 1, 0, 0, 4, 0)]).reshape(shape)
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
-    units = f"{unit} since 2000-01-01"
+    units = "{} since 2000-01-01".format(unit)
     result = num2date_exact(numeric_times, units=units, calendar=calendar)
     np.testing.assert_equal(result, expected)
 
@@ -1640,7 +1640,7 @@ def test_num2date_exact_minute_units(calendar, unit, shape, dtype):
                          date_type(2000, 1, 1, 0, 3, 0, 0),
                          date_type(2000, 1, 1, 0, 4, 0, 0)]).reshape(shape)
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
-    units = f"{unit} since 2000-01-01"
+    units = "{} since 2000-01-01".format(unit)
     result = num2date_exact(numeric_times, units=units, calendar=calendar)
     np.testing.assert_equal(result, expected)
 
@@ -1653,7 +1653,7 @@ def test_num2date_exact_hour_units(calendar, unit, shape, dtype):
                          date_type(2000, 1, 1, 3, 0, 0, 0),
                          date_type(2000, 1, 1, 4, 0, 0, 0)]).reshape(shape)
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
-    units = f"{unit} since 2000-01-01"
+    units = "{} since 2000-01-01".format(unit)
     result = num2date_exact(numeric_times, units=units, calendar=calendar)
     np.testing.assert_equal(result, expected)
 
@@ -1666,7 +1666,7 @@ def test_num2date_exact_day_units(calendar, unit, shape, dtype):
                          date_type(2000, 1, 4, 0, 0, 0, 0),
                          date_type(2000, 1, 5, 0, 0, 0, 0)]).reshape(shape)
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
-    units = f"{unit} since 2000-01-01"
+    units = "{} since 2000-01-01".format(unit)
     result = num2date_exact(numeric_times, units=units, calendar=calendar)
     np.testing.assert_equal(result, expected)
 
@@ -1679,7 +1679,7 @@ def test_num2date_exact_month_units(calendar, unit, shape, dtype):
                          date_type(2000, 4, 1, 0, 0, 0, 0),
                          date_type(2000, 5, 1, 0, 0, 0, 0)]).reshape(shape)
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
-    units = f"{unit} since 2000-01-01"
+    units = "{} since 2000-01-01".format(unit)
 
     if calendar != "360_day":
         with pytest.raises(ValueError):
@@ -1737,7 +1737,7 @@ def test_num2date_exact_only_use_python_datetimes_invalid_basedate(
     standard_calendar,
     breakpoint
 ):
-    units = f"days since {breakpoint}"
+    units = "days since {}".format(breakpoint)
     numeric_times = np.array([1, 2, 3, 4])
     with pytest.raises(ValueError, match="illegal calendar or reference date"):
         num2date_exact(
