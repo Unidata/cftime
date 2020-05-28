@@ -1523,7 +1523,8 @@ def test_num2date_only_use_cftime_datetimes_post_gregorian(
 
 
 def test_repr():
-    expected = 'cftime.datetime(2000-01-01 00:00:00)'
+    #expected = 'cftime.datetime(2000-01-01 00:00:00)'
+    expected = 'cftime.datetime(2000, 1, 1, 0, 0, 0)'
     assert repr(datetimex(2000, 1, 1)) == expected
 
 
