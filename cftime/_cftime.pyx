@@ -828,6 +828,26 @@ units to datetime objects.
         self._jd0 = JulianDayFromDate(self.origin, calendar=self.calendar)
         self.only_use_cftime_datetimes = only_use_cftime_datetimes
 
+    def _convertunits(self, jdelta):
+        # convert julian day to desired units, add time zone offset.
+        if self.units in microsec_units:
+            jdelta = jdelta * 86400. * 1.e6  + self.tzoffset * 60. * 1.e6
+        elif self.units in millisec_units:
+            jdelta = jdelta * 86400. * 1.e3  + self.tzoffset * 60. * 1.e3
+        elif self.units in sec_units:
+            jdelta = jdelta * 86400. + self.tzoffset * 60.
+        elif self.units in min_units:
+            jdelta = jdelta * 1440. + self.tzoffset
+        elif self.units in hr_units:
+            jdelta = jdelta * 24. + self.tzoffset / 60.
+        elif self.units in day_units:
+            jdelta = jdelta + self.tzoffset / 1440.
+        elif self.units in month_units and self.calendar == '360_day':
+            jdelta = jdelta/30. + self.tzoffset / (30. * 1440.)
+        else:
+            raise ValueError('unsupported time units')
+        return jdelta
+
     def date2num(self, date):
         """
         Returns C{time_value} in units described by L{unit_string}, using
@@ -864,23 +884,7 @@ units to datetime objects.
             for d, m in zip(date.flat, mask.flat):
                 if not m:
                     jdelta = JulianDayFromDate(d, self.calendar)-self._jd0
-                    # convert to desired units, add time zone offset.
-                    if self.units in microsec_units:
-                        jdelta = jdelta * 86400. * 1.e6  + self.tzoffset * 60. * 1.e6
-                    elif self.units in millisec_units:
-                        jdelta = jdelta * 86400. * 1.e3  + self.tzoffset * 60. * 1.e3
-                    elif self.units in sec_units:
-                        jdelta = jdelta * 86400. + self.tzoffset * 60.
-                    elif self.units in min_units:
-                        jdelta = jdelta * 1440. + self.tzoffset
-                    elif self.units in hr_units:
-                        jdelta = jdelta * 24. + self.tzoffset / 60.
-                    elif self.units in day_units:
-                        jdelta = jdelta + self.tzoffset / 1440.
-                    elif self.units in month_units and self.calendar == '360_day':
-                        jdelta = jdelta/30. + self.tzoffset / (30. * 1440.)
-                    else:
-                        raise ValueError('unsupported time units')
+                    jdelta = self._convertunits(jdelta)
                 else:
                     jdelta = None
                 jd.append(jdelta)
@@ -895,25 +899,8 @@ units to datetime objects.
                 jdelta = JulianDayFromDate(date, self.calendar)-self._jd0
             else:
                 jdelta = JulianDayFromDate(date.flat, self.calendar)-self._jd0
-            if not isscalar:
                 jdelta = np.array(jdelta)
-            # convert to desired units, add time zone offset.
-            if self.units in microsec_units:
-                jdelta = jdelta * 86400. * 1.e6  + self.tzoffset * 60. * 1.e6
-            elif self.units in millisec_units:
-                jdelta = jdelta * 86400. * 1.e3  + self.tzoffset * 60. * 1.e3
-            elif self.units in sec_units:
-                jdelta = jdelta * 86400. + self.tzoffset * 60.
-            elif self.units in min_units:
-                jdelta = jdelta * 1440. + self.tzoffset
-            elif self.units in hr_units:
-                jdelta = jdelta * 24. + self.tzoffset / 60.
-            elif self.units in day_units:
-                jdelta = jdelta + self.tzoffset / 1440.
-            elif self.units in month_units and self.calendar == '360_day':
-                jdelta = jdelta/30. + self.tzoffset / (30. * 1440.)
-            else:
-                raise ValueError('unsupported time units')
+            jdelta = self._convertunits(jdelta)
             if isscalar:
                 return jdelta.astype(np.float64)
             else:
