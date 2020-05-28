@@ -758,6 +758,15 @@ class cftimeTestCase(unittest.TestCase):
         # to fail.
         c = cftime.datetime(*cftime._parse_date('7480-01-01 00:00:00'))
         assert(c.strftime() == '7480-01-01 00:00:00')
+        # issue #175: masked values not treated properly in num2date
+        times = np.ma.masked_array([-3956.7499999995343,-999999999999],mask=[False,True])
+        units='days since 1858-11-17 00:00:00'
+        dates = num2date(times, units=units, calendar='standard',\
+        only_use_cftime_datetimes=False, only_use_python_datetimes=True)
+        assert((dates==[datetime(1848, 1, 17, 6, 0, 0, 40),None]).all())
+        dates = num2date(times, units=units, calendar='standard')
+        assert((dates==[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 0),None]).all())
+        
 
 class TestDate2index(unittest.TestCase):
 
