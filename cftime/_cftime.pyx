@@ -243,6 +243,13 @@ def date2num(dates,units,calendar='standard'):
                         times.append(totaltime/1.e6/3600./24.)
                     else:
                         raise ValueError('unsupported time units')
+            if ismasked: # convert to masked array if input was masked array
+                times = np.array(times)
+                times = np.ma.masked_where(times==None,times)
+                if isscalar:
+                    return times[0]
+                else:
+                    return np.reshape(times, shape)
             if isscalar:
                 return times[0]
             else:
@@ -388,6 +395,13 @@ OverflowError in python datetime, probably because year < datetime.MINYEAR"""
                     raise ValueError(msg)
                 dates.append(date)
             n += 1
+        if ismasked: # convert to masked array if input was masked array
+            dates = np.array(dates)
+            dates = np.ma.masked_where(dates==None,dates)
+            if isscalar:
+                return dates[0]
+            else:
+                return np.reshape(dates, shape)
         if isscalar:
             return dates[0]
         else:
@@ -838,36 +852,72 @@ units to datetime objects.
             date[0]
         except:
             isscalar = True
+        ismasked = False
+        if np.ma.isMA(date) and np.ma.is_masked(date):
+            mask = date.mask
+            ismasked = True
         if not isscalar:
             date = np.array(date)
             shape = date.shape
-        if isscalar:
-            jdelta = JulianDayFromDate(date, self.calendar)-self._jd0
+        if ismasked:
+            jd = []
+            for d, m in zip(date.flat, mask.flat):
+                if not m:
+                    jdelta = JulianDayFromDate(d, self.calendar)-self._jd0
+                    # convert to desired units, add time zone offset.
+                    if self.units in microsec_units:
+                        jdelta = jdelta * 86400. * 1.e6  + self.tzoffset * 60. * 1.e6
+                    elif self.units in millisec_units:
+                        jdelta = jdelta * 86400. * 1.e3  + self.tzoffset * 60. * 1.e3
+                    elif self.units in sec_units:
+                        jdelta = jdelta * 86400. + self.tzoffset * 60.
+                    elif self.units in min_units:
+                        jdelta = jdelta * 1440. + self.tzoffset
+                    elif self.units in hr_units:
+                        jdelta = jdelta * 24. + self.tzoffset / 60.
+                    elif self.units in day_units:
+                        jdelta = jdelta + self.tzoffset / 1440.
+                    elif self.units in month_units and self.calendar == '360_day':
+                        jdelta = jdelta/30. + self.tzoffset / (30. * 1440.)
+                    else:
+                        raise ValueError('unsupported time units')
+                else:
+                    jdelta = None
+                jd.append(jdelta)
+            jd = np.array(jd)
+            jd = np.ma.masked_where(jd==None,jd, dtype=np.float64)
+            if isscalar:
+                return jd[0]
+            else:
+                return np.reshape(jd, shape)
         else:
-            jdelta = JulianDayFromDate(date.flat, self.calendar)-self._jd0
-        if not isscalar:
-            jdelta = np.array(jdelta)
-        # convert to desired units, add time zone offset.
-        if self.units in microsec_units:
-            jdelta = jdelta * 86400. * 1.e6  + self.tzoffset * 60. * 1.e6
-        elif self.units in millisec_units:
-            jdelta = jdelta * 86400. * 1.e3  + self.tzoffset * 60. * 1.e3
-        elif self.units in sec_units:
-            jdelta = jdelta * 86400. + self.tzoffset * 60.
-        elif self.units in min_units:
-            jdelta = jdelta * 1440. + self.tzoffset
-        elif self.units in hr_units:
-            jdelta = jdelta * 24. + self.tzoffset / 60.
-        elif self.units in day_units:
-            jdelta = jdelta + self.tzoffset / 1440.
-        elif self.units in month_units and self.calendar == '360_day':
-            jdelta = jdelta/30. + self.tzoffset / (30. * 1440.)
-        else:
-            raise ValueError('unsupported time units')
-        if isscalar:
-            return jdelta.astype(np.float64)
-        else:
-            return np.reshape(jdelta.astype(np.float64), shape)
+            if isscalar:
+                jdelta = JulianDayFromDate(date, self.calendar)-self._jd0
+            else:
+                jdelta = JulianDayFromDate(date.flat, self.calendar)-self._jd0
+            if not isscalar:
+                jdelta = np.array(jdelta)
+            # convert to desired units, add time zone offset.
+            if self.units in microsec_units:
+                jdelta = jdelta * 86400. * 1.e6  + self.tzoffset * 60. * 1.e6
+            elif self.units in millisec_units:
+                jdelta = jdelta * 86400. * 1.e3  + self.tzoffset * 60. * 1.e3
+            elif self.units in sec_units:
+                jdelta = jdelta * 86400. + self.tzoffset * 60.
+            elif self.units in min_units:
+                jdelta = jdelta * 1440. + self.tzoffset
+            elif self.units in hr_units:
+                jdelta = jdelta * 24. + self.tzoffset / 60.
+            elif self.units in day_units:
+                jdelta = jdelta + self.tzoffset / 1440.
+            elif self.units in month_units and self.calendar == '360_day':
+                jdelta = jdelta/30. + self.tzoffset / (30. * 1440.)
+            else:
+                raise ValueError('unsupported time units')
+            if isscalar:
+                return jdelta.astype(np.float64)
+            else:
+                return np.reshape(jdelta.astype(np.float64), shape)
 
     def num2date(self, time_value):
         """
@@ -940,6 +990,13 @@ units to datetime objects.
             else:
                 date = DateFromJulianDay(jd, self.calendar,
                                          self.only_use_cftime_datetimes)
+        if ismasked: # convert to masked array if input was masked array
+            date = np.array(date)
+            date = np.ma.masked_where(date==None,date)
+            if isscalar:
+                return date[0]
+            else:
+                return np.reshape(date, shape)
         if isscalar:
             return date
         else:
