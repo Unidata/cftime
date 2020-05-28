@@ -1729,7 +1729,7 @@ def test_num2date_exact_use_pydatetime_if_possible(calendar, shape, dtype):
 
 @pytest.mark.parametrize(
     ["standard_calendar", "breakpoint"],
-    [("proleptic_gregorian", "{}-12-31T23:59:59.999999".format(MINYEAR - 1),
+    [("proleptic_gregorian", "{}-12-31T23:59:59.999999".format(MINYEAR - 1)),
      ("gregorian", "1582-10-15"),
      ("standard", "1582-10-15")]
 )
