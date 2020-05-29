@@ -577,7 +577,6 @@ def num2date_exact(
             "inexact version of the num2date function.")
         return num2date(times, units, calendar, only_use_cftime_datetimes, only_use_python_datetimes)
 
-    shape = scaled_times.shape
     deltas = scaled_times.astype("timedelta64[us]").astype(timedelta)
     return basedate + deltas
 
