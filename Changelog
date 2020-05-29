@@ -1,5 +1,7 @@
 version 1.1.4 (not yet released)
 ================================
+ * Return the default values of dayofwk and dayofyr when calendar
+   is '' (issue #173).
  * fix treatment of masked arrays in num2date and date2num (issue #175).
    Also make sure masked arrays are output from num2date/date2num if
    masked arrays are input.

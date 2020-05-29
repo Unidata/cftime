@@ -1320,7 +1320,7 @@ Gregorial calendar.
 
     @property
     def dayofwk(self):
-        if self._dayofwk < 0:
+        if self._dayofwk < 0 and self.calendar != '':
             jd = JulianDayFromDate(self,calendar=self.calendar)
             year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
             DateFromJulianDay(jd,return_tuple=True,calendar=self.calendar)
@@ -1333,7 +1333,7 @@ Gregorial calendar.
 
     @property
     def dayofyr(self):
-        if self._dayofyr < 0:
+        if self._dayofyr < 0 and self.calendar != '':
             jd = JulianDayFromDate(self,calendar=self.calendar)
             year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
             DateFromJulianDay(jd,return_tuple=True,calendar=self.calendar)
@@ -1366,10 +1366,15 @@ Gregorial calendar.
                 "hour": self.hour,
                 "minute": self.minute,
                 "second": self.second,
-                "microsecond": self.microsecond}
+                "microsecond": self.microsecond,
+                "calendar": self.calendar}
 
         if 'dayofyr' in kwargs or 'dayofwk' in kwargs:
             raise ValueError('Replacing the dayofyr or dayofwk of a datetime is '
+                             'not supported.')
+
+        if 'calendar' in kwargs:
+            raise ValueError('Replacing the calendar of a datetime is '
                              'not supported.')
 
         for name, value in kwargs.items():
