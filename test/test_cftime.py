@@ -1153,10 +1153,10 @@ class DateTime(unittest.TestCase):
         self.assertEqual(self.date1_365_day.replace(minute=3).minute, 3)
         self.assertEqual(self.date1_365_day.replace(second=3).second, 3)
         self.assertEqual(self.date1_365_day.replace(microsecond=3).microsecond, 3)
-        d = datetimex(2000, 2, 3, calendar='noleap'))
-        self.assertEqual(d.replace(year=1999).calendar = 'noleap')
-        d = datetimex(2000, 2, 3, calendar=''))
-        self.assertEqual(d.replace(year=1999).calendar = '')
+        d = datetimex(2000, 2, 3, calendar='noleap')
+        self.assertEqual(d.replace(year=1999).calendar, 'noleap')
+        d = datetimex(2000, 2, 3, calendar='')
+        self.assertEqual(d.replace(year=1999).calendar, '')
 
     def test_pickling(self):
         "Test reversibility of pickling."
