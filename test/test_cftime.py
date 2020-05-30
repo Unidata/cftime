@@ -697,6 +697,20 @@ class cftimeTestCase(unittest.TestCase):
         d2 = real_datetime(1582,10,4,12)
         assert (d1.dayofwk == d2.dayofwk == 0)
         assert (d1.dayofyr == d2.dayofyr == 277)
+
+        # issue 173: Return the default values of dayofwk and dayofyr
+        # when calendar is ''
+        d1 = datetimex(1582, 10, 4, 12, calendar='')
+        assert (d1.dayofwk == d1.dayofyr == -1)
+        d1 = datetimex(2020, 5, 20, calendar='')
+        assert (d1.dayofwk == d1.dayofyr == -1)
+        d1 = datetimex(2020, 5, 20, dayofwk=-2, dayofyr=-3, calendar='')
+        assert (d1.dayofwk == -2)
+        assert (d1.dayofyr == -3)
+        d1 = datetimex(2020, 5, 20, dayofwk=8, dayofyr=9, calendar='')
+        assert (d1.dayofwk == 8)
+        assert (d1.dayofyr == 9)
+        
         # issue 71: negative reference years
         # https://coastwatch.pfeg.noaa.gov/erddap/convert/time.html
         # gives 2446433 (365 days more - is it counting year 0?)
@@ -758,6 +772,15 @@ class cftimeTestCase(unittest.TestCase):
         # to fail.
         c = cftime.datetime(*cftime._parse_date('7480-01-01 00:00:00'))
         assert(c.strftime() == '7480-01-01 00:00:00')
+        # issue #175: masked values not treated properly in num2date
+        times = np.ma.masked_array([-3956.7499999995343,-999999999999],mask=[False,True])
+        units='days since 1858-11-17 00:00:00'
+        dates = num2date(times, units=units, calendar='standard',\
+        only_use_cftime_datetimes=False, only_use_python_datetimes=True)
+        assert((dates==[datetime(1848, 1, 17, 6, 0, 0, 40),None]).all())
+        dates = num2date(times, units=units, calendar='standard')
+        assert((dates==[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 0),None]).all())
+        
 
 class TestDate2index(unittest.TestCase):
 
@@ -1139,6 +1162,10 @@ class DateTime(unittest.TestCase):
         self.assertEqual(self.date1_365_day.replace(minute=3).minute, 3)
         self.assertEqual(self.date1_365_day.replace(second=3).second, 3)
         self.assertEqual(self.date1_365_day.replace(microsecond=3).microsecond, 3)
+        d = datetimex(2000, 2, 3, calendar='noleap')
+        self.assertEqual(d.replace(year=1999).calendar, 'noleap')
+        d = datetimex(2000, 2, 3, calendar='')
+        self.assertEqual(d.replace(year=1999).calendar, '')
 
     def test_pickling(self):
         "Test reversibility of pickling."
@@ -1514,7 +1541,8 @@ def test_num2date_only_use_cftime_datetimes_post_gregorian(
 
 
 def test_repr():
-    expected = 'cftime.datetime(2000-01-01 00:00:00)'
+    #expected = 'cftime.datetime(2000-01-01 00:00:00)'
+    expected = 'cftime.datetime(2000, 1, 1, 0, 0, 0)'
     assert repr(datetimex(2000, 1, 1)) == expected
 
 
