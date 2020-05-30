@@ -196,10 +196,6 @@ def date2num(dates,units,calendar='standard'):
         calendar = calendar.lower()
         basedate = _dateparse(units)
         (unit, isostring) = _datesplit(units)
-        # parse the date string to get utc_offset.
-        year, month, day, hour, minute, second, microsecond, utc_offset =\
-         _parse_date(isostring.strip())
-        #basedate =  basedate + utc_offset*timedelta(minutes=1)
         # real-world calendars limited to positive reference years.
         if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
             if basedate.year == 0:
