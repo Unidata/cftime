@@ -201,6 +201,11 @@ def date2num(dates,units,calendar='standard'):
             if basedate.year == 0:
                 msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
                 raise ValueError(msg)
+        if unit not in UNIT_CONVERSION_FACTORS:
+            raise ValueError("Unsupported time units provided, {!r}.".format(unit))
+        if unit in ["months", "month"] and calendar != "360_day":
+            raise ValueError("Units of months only valid for 360_day calendar.")
+        factor = UNIT_CONVERSION_FACTORS[unit]
 
         if (calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
            (calendar in ['gregorian','standard'] and basedate > gregorian):
@@ -228,22 +233,7 @@ def date2num(dates,units,calendar='standard'):
                     times.append(None)
                 else:
                     td = date - basedate
-                    # total time in microseconds.
-                    totaltime = td.microseconds + (td.seconds + td.days * 24 * 3600) * 1.e6
-                    if unit in microsec_units:
-                        times.append(totaltime)
-                    elif unit in millisec_units:
-                        times.append(totaltime/1.e3)
-                    elif unit in sec_units:
-                        times.append(totaltime/1.e6)
-                    elif unit in min_units:
-                        times.append(totaltime/1.e6/60)
-                    elif unit in hr_units:
-                        times.append(totaltime/1.e6/3600)
-                    elif unit in day_units:
-                        times.append(totaltime/1.e6/3600./24.)
-                    else:
-                        raise ValueError('unsupported time units')
+                    times.append( (td/timedelta(microseconds=1)) / factor )
             if isscalar:
                 return times[0]
             else:
