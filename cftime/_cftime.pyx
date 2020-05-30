@@ -228,12 +228,18 @@ def date2num(dates,units,calendar='standard'):
             for date in dates.flat:
                 if getattr(date, 'tzinfo',None) is not None:
                     date = date.replace(tzinfo=None) - date.utcoffset()
-
                 if ismasked and not date:
                     times.append(None)
                 else:
                     td = date - basedate
                     times.append( (td/timedelta(microseconds=1)) / factor )
+            if ismasked: # convert to masked array if input was masked array
+                times = np.array(times)
+                times = np.ma.masked_where(times==None,times)
+                if isscalar:
+                    return times[0]
+                else:
+                    return np.reshape(times, shape)
             if isscalar:
                 return times[0]
             else:
