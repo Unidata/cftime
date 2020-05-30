@@ -195,7 +195,11 @@ def date2num(dates,units,calendar='standard'):
         """
         calendar = calendar.lower()
         basedate = _dateparse(units)
-        (unit, ignore) = _datesplit(units)
+        (unit, isostring) = _datesplit(units)
+        # parse the date string to get utc_offset.
+        year, month, day, hour, minute, second, microsecond, utc_offset =\
+         _parse_date(isostring.strip())
+        #basedate =  basedate + utc_offset*timedelta(minutes=1)
         # real-world calendars limited to positive reference years.
         if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
             if basedate.year == 0:
@@ -232,7 +236,9 @@ def date2num(dates,units,calendar='standard'):
                     times.append(None)
                 else:
                     td = date - basedate
-                    times.append( (td/timedelta(microseconds=1)) / factor )
+                    # timedelta division only works python >= 3.2
+                    #times.append( (td/timedelta(microseconds=1)) / factor )
+                    times.append( (td.total_seconds()*1.e6) / factor )
             if ismasked: # convert to masked array if input was masked array
                 times = np.array(times)
                 times = np.ma.masked_where(times==None,times)
