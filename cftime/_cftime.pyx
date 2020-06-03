@@ -634,6 +634,8 @@ def num2date_int(
             "inexact version of the num2date function.")
         return num2date(times, units, calendar, only_use_cftime_datetimes, only_use_python_datetimes)
 
+    # Through np.timedelta64, convert integers scaled to have units of
+    # microseconds to datetime.timedelta objects.
     deltas = scaled_times.astype("timedelta64[us]").astype(timedelta)
     return basedate + deltas
 
