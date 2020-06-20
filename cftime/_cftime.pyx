@@ -532,7 +532,7 @@ _MIN_INT64 = np.iinfo("int64").min
 
 def cast_to_int_if_safe(num):
     """Adapted from xarray.coding.times.py"""
-    if np.issubdtype(num.dtype, np.integer):
+    if num.dtype.kind in "iu":
         return num
     elif np.max(np.abs(num)) > _LONGDOUBLE_INTEGER_RANGE:
         return num
@@ -550,7 +550,7 @@ def upcast_times(num):
     """Cast times array to larger float or integer dtype before scaling
     to units of microseconds.
     """
-    if np.issubdtype(num.dtype, np.float):
+    if num.dtype.kind == "f":
         return num.astype(np.longdouble)
     else:
         return num.astype(np.int64)
@@ -559,7 +559,7 @@ def upcast_times(num):
 def safely_scale_times(num, factor):
     """Scale times by a factor, casting to a longdouble if integer overflow
     would occur."""
-    if np.issubdtype(num.dtype, np.float):
+    if num.dtype.kind == "f":
         return factor * num
     else:
         # Python integers have arbitrary precision, so convert min and max
@@ -666,7 +666,7 @@ def num2date_int(
     times = upcast_times(times)
     scaled_times = safely_scale_times(times, factor)
     scaled_times = cast_to_int_if_safe(scaled_times)
-    if not np.issubdtype(scaled_times.dtype, np.integer):
+    if scaled_times.dtype.kind not in "iu":
         warnings.warn(
             "times must be able to be safely converted to an integer number "
             "of microseconds to be decoded exactly.  Falling back to the "
@@ -683,7 +683,10 @@ def num2date_int(
     # microseconds to datetime.timedelta objects, the timedelta type compatible
     # with all cftime.datetime objects.
     deltas = scaled_times.astype("timedelta64[us]").astype(timedelta)
-    return basedate + deltas
+    try:
+        return basedate + deltas
+    except OverflowError:
+        raise ValueError("OverflowError in python datetime, probably because year < datetime.MINYEAR")
 
 
 def date2index(dates, nctime, calendar=None, select='exact'):

@@ -1799,7 +1799,7 @@ def test_num2date_int_valid_zero_reference_year(artificial_calendar):
 def test_num2date_int_uncastable_values(calendar):
     units = "days since 2000-01-01"
     numeric_times = np.array([1.0, np.pi])
-    with pytest.warns(UserWarning, match="Falling back to the inexact"):
+    with pytest.warns(UserWarning, match="Falling back to the older inexact"):
         num2date_int(numeric_times, units=units, calendar=calendar)
 
 
@@ -1820,7 +1820,7 @@ def test_num2date_int_masked_array(calendar):
 def test_num2date_int_out_of_range():
     numeric_times = 12 * np.array([200000, 400000, 600000])
     units = "months since 2000-01-01"
-    with pytest.warns(UserWarning, match="Falling back to the inexact"):
+    with pytest.warns(UserWarning, match="Falling back to the older inexact"):
         num2date_int(numeric_times, units=units, calendar="360_day")
 
 
