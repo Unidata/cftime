@@ -1789,5 +1789,37 @@ def test_num2date_int_masked_array(calendar):
     np.testing.assert_equal(result, expected)
 
 
+def test_num2date_int_out_of_range():
+    numeric_times = 12 * np.array([200000, 400000, 600000])
+    units = "months since 2000-01-01"
+    with pytest.warns(UserWarning, match="Falling back to the inexact"):
+        num2date_int(numeric_times, units=units, calendar="360_day")
+
+
+def test_num2date_int_list_input(calendar):
+    date_type = _EXPECTED_DATE_TYPES[calendar]
+    expected = np.array([date_type(2000, 1, 1, 1, 0, 0, 0),
+                         date_type(2000, 1, 1, 2, 0, 0, 0),
+                         date_type(2000, 1, 1, 3, 0, 0, 0),
+                         date_type(2000, 1, 1, 4, 0, 0, 0)])
+    numeric_times = [1, 2, 3, 4]
+    units = "hours since 2000-01-01"
+    result = num2date_int(numeric_times, units=units, calendar=calendar)
+    np.testing.assert_equal(result, expected)
+
+
+def test_num2date_int_integer_upcast_required():
+    numeric_times = np.array([30, 60, 90, 120], dtype=np.int32)
+    units = "minutes since 2000-01-01"
+    expected = np.array([
+        Datetime360Day(2000, 1, 1, 0, 30, 0),
+        Datetime360Day(2000, 1, 1, 1, 0, 0),
+        Datetime360Day(2000, 1, 1, 1, 30, 0),
+        Datetime360Day(2000, 1, 1, 2, 0, 0)
+    ])
+    result = num2date_int(numeric_times, units=units, calendar="360_day")
+    np.testing.assert_equal(result, expected)
+
+
 if __name__ == '__main__':
     unittest.main()

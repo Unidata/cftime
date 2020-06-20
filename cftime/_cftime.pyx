@@ -311,7 +311,7 @@ def num2date(times,units,calendar='standard',\
     do not contain a time-zone offset, even if the specified `units`
     contains one.
     """
-    return num2date_float(
+    return num2date_int(
         times,
         units,
         calendar=calendar,
@@ -501,8 +501,13 @@ DATE_TYPES = {
 }
 
 
-def to_calendar_specific_datetime(datetime, calendar):
-    return DATE_TYPES[calendar](
+def to_calendar_specific_datetime(datetime, calendar, use_python_datetime):
+    if use_python_datetime:
+        date_type = real_datetime
+    else:
+        date_type = DATE_TYPES[calendar]
+
+    return date_type(
         datetime.year,
         datetime.month,
         datetime.day,
@@ -513,15 +518,52 @@ def to_calendar_specific_datetime(datetime, calendar):
     )
 
 
+_LONGDOUBLE_INTEGER_RANGE = np.longdouble(2 ** np.finfo(np.longdouble).nmant)
+_MAX_INT64 = np.iinfo("int64").max
+_MIN_INT64 = np.iinfo("int64").min
+
+
 def cast_to_int_if_safe(num):
     """Adapted from xarray.coding.times.py"""
-    if isinstance(num, np.ma.core.MaskedArray):
-        int_num = np.ma.masked_array(num, dtype=np.int64)
+    if np.issubdtype(num.dtype, np.integer):
+        return num
+    elif np.max(np.abs(num)) > _LONGDOUBLE_INTEGER_RANGE:
+        return num
     else:
-        int_num = np.array(num, dtype=np.int64)
-    if (num == int_num).all():
-        num = int_num
-    return num
+        if isinstance(num, np.ma.core.MaskedArray):
+            int_num = np.ma.masked_array(num, dtype=np.int64)
+        else:
+            int_num = np.array(num, dtype=np.int64)
+        if (num == int_num).all():
+            num = int_num
+        return num
+
+
+def upcast_times(num):
+    """Cast times array to larger float or integer dtype before scaling
+    to units of microseconds.
+    """
+    if np.issubdtype(num.dtype, np.float):
+        return num.astype(np.longdouble)
+    else:
+        return num.astype(np.int64)
+
+
+def safely_scale_times(num, factor):
+    """Scale times by a factor, casting to a longdouble if integer overflow
+    would occur."""
+    if np.issubdtype(num.dtype, np.float):
+        return factor * num
+    else:
+        # Python integers have arbitrary precision, so convert min and max
+        # returned by NumPy functions through item, prior to multiplying by
+        # factor.
+        minimum = np.min(num).item() * factor
+        maximum = np.max(num).item() * factor
+        if minimum < _MIN_INT64 or maximum > _MAX_INT64:
+            return num.astype(np.longdouble) * factor
+        else:
+            return num * factor
 
 
 def num2date_int(
@@ -604,18 +646,7 @@ def num2date_int(
         # return python datetime if possible.
         use_python_datetime = True
 
-    if use_python_datetime:
-        basedate = real_datetime(
-            basedate.year,
-            basedate.month,
-            basedate.day,
-            basedate.hour,
-            basedate.minute,
-            basedate.second,
-            basedate.microsecond
-        )
-    else:
-        basedate = to_calendar_specific_datetime(basedate, calendar)
+    basedate = to_calendar_specific_datetime(basedate, calendar, use_python_datetime)
 
     if unit not in UNIT_CONVERSION_FACTORS:
         raise ValueError("Unsupported time units provided, {!r}.".format(unit))
@@ -624,15 +655,22 @@ def num2date_int(
         raise ValueError("Units of months only valid for 360_day calendar.")
 
     factor = UNIT_CONVERSION_FACTORS[unit]
-    scaled_times = factor * times
-
+    times = np.asanyarray(times)  # Allow list as input
+    times = upcast_times(times)
+    scaled_times = safely_scale_times(times, factor)
     scaled_times = cast_to_int_if_safe(scaled_times)
     if not np.issubdtype(scaled_times.dtype, np.integer):
         warnings.warn(
-            "times must have integer dtype or be able to be safely cast to an "
-            "integer dtype to be decoded exactly.  Falling back to the "
-            "inexact version of the num2date function.")
-        return num2date(times, units, calendar, only_use_cftime_datetimes, only_use_python_datetimes)
+            "times must be able to be safely converted to an integer number "
+            "of microseconds to be decoded exactly.  Falling back to the "
+            "older inexact version of the num2date function.")
+        return num2date_float(
+            times,
+            units,
+            calendar,
+            only_use_cftime_datetimes,
+            only_use_python_datetimes
+        )
 
     # Through np.timedelta64, convert integers scaled to have units of
     # microseconds to datetime.timedelta objects, the timedelta type compatible
