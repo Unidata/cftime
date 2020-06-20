@@ -686,7 +686,7 @@ def num2date_int(
     try:
         return basedate + deltas
     except OverflowError:
-        raise ValueError("OverflowError in python datetime, probably because year < datetime.MINYEAR")
+        raise ValueError("OverflowError in datetime, possibly because year < datetime.MINYEAR")
 
 
 def date2index(dates, nctime, calendar=None, select='exact'):
