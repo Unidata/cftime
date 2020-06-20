@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>API &#8212; cftime 1.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -13,6 +11,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Installation" href="installing.html" />
@@ -36,20 +35,25 @@
 <span id="api"></span><h1>API<a class="headerlink" href="#module-cftime" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="cftime.datetime">
-<em class="property">class </em><code class="descclassname">cftime.</code><code class="descname">datetime</code><span class="sig-paren">(</span><em>int year</em>, <em>int month</em>, <em>int day</em>, <em>int hour=0</em>, <em>int minute=0</em>, <em>int second=0</em>, <em>int microsecond=0</em>, <em>int dayofwk=-1</em>, <em>int dayofyr=1</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.datetime" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">datetime</code><span class="sig-paren">(</span><em class="sig-param">int year</em>, <em class="sig-param">int month</em>, <em class="sig-param">int day</em>, <em class="sig-param">int hour=0</em>, <em class="sig-param">int minute=0</em>, <em class="sig-param">int second=0</em>, <em class="sig-param">int microsecond=0</em>, <em class="sig-param">int dayofwk=-1</em>, <em class="sig-param">int dayofyr=-1</em>, <em class="sig-param">calendar='standard'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.datetime" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>The base class implementing most methods of datetime classes that
 mimic datetime.datetime but support calendars other than the proleptic
 Gregorial calendar.</p>
 <dl class="method">
+<dt id="cftime.datetime.isoformat">
+<code class="sig-name descname">isoformat</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">sep='T'</em>, <em class="sig-param">timespec='auto'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.datetime.isoformat" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="cftime.datetime.replace">
-<code class="descname">replace</code><span class="sig-paren">(</span><em>self</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.datetime.replace" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">replace</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.datetime.replace" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return datetime with new specified fields.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="cftime.datetime.strftime">
-<code class="descname">strftime</code><span class="sig-paren">(</span><em>self</em>, <em>format=None</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.datetime.strftime" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">strftime</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">format=None</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.datetime.strftime" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a string representing the date, controlled by an explicit format
 string. For a complete list of formatting directives, see section
 ‘strftime() and strptime() Behavior’ in the base Python documentation.</p>
@@ -57,7 +61,7 @@ string. For a complete list of formatting directives, see section
 
 <dl class="method">
 <dt id="cftime.datetime.timetuple">
-<code class="descname">timetuple</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.datetime.timetuple" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">timetuple</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.datetime.timetuple" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a time.struct_time such as returned by time.localtime().
 The DST flag is -1. d.timetuple() is equivalent to
 time.struct_time((d.year, d.month, d.day, d.hour, d.minute,
@@ -69,7 +73,7 @@ day number within the current year starting with 1 for January 1st.</p>
 
 <dl class="function">
 <dt id="cftime.date2num">
-<code class="descclassname">cftime.</code><code class="descname">date2num</code><span class="sig-paren">(</span><em>dates</em>, <em>units</em>, <em>calendar='standard'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.date2num" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">date2num</code><span class="sig-paren">(</span><em class="sig-param">dates</em>, <em class="sig-param">units</em>, <em class="sig-param">calendar='standard'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.date2num" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return numeric time values given datetime objects. The units
 of the numeric time values are described by the <cite>units</cite> argument
 and the <cite>calendar</cite> keyword. The datetime objects must
@@ -94,7 +98,7 @@ with approximately 100 microsecond accuracy.</p>
 
 <dl class="function">
 <dt id="cftime.num2date">
-<code class="descclassname">cftime.</code><code class="descname">num2date</code><span class="sig-paren">(</span><em>times</em>, <em>units</em>, <em>calendar='standard'</em>, <em>only_use_cftime_datetimes=True</em>, <em>only_use_python_datetimes=False</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.num2date" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">num2date</code><span class="sig-paren">(</span><em class="sig-param">times</em>, <em class="sig-param">units</em>, <em class="sig-param">calendar='standard'</em>, <em class="sig-param">only_use_cftime_datetimes=True</em>, <em class="sig-param">only_use_python_datetimes=False</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.num2date" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return datetime objects given numeric time values. The units
 of the numeric time values are described by the <cite>units</cite> argument
 and the <cite>calendar</cite> keyword. The returned datetime objects represent
@@ -134,7 +138,7 @@ contains one.</p>
 
 <dl class="function">
 <dt id="cftime.num2pydate">
-<code class="descclassname">cftime.</code><code class="descname">num2pydate</code><span class="sig-paren">(</span><em>times</em>, <em>units</em>, <em>calendar='standard'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.num2pydate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">num2pydate</code><span class="sig-paren">(</span><em class="sig-param">times</em>, <em class="sig-param">units</em>, <em class="sig-param">calendar='standard'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.num2pydate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Always returns python datetime.datetime
 objects and raise an error if this is not possible.</p>
 <p>Same as
@@ -143,7 +147,7 @@ num2date(times,units,calendar,only_use_cftime_datetimes=False,only_use_python_da
 
 <dl class="function">
 <dt id="cftime.date2index">
-<code class="descclassname">cftime.</code><code class="descname">date2index</code><span class="sig-paren">(</span><em>dates</em>, <em>nctime</em>, <em>calendar=None</em>, <em>select='exact'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.date2index" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">date2index</code><span class="sig-paren">(</span><em class="sig-param">dates</em>, <em class="sig-param">nctime</em>, <em class="sig-param">calendar=None</em>, <em class="sig-param">select='exact'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.date2index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return indices of a netCDF time variable corresponding to the given dates.</p>
 <p><strong>`dates`</strong>: A datetime object or a sequence of datetime objects.
 The datetime objects should not include a time-zone offset.</p>
@@ -169,7 +173,7 @@ to the given datetime object(s).</p>
 
 <dl class="function">
 <dt id="cftime.JulianDayFromDate">
-<code class="descclassname">cftime.</code><code class="descname">JulianDayFromDate</code><span class="sig-paren">(</span><em>date</em>, <em>calendar='standard'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.JulianDayFromDate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">JulianDayFromDate</code><span class="sig-paren">(</span><em class="sig-param">date</em>, <em class="sig-param">calendar='standard'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.JulianDayFromDate" title="Permalink to this definition">¶</a></dt>
 <dd><p>creates a Julian Day from a ‘datetime-like’ object.  Returns the fractional
 Julian Day (approximately 100 microsecond accuracy).</p>
 <p>if calendar=’standard’ or ‘gregorian’ (default), Julian day follows Julian
@@ -180,7 +184,7 @@ Calendar on and before 1582-10-5, Gregorian calendar after 1582-10-15.</p>
 
 <dl class="class">
 <dt id="cftime.DatetimeJulian">
-<em class="property">class </em><code class="descclassname">cftime.</code><code class="descname">DatetimeJulian</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.DatetimeJulian" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">DatetimeJulian</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.DatetimeJulian" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">cftime._cftime.datetime</span></code></p>
 <p>Phony datetime object which mimics the python datetime object,
 but uses the “julian” calendar.</p>
@@ -188,7 +192,7 @@ but uses the “julian” calendar.</p>
 
 <dl class="class">
 <dt id="cftime.DatetimeProlepticGregorian">
-<em class="property">class </em><code class="descclassname">cftime.</code><code class="descname">DatetimeProlepticGregorian</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.DatetimeProlepticGregorian" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">DatetimeProlepticGregorian</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.DatetimeProlepticGregorian" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">cftime._cftime.datetime</span></code></p>
 <p>Phony datetime object which mimics the python datetime object,
 but allows for dates that don’t exist in the proleptic gregorian calendar.</p>
@@ -205,7 +209,7 @@ format, and calendar.</p>
 
 <dl class="class">
 <dt id="cftime.DatetimeNoLeap">
-<em class="property">class </em><code class="descclassname">cftime.</code><code class="descname">DatetimeNoLeap</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.DatetimeNoLeap" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">DatetimeNoLeap</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.DatetimeNoLeap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">cftime._cftime.datetime</span></code></p>
 <p>Phony datetime object which mimics the python datetime object,
 but uses the “noleap” (“365_day”) calendar.</p>
@@ -213,7 +217,7 @@ but uses the “noleap” (“365_day”) calendar.</p>
 
 <dl class="class">
 <dt id="cftime.DatetimeAllLeap">
-<em class="property">class </em><code class="descclassname">cftime.</code><code class="descname">DatetimeAllLeap</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.DatetimeAllLeap" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">DatetimeAllLeap</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.DatetimeAllLeap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">cftime._cftime.datetime</span></code></p>
 <p>Phony datetime object which mimics the python datetime object,
 but uses the “all_leap” (“366_day”) calendar.</p>
@@ -221,7 +225,7 @@ but uses the “all_leap” (“366_day”) calendar.</p>
 
 <dl class="class">
 <dt id="cftime.DatetimeGregorian">
-<em class="property">class </em><code class="descclassname">cftime.</code><code class="descname">DatetimeGregorian</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.DatetimeGregorian" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">DatetimeGregorian</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.DatetimeGregorian" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">cftime._cftime.datetime</span></code></p>
 <p>Phony datetime object which mimics the python datetime object,
 but uses the mixed Julian-Gregorian (“standard”, “gregorian”) calendar.</p>
@@ -266,17 +270,23 @@ a datetime.datetime instance or vice versa.</p>
 </ul>
 </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
@@ -285,8 +295,8 @@ a datetime.datetime instance or vice versa.</p>
       &copy;2018, Jeff Whitaker.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="_sources/api.rst.txt"
