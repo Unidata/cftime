@@ -1280,7 +1280,6 @@ _converters = {}
 for calendar in _calendars:
     _converters[calendar] = utime("seconds since 1-1-1", calendar)
 
-
 @cython.embedsignature(True)
 cdef class datetime(object):
     """
