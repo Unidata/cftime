@@ -1280,6 +1280,7 @@ _converters = {}
 for calendar in _calendars:
     _converters[calendar] = utime("seconds since 1-1-1", calendar)
 
+
 @cython.embedsignature(True)
 cdef class datetime(object):
     """
@@ -1517,8 +1518,14 @@ Gregorial calendar.
                     raise ValueError("cannot compute the time difference between dates with different calendars")
                 if dt.calendar == "":
                     raise ValueError("cannot compute the time difference between dates that are not calendar-aware")
-                converter = _converters[dt.calendar]
-                return timedelta(seconds=converter.date2num(dt) - converter.date2num(other))
+                ordinal_self = _IntJulianDayFromDate(dt.year, dt.month, dt.day, dt.calendar)
+                ordinal_other = _IntJulianDayFromDate(other.year, other.month, other.day, other.calendar)
+                days = ordinal_self - ordinal_other
+                seconds_self = dt.second + 60 * dt.minute + 3600 * dt.hour
+                seconds_other = other.second + 60 * other.minute + 3600 * other.hour
+                seconds = seconds_self - seconds_other
+                microseconds = dt.microsecond - other.microsecond
+                return timedelta(days, seconds, microseconds)
             elif isinstance(other, datetime_python):
                 # datetime - real_datetime
                 if not dt.datetime_compatible:
