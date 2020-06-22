@@ -13,6 +13,7 @@ import time
 from datetime import datetime as datetime_python
 from datetime import timedelta, MINYEAR
 import time                     # strftime
+import warnings
 try:
     from itertools import izip as zip
 except ImportError:  # python 3.x
@@ -194,12 +195,17 @@ def date2num(dates,units,calendar='standard'):
         """
         calendar = calendar.lower()
         basedate = _dateparse(units)
-        (unit, ignore) = _datesplit(units)
+        (unit, isostring) = _datesplit(units)
         # real-world calendars limited to positive reference years.
         if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
             if basedate.year == 0:
                 msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
                 raise ValueError(msg)
+        if unit not in UNIT_CONVERSION_FACTORS:
+            raise ValueError("Unsupported time units provided, {!r}.".format(unit))
+        if unit in ["months", "month"] and calendar != "360_day":
+            raise ValueError("Units of months only valid for 360_day calendar.")
+        factor = UNIT_CONVERSION_FACTORS[unit]
 
         if (calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
            (calendar in ['gregorian','standard'] and basedate > gregorian):
@@ -222,27 +228,13 @@ def date2num(dates,units,calendar='standard'):
             for date in dates.flat:
                 if getattr(date, 'tzinfo',None) is not None:
                     date = date.replace(tzinfo=None) - date.utcoffset()
-
                 if ismasked and not date:
                     times.append(None)
                 else:
                     td = date - basedate
-                    # total time in microseconds.
-                    totaltime = td.microseconds + (td.seconds + td.days * 24 * 3600) * 1.e6
-                    if unit in microsec_units:
-                        times.append(totaltime)
-                    elif unit in millisec_units:
-                        times.append(totaltime/1.e3)
-                    elif unit in sec_units:
-                        times.append(totaltime/1.e6)
-                    elif unit in min_units:
-                        times.append(totaltime/1.e6/60)
-                    elif unit in hr_units:
-                        times.append(totaltime/1.e6/3600)
-                    elif unit in day_units:
-                        times.append(totaltime/1.e6/3600./24.)
-                    else:
-                        raise ValueError('unsupported time units')
+                    # timedelta division only works python >= 3.2
+                    #times.append( (td/timedelta(microseconds=1)) / factor )
+                    times.append( (td.total_seconds()*1.e6) / factor )
             if ismasked: # convert to masked array if input was masked array
                 times = np.array(times)
                 times = np.ma.masked_where(times==None,times)
@@ -269,7 +261,64 @@ def num2pydate(times,units,calendar='standard'):
     """
     return num2date(times,units,calendar,only_use_cftime_datetimes=False,only_use_python_datetimes=True)
 
+
 def num2date(times,units,calendar='standard',\
+             only_use_cftime_datetimes=True,only_use_python_datetimes=False):
+    """num2date(times,units,calendar='standard',only_use_cftime_datetimes=True,only_use_python_datetimes=False)
+
+    Return datetime objects given numeric time values. The units
+    of the numeric time values are described by the `units` argument
+    and the `calendar` keyword. The returned datetime objects represent
+    UTC with no time-zone offset, even if the specified
+    `units` contain a time-zone offset.
+
+    **`times`**: numeric time values.
+
+    **`units`**: a string of the form `<time units> since <reference time>`
+    describing the time units. `<time units>` can be days, hours, minutes,
+    seconds, milliseconds or microseconds. `<reference time>` is the time
+    origin. `months_since` is allowed *only* for the `360_day` calendar.
+
+    **`calendar`**: describes the calendar used in the time calculations.
+    All the values currently defined in the
+    [CF metadata convention](http://cfconventions.org)
+    Valid calendars `'standard', 'gregorian', 'proleptic_gregorian'
+    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'`.
+    Default is `'standard'`, which is a mixed Julian/Gregorian calendar.
+
+    **`only_use_cftime_datetimes`**: if False, python datetime.datetime
+    objects are returned from num2date where possible; if True dates which
+    subclass cftime.datetime are returned for all calendars. Default `True`.
+
+    **`only_use_python_datetimes`**: always return python datetime.datetime
+    objects and raise an error if this is not possible. Ignored unless
+    `only_use_cftime_datetimes=False`. Default `False`.
+
+    returns a datetime instance, or an array of datetime instances with
+    approximately 100 microsecond accuracy.
+
+    ***Note***: If only_use_cftime_datetimes=False and
+    use_only_python_datetimes=False, the datetime instances
+    returned are 'real' python datetime
+    objects if `calendar='proleptic_gregorian'`, or
+    `calendar='standard'` or `'gregorian'`
+    and the date is after the breakpoint between the Julian and
+    Gregorian calendars (1582-10-15). Otherwise, they are ctime.datetime
+    objects which support some but not all the methods of native python
+    datetime objects. The datetime instances
+    do not contain a time-zone offset, even if the specified `units`
+    contains one.
+    """
+    return num2date_int(
+        times,
+        units,
+        calendar=calendar,
+        only_use_cftime_datetimes=only_use_cftime_datetimes,
+        only_use_python_datetimes=only_use_python_datetimes
+    )
+
+
+def num2date_float(times,units,calendar='standard',\
              only_use_cftime_datetimes=True,only_use_python_datetimes=False):
     """num2date(times,units,calendar='standard',only_use_cftime_datetimes=True,only_use_python_datetimes=False)
 
@@ -411,6 +460,233 @@ OverflowError in python datetime, probably because year < datetime.MINYEAR"""
                         only_use_cftime_datetimes=only_use_cftime_datetimes)
         return cdftime.num2date(times)
 
+
+UNIT_CONVERSION_FACTORS = {
+    "microseconds": 1,
+    "microsecond": 1,
+    "microsec": 1,
+    "microsecs": 1,
+    "milliseconds": 1000,
+    "millisecond": 1000,
+    "millisec": 1000,
+    "millisecs": 1000,
+    "msec": 1000,
+    "msecs": 1000,
+    "ms": 1000,
+    "seconds": 1000000,
+    "second": 1000000,
+    "sec": 1000000,
+    "secs": 1000000,
+    "s": 1000000,
+    "minutes": 60 * 1000000,
+    "minute": 60 * 1000000,
+    "min": 60 * 1000000,
+    "mins": 60 * 1000000,
+    "hours": 3600 * 1000000,
+    "hour": 3600 * 1000000,
+    "hr": 3600 * 1000000,
+    "hrs": 3600 * 1000000,
+    "h": 3600 * 1000000,
+    "day": 86400 * 1000000,
+    "days": 86400 * 1000000,
+    "d": 86400 * 1000000,
+    "month": 30 * 86400 * 1000000,  # Only allowed for 360_day calendar
+    "months": 30 * 86400 * 1000000
+}
+
+
+DATE_TYPES = {
+    "proleptic_gregorian": DatetimeProlepticGregorian,
+    "standard": DatetimeGregorian,
+    "noleap": DatetimeNoLeap,
+    "365_day": DatetimeNoLeap,
+    "all_leap": DatetimeAllLeap,
+    "366_day": DatetimeAllLeap,
+    "julian": DatetimeJulian,
+    "360_day": Datetime360Day,
+    "gregorian": DatetimeGregorian
+}
+
+
+def to_calendar_specific_datetime(datetime, calendar, use_python_datetime):
+    if use_python_datetime:
+        date_type = real_datetime
+    else:
+        date_type = DATE_TYPES[calendar]
+
+    return date_type(
+        datetime.year,
+        datetime.month,
+        datetime.day,
+        datetime.hour,
+        datetime.minute,
+        datetime.second,
+        datetime.microsecond
+    )
+
+
+_LONGDOUBLE_INTEGER_RANGE = np.longdouble(2 ** np.finfo(np.longdouble).nmant)
+_MAX_INT64 = np.iinfo("int64").max
+_MIN_INT64 = np.iinfo("int64").min
+
+
+def cast_to_int_if_safe(num):
+    """Adapted from xarray.coding.times.py"""
+    if num.dtype.kind in "iu":
+        return num
+    elif np.max(np.abs(num)) > _LONGDOUBLE_INTEGER_RANGE:
+        return num
+    else:
+        if isinstance(num, np.ma.core.MaskedArray):
+            int_num = np.ma.masked_array(num, dtype=np.int64)
+        else:
+            int_num = np.array(num, dtype=np.int64)
+        if (num == int_num).all():
+            num = int_num
+        return num
+
+
+def upcast_times(num):
+    """Cast times array to larger float or integer dtype before scaling
+    to units of microseconds.
+    """
+    if num.dtype.kind == "f":
+        return num.astype(np.longdouble)
+    else:
+        return num.astype(np.int64)
+
+
+def safely_scale_times(num, factor):
+    """Scale times by a factor, casting to a longdouble if integer overflow
+    would occur."""
+    if num.dtype.kind == "f":
+        return factor * num
+    else:
+        # Python integers have arbitrary precision, so convert min and max
+        # returned by NumPy functions through item, prior to multiplying by
+        # factor.
+        minimum = np.min(num).item() * factor
+        maximum = np.max(num).item() * factor
+        if minimum < _MIN_INT64 or maximum > _MAX_INT64:
+            return num.astype(np.longdouble) * factor
+        else:
+            return num * factor
+
+
+def num2date_int(
+    times,
+    units,
+    calendar='standard',
+    only_use_cftime_datetimes=True,
+    only_use_python_datetimes=False
+):
+    """Decode times exactly with timedelta arithmetic.
+
+    Return datetime objects given numeric time values. The units
+    of the numeric time values are described by the `units` argument
+    and the `calendar` keyword. The returned datetime objects represent
+    UTC with no time-zone offset, even if the specified
+    `units` contain a time-zone offset.
+
+    **`times`**: numeric time values.
+
+    **`units`**: a string of the form `<time units> since <reference time>`
+    describing the time units. `<time units>` can be days, hours, minutes,
+    seconds, milliseconds or microseconds. `<reference time>` is the time
+    origin. `months_since` is allowed *only* for the `360_day` calendar.
+
+    **`calendar`**: describes the calendar used in the time calculations.
+    All the values currently defined in the
+    [CF metadata convention](http://cfconventions.org)
+    Valid calendars `'standard', 'gregorian', 'proleptic_gregorian'
+    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'`.
+    Default is `'standard'`, which is a mixed Julian/Gregorian calendar.
+
+    **`only_use_cftime_datetimes`**: if False, python datetime.datetime
+    objects are returned from num2date where possible; if True dates which
+    subclass cftime.datetime are returned for all calendars. Default `True`.
+
+    **`only_use_python_datetimes`**: always return python datetime.datetime
+    objects and raise an error if this is not possible. Ignored unless
+    `only_use_cftime_datetimes=False`. Default `False`.
+
+    returns a datetime instance, or an array of datetime instances with
+    microsecond accuracy, if possible.
+
+    ***Note***: If only_use_cftime_datetimes=False and
+    use_only_python_datetimes=False, the datetime instances
+    returned are 'real' python datetime
+    objects if `calendar='proleptic_gregorian'`, or
+    `calendar='standard'` or `'gregorian'`
+    and the date is after the breakpoint between the Julian and
+    Gregorian calendars (1582-10-15). Otherwise, they are ctime.datetime
+    objects which support some but not all the methods of native python
+    datetime objects. The datetime instances
+    do not contain a time-zone offset, even if the specified `units`
+    contains one.
+    """
+    calendar = calendar.lower()
+    basedate = _dateparse(units)
+
+    can_use_python_datetime=\
+      ((calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
+       (calendar in ['gregorian','standard'] and basedate > gregorian))
+    if not only_use_cftime_datetimes and only_use_python_datetimes:
+        if not can_use_python_datetime:
+            msg='illegal calendar or reference date for python datetime'
+            raise ValueError(msg)
+
+    unit, ignore = _datesplit(units)
+
+    # real-world calendars limited to positive reference years.
+    if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
+        if basedate.year == 0:
+            msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
+            raise ValueError(msg)
+
+    use_python_datetime = False
+    if only_use_python_datetimes and not only_use_cftime_datetimes:
+        # only_use_cftime_datetimes takes precendence
+        use_python_datetime = True
+    if not only_use_python_datetimes and not only_use_cftime_datetimes and can_use_python_datetime:
+        # if only_use_cftimes_datetimes and only_use_python_datetimes are False
+        # return python datetime if possible.
+        use_python_datetime = True
+
+    basedate = to_calendar_specific_datetime(basedate, calendar, use_python_datetime)
+
+    if unit not in UNIT_CONVERSION_FACTORS:
+        raise ValueError("Unsupported time units provided, {!r}.".format(unit))
+
+    if unit in ["months", "month"] and calendar != "360_day":
+        raise ValueError("Units of months only valid for 360_day calendar.")
+
+    factor = UNIT_CONVERSION_FACTORS[unit]
+    times = np.asanyarray(times)  # Allow list as input
+    times = upcast_times(times)
+    scaled_times = safely_scale_times(times, factor)
+    scaled_times = cast_to_int_if_safe(scaled_times)
+    if scaled_times.dtype.kind not in "iu":
+        warnings.warn(
+            "times must be able to be safely converted to an integer number "
+            "of microseconds to be decoded exactly.  Falling back to the "
+            "older inexact version of the num2date function.")
+        return num2date_float(
+            times,
+            units,
+            calendar,
+            only_use_cftime_datetimes,
+            only_use_python_datetimes
+        )
+
+    # Through np.timedelta64, convert integers scaled to have units of
+    # microseconds to datetime.timedelta objects, the timedelta type compatible
+    # with all cftime.datetime objects.
+    deltas = scaled_times.astype("timedelta64[us]").astype(timedelta)
+    try:
+        return basedate + deltas
+    except OverflowError:
+        raise ValueError("OverflowError in datetime, possibly because year < datetime.MINYEAR")
 
 
 def date2index(dates, nctime, calendar=None, select='exact'):
