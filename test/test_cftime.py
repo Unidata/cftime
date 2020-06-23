@@ -777,10 +777,9 @@ class cftimeTestCase(unittest.TestCase):
         units='days since 1858-11-17 00:00:00'
         dates = num2date(times, units=units, calendar='standard',\
         only_use_cftime_datetimes=False, only_use_python_datetimes=True)
-        assert((dates==[datetime(1848, 1, 17, 6, 0, 0, 40),None]).all())
+        assert(str(dates)=='[datetime.datetime(1848, 1, 17, 6, 0, 0, 41) --]')
         dates = num2date(times, units=units, calendar='standard')
-        assert((dates==[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 0),None]).all())
-        
+        assert(str(dates)=='[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 41) --]')
 
 class TestDate2index(unittest.TestCase):
 
