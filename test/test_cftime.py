@@ -1736,12 +1736,12 @@ def test_num2date_int_only_use_python_datetimes(calendar, shape, dtype):
     if calendar not in _STANDARD_CALENDARS:
         with pytest.raises(ValueError):
             num2date_int(numeric_times, units=units, calendar=calendar,
-                         only_use_python_datetimes=True,
-                         only_use_cftime_datetimes=False)
+                           only_use_python_datetimes=True,
+                           only_use_cftime_datetimes=False)
     else:
         result = num2date_int(numeric_times, units=units, calendar=calendar,
-                              only_use_python_datetimes=True,
-                              only_use_cftime_datetimes=False)
+                                only_use_python_datetimes=True,
+                                only_use_cftime_datetimes=False)
         np.testing.assert_equal(result, expected)
 
 
@@ -1758,8 +1758,8 @@ def test_num2date_int_use_pydatetime_if_possible(calendar, shape, dtype):
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
     units = "days since 2000-01-01"
     result = num2date_int(numeric_times, units=units, calendar=calendar,
-                          only_use_python_datetimes=False,
-                          only_use_cftime_datetimes=False)
+                            only_use_python_datetimes=False,
+                            only_use_cftime_datetimes=False)
     np.testing.assert_equal(result, expected)
 
 
