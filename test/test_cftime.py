@@ -1583,6 +1583,14 @@ def test_dayofyr_after_timedelta_addition(date_type):
     assert date_after_timedelta_addition.dayofyr == 3
 
 
+def test_exact_datetime_difference(date_type):
+    b = date_type(2000, 1, 2, 0, 0, 0, 5)
+    a = date_type(2000, 1, 2)
+    result = b - a
+    expected = timedelta(microseconds=5)
+    assert result == expected
+
+
 _SHAPES = [(4, ), (2, 2)]
 _MICROSECOND_UNITS = ["microseconds", "microsecond", "microsec", "microsecs"]
 _MILLISECOND_UNITS = ["milliseconds", "millisecond", "millisec", "millisecs", "ms"]
