@@ -145,205 +145,6 @@ def _dateparse(timestr):
             raise ValueError('cannot use utc_offset for reference years <= 0')
     return basedate
 
-def _round_half_up(x):
-    # 'round half up' so 0.5 rounded to 1 (instead of 0 as in numpy.round)
-    return np.ceil(np.floor(2.*x)/2.)
-
-def JulianDayFromDate(date, calendar='standard'):
-    """JulianDayFromDate(date, calendar='standard')
-
-    creates a Julian Day from a 'datetime-like' object.  Returns the fractional
-    Julian Day (approximately 100 microsecond accuracy).
-
-    if calendar='standard' or 'gregorian' (default), Julian day follows Julian
-    Calendar on and before 1582-10-5, Gregorian calendar after 1582-10-15.
-
-    if calendar='proleptic_gregorian', Julian Day follows gregorian calendar.
-
-    if calendar='julian', Julian Day follows julian calendar.
-    """
-
-    # check if input was scalar and change return accordingly
-    isscalar = False
-    try:
-        date[0]
-    except:
-        isscalar = True
-
-    date = np.atleast_1d(np.array(date))
-    year = np.empty(len(date), dtype=np.int32)
-    month = year.copy()
-    day = year.copy()
-    hour = year.copy()
-    minute = year.copy()
-    second = year.copy()
-    microsecond = year.copy()
-    jd = np.empty(year.shape, np.longdouble)
-    cdef long double[:] jd_view = jd
-    cdef Py_ssize_t i_max = len(date)
-    cdef Py_ssize_t i
-    for i in range(i_max):
-        d = date[i]
-        if getattr(d, 'tzinfo', None) is not None:
-            d = d.replace(tzinfo=None) - d.utcoffset()
-
-        year[i] = d.year
-        month[i] = d.month
-        day[i] = d.day
-        hour[i] = d.hour
-        minute[i] = d.minute
-        second[i] = d.second
-        microsecond[i] = d.microsecond
-        jd_view[i] = <double>_IntJulianDayFromDate(<int>year[i],<int>month[i],<int>day[i],calendar)
-
-    # at this point jd is an integer representing noon UTC on the given
-    # year,month,day.
-    # compute fractional day from hour,minute,second,microsecond
-    fracday = hour / 24.0 + minute / 1440.0 + (second + microsecond/1.e6) / 86400.0
-    jd = jd - 0.5 + fracday
-
-    if isscalar:
-        return jd[0]
-    else:
-        return jd
-
-def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=True,
-                      return_tuple=False):
-    """
-
-    returns a 'datetime-like' object given Julian Day. Julian Day is a
-    fractional day with approximately 100 microsecond accuracy.
-
-    if calendar='standard' or 'gregorian' (default), Julian day follows Julian
-    Calendar on and before 1582-10-5, Gregorian calendar after  1582-10-15.
-
-    if calendar='proleptic_gregorian', Julian Day follows gregorian calendar.
-
-    if calendar='julian', Julian Day follows julian calendar.
-
-    If only_use_cftime_datetimes is set to True, then cftime.datetime
-    objects are returned for all calendars.  Otherwise the datetime object is a
-    native python datetime object if the date falls in the Gregorian calendar
-    (i.e. calendar='proleptic_gregorian', or  calendar = 'standard'/'gregorian'
-    and the date is after 1582-10-15).
-    """
-
-    julian = np.atleast_1d(np.array(JD, dtype=np.longdouble))
-
-    def getdateinfo(julian):
-        # get the day (Z) and the fraction of the day (F)
-        # use 'round half up' rounding instead of numpy's even rounding
-        # so that 0.5 is rounded to 1.0, not 0 (cftime issue #49)
-        Z = np.atleast_1d(np.int32(_round_half_up(julian)))
-        F = (julian + 0.5 - Z).astype(np.longdouble)
-
-        cdef Py_ssize_t i_max = len(Z)
-        year = np.empty(i_max, dtype=np.int32)
-        month = np.empty(i_max, dtype=np.int32)
-        day = np.empty(i_max, dtype=np.int32)
-        dayofyr = np.zeros(i_max,dtype=np.int32)
-        dayofwk = np.zeros(i_max,dtype=np.int32)
-        cdef int ijd
-        cdef Py_ssize_t i
-        for i in range(i_max):
-            ijd = Z[i]
-            year[i],month[i],day[i],dayofwk[i],dayofyr[i] = _IntJulianDayToDate(ijd,calendar)
-
-        if calendar in ['standard', 'gregorian']:
-            ind_before = np.where(julian < 2299160.5)
-            ind_before = np.asarray(ind_before).any()
-        else:
-            ind_before = False
-
-        # compute hour, minute, second, microsecond, convert to int32
-        hour = np.clip((F * 24.).astype(np.int64), 0, 23)
-        F   -= hour / 24.
-        minute = np.clip((F * 1440.).astype(np.int64), 0, 59)
-        second = np.clip((F - minute / 1440.) * 86400., 0, None)
-        microsecond = (second % 1)*1.e6
-        hour = hour.astype(np.int32)
-        minute = minute.astype(np.int32)
-        second = second.astype(np.int32)
-        microsecond = microsecond.astype(np.int32)
-
-        return year,month,day,hour,minute,second,microsecond,dayofyr,dayofwk,ind_before
-
-    year,month,day,hour,minute,second,microsecond,dayofyr,dayofwk,ind_before =\
-    getdateinfo(julian)
-    # round to nearest second if within ms_eps microseconds
-    # (to avoid ugly errors in datetime formatting - alternative
-    # to adding small offset all the time as was done previously)
-    # see netcdf4-python issue #433 and cftime issue #78
-    # this is done by rounding microsends up or down, then
-    # recomputing year,month,day etc
-    # ms_eps is proportional to julian day,
-    # about 47 microseconds in 2000 for Julian base date in -4713
-    ms_eps = np.atleast_1d(np.array(np.finfo(np.float64).eps,np.longdouble))
-    ms_eps = 86400000000.*np.maximum(ms_eps*julian, ms_eps)
-    microsecond = np.where(microsecond < ms_eps, 0, microsecond)
-    indxms = microsecond > 1000000-ms_eps
-    if indxms.any():
-        julian[indxms] = julian[indxms] + 2*ms_eps[indxms]/86400000000.
-        year[indxms],month[indxms],day[indxms],hour[indxms],minute[indxms],second[indxms],microsecond2,dayofyr[indxms],dayofwk[indxms],ind_before2 =\
-        getdateinfo(julian[indxms])
-        microsecond[indxms] = 0
-
-    # check if input was scalar and change return accordingly
-    isscalar = False
-    try:
-        JD[0]
-    except:
-        isscalar = True
-
-    if calendar == 'proleptic_gregorian':
-        # datetime.datetime does not support years < 1
-        #if year < 0:
-        if only_use_cftime_datetimes:
-            datetime_type = DatetimeProlepticGregorian
-        else:
-            if (year < 0).any(): # netcdftime issue #28
-               datetime_type = DatetimeProlepticGregorian
-            else:
-               datetime_type = real_datetime
-    elif calendar in ('standard', 'gregorian'):
-        # return a 'real' datetime instance if calendar is proleptic
-        # Gregorian or Gregorian and all dates are after the
-        # Julian/Gregorian transition
-        if ind_before and not only_use_cftime_datetimes:
-            datetime_type = real_datetime
-        else:
-            datetime_type = DatetimeGregorian
-    elif calendar == "julian":
-        datetime_type = DatetimeJulian
-    elif calendar in ["noleap","365_day"]:
-        datetime_type = DatetimeNoLeap
-    elif calendar in ["all_leap","366_day"]:
-        datetime_type = DatetimeAllLeap
-    elif calendar == "360_day":
-        datetime_type = Datetime360Day
-    else:
-        raise ValueError("unsupported calendar: {0}".format(calendar))
-
-    if not isscalar:
-        if return_tuple:
-            return np.array([args for args in
-                            zip(year, month, day, hour, minute, second,
-                                microsecond,dayofwk,dayofyr)])
-        else:
-            return np.array([datetime_type(*args)
-                             for args in
-                             zip(year, month, day, hour, minute, second,
-                                 microsecond)])
-
-    else:
-        if return_tuple:
-            return (year[0], month[0], day[0], hour[0],
-                    minute[0], second[0], microsecond[0],
-                    dayofwk[0], dayofyr[0])
-        else:
-            return datetime_type(year[0], month[0], day[0], hour[0],
-                                 minute[0], second[0], microsecond[0])
-
 def date2num(dates,units,calendar='standard'):
         """date2num(dates,units,calendar='standard')
 
@@ -1042,9 +843,8 @@ Gregorial calendar.
     @property
     def dayofwk(self):
         if self._dayofwk < 0 and self.calendar != '':
-            jd = JulianDayFromDate(self,calendar=self.calendar)
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar=self.calendar)
+            jd = _IntJulianDayFromDate(self.year,self.month,self.day,self.calendar)
+            year,month,day,dayofwk,dayofyr = _IntJulianDayToDate(jd,self.calendar)
             # cache results for dayofwk, dayofyr
             self._dayofwk = dayofwk
             self._dayofyr = dayofyr
@@ -1055,9 +855,8 @@ Gregorial calendar.
     @property
     def dayofyr(self):
         if self._dayofyr < 0 and self.calendar != '':
-            jd = JulianDayFromDate(self,calendar=self.calendar)
-            year,month,day,hour,mn,sec,ms,dayofwk,dayofyr =\
-            DateFromJulianDay(jd,return_tuple=True,calendar=self.calendar)
+            jd = _IntJulianDayFromDate(self.year,self.month,self.day,self.calendar)
+            year,month,day,dayofwk,dayofyr = _IntJulianDayToDate(jd,self.calendar)
             # cache results for dayofwk, dayofyr
             self._dayofwk = dayofwk
             self._dayofyr = dayofyr
@@ -1954,6 +1753,205 @@ cdef _IntJulianDayToDate_360day(int jday):
     return year,month,day,dow,doy
 
 # deprecated code
+
+def _round_half_up(x):
+    # 'round half up' so 0.5 rounded to 1 (instead of 0 as in numpy.round)
+    return np.ceil(np.floor(2.*x)/2.)
+
+def JulianDayFromDate(date, calendar='standard'):
+    """JulianDayFromDate(date, calendar='standard')
+
+    creates a Julian Day from a 'datetime-like' object.  Returns the fractional
+    Julian Day (approximately 100 microsecond accuracy).
+
+    if calendar='standard' or 'gregorian' (default), Julian day follows Julian
+    Calendar on and before 1582-10-5, Gregorian calendar after 1582-10-15.
+
+    if calendar='proleptic_gregorian', Julian Day follows gregorian calendar.
+
+    if calendar='julian', Julian Day follows julian calendar.
+    """
+
+    # check if input was scalar and change return accordingly
+    isscalar = False
+    try:
+        date[0]
+    except:
+        isscalar = True
+
+    date = np.atleast_1d(np.array(date))
+    year = np.empty(len(date), dtype=np.int32)
+    month = year.copy()
+    day = year.copy()
+    hour = year.copy()
+    minute = year.copy()
+    second = year.copy()
+    microsecond = year.copy()
+    jd = np.empty(year.shape, np.longdouble)
+    cdef long double[:] jd_view = jd
+    cdef Py_ssize_t i_max = len(date)
+    cdef Py_ssize_t i
+    for i in range(i_max):
+        d = date[i]
+        if getattr(d, 'tzinfo', None) is not None:
+            d = d.replace(tzinfo=None) - d.utcoffset()
+
+        year[i] = d.year
+        month[i] = d.month
+        day[i] = d.day
+        hour[i] = d.hour
+        minute[i] = d.minute
+        second[i] = d.second
+        microsecond[i] = d.microsecond
+        jd_view[i] = <double>_IntJulianDayFromDate(<int>year[i],<int>month[i],<int>day[i],calendar)
+
+    # at this point jd is an integer representing noon UTC on the given
+    # year,month,day.
+    # compute fractional day from hour,minute,second,microsecond
+    fracday = hour / 24.0 + minute / 1440.0 + (second + microsecond/1.e6) / 86400.0
+    jd = jd - 0.5 + fracday
+
+    if isscalar:
+        return jd[0]
+    else:
+        return jd
+
+def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=True,
+                      return_tuple=False):
+    """
+
+    returns a 'datetime-like' object given Julian Day. Julian Day is a
+    fractional day with approximately 100 microsecond accuracy.
+
+    if calendar='standard' or 'gregorian' (default), Julian day follows Julian
+    Calendar on and before 1582-10-5, Gregorian calendar after  1582-10-15.
+
+    if calendar='proleptic_gregorian', Julian Day follows gregorian calendar.
+
+    if calendar='julian', Julian Day follows julian calendar.
+
+    If only_use_cftime_datetimes is set to True, then cftime.datetime
+    objects are returned for all calendars.  Otherwise the datetime object is a
+    native python datetime object if the date falls in the Gregorian calendar
+    (i.e. calendar='proleptic_gregorian', or  calendar = 'standard'/'gregorian'
+    and the date is after 1582-10-15).
+    """
+
+    julian = np.atleast_1d(np.array(JD, dtype=np.longdouble))
+
+    def getdateinfo(julian):
+        # get the day (Z) and the fraction of the day (F)
+        # use 'round half up' rounding instead of numpy's even rounding
+        # so that 0.5 is rounded to 1.0, not 0 (cftime issue #49)
+        Z = np.atleast_1d(np.int32(_round_half_up(julian)))
+        F = (julian + 0.5 - Z).astype(np.longdouble)
+
+        cdef Py_ssize_t i_max = len(Z)
+        year = np.empty(i_max, dtype=np.int32)
+        month = np.empty(i_max, dtype=np.int32)
+        day = np.empty(i_max, dtype=np.int32)
+        dayofyr = np.zeros(i_max,dtype=np.int32)
+        dayofwk = np.zeros(i_max,dtype=np.int32)
+        cdef int ijd
+        cdef Py_ssize_t i
+        for i in range(i_max):
+            ijd = Z[i]
+            year[i],month[i],day[i],dayofwk[i],dayofyr[i] = _IntJulianDayToDate(ijd,calendar)
+
+        if calendar in ['standard', 'gregorian']:
+            ind_before = np.where(julian < 2299160.5)
+            ind_before = np.asarray(ind_before).any()
+        else:
+            ind_before = False
+
+        # compute hour, minute, second, microsecond, convert to int32
+        hour = np.clip((F * 24.).astype(np.int64), 0, 23)
+        F   -= hour / 24.
+        minute = np.clip((F * 1440.).astype(np.int64), 0, 59)
+        second = np.clip((F - minute / 1440.) * 86400., 0, None)
+        microsecond = (second % 1)*1.e6
+        hour = hour.astype(np.int32)
+        minute = minute.astype(np.int32)
+        second = second.astype(np.int32)
+        microsecond = microsecond.astype(np.int32)
+
+        return year,month,day,hour,minute,second,microsecond,dayofyr,dayofwk,ind_before
+
+    year,month,day,hour,minute,second,microsecond,dayofyr,dayofwk,ind_before =\
+    getdateinfo(julian)
+    # round to nearest second if within ms_eps microseconds
+    # (to avoid ugly errors in datetime formatting - alternative
+    # to adding small offset all the time as was done previously)
+    # see netcdf4-python issue #433 and cftime issue #78
+    # this is done by rounding microsends up or down, then
+    # recomputing year,month,day etc
+    # ms_eps is proportional to julian day,
+    # about 47 microseconds in 2000 for Julian base date in -4713
+    ms_eps = np.atleast_1d(np.array(np.finfo(np.float64).eps,np.longdouble))
+    ms_eps = 86400000000.*np.maximum(ms_eps*julian, ms_eps)
+    microsecond = np.where(microsecond < ms_eps, 0, microsecond)
+    indxms = microsecond > 1000000-ms_eps
+    if indxms.any():
+        julian[indxms] = julian[indxms] + 2*ms_eps[indxms]/86400000000.
+        year[indxms],month[indxms],day[indxms],hour[indxms],minute[indxms],second[indxms],microsecond2,dayofyr[indxms],dayofwk[indxms],ind_before2 =\
+        getdateinfo(julian[indxms])
+        microsecond[indxms] = 0
+
+    # check if input was scalar and change return accordingly
+    isscalar = False
+    try:
+        JD[0]
+    except:
+        isscalar = True
+
+    if calendar == 'proleptic_gregorian':
+        # datetime.datetime does not support years < 1
+        #if year < 0:
+        if only_use_cftime_datetimes:
+            datetime_type = DatetimeProlepticGregorian
+        else:
+            if (year < 0).any(): # netcdftime issue #28
+               datetime_type = DatetimeProlepticGregorian
+            else:
+               datetime_type = real_datetime
+    elif calendar in ('standard', 'gregorian'):
+        # return a 'real' datetime instance if calendar is proleptic
+        # Gregorian or Gregorian and all dates are after the
+        # Julian/Gregorian transition
+        if ind_before and not only_use_cftime_datetimes:
+            datetime_type = real_datetime
+        else:
+            datetime_type = DatetimeGregorian
+    elif calendar == "julian":
+        datetime_type = DatetimeJulian
+    elif calendar in ["noleap","365_day"]:
+        datetime_type = DatetimeNoLeap
+    elif calendar in ["all_leap","366_day"]:
+        datetime_type = DatetimeAllLeap
+    elif calendar == "360_day":
+        datetime_type = Datetime360Day
+    else:
+        raise ValueError("unsupported calendar: {0}".format(calendar))
+
+    if not isscalar:
+        if return_tuple:
+            return np.array([args for args in
+                            zip(year, month, day, hour, minute, second,
+                                microsecond,dayofwk,dayofyr)])
+        else:
+            return np.array([datetime_type(*args)
+                             for args in
+                             zip(year, month, day, hour, minute, second,
+                                 microsecond)])
+
+    else:
+        if return_tuple:
+            return (year[0], month[0], day[0], hour[0],
+                    minute[0], second[0], microsecond[0],
+                    dayofwk[0], dayofyr[0])
+        else:
+            return datetime_type(year[0], month[0], day[0], hour[0],
+                                 minute[0], second[0], microsecond[0])
 
 cdef _parse_date_and_units(timestr,calendar='standard'):
     """parse a string of the form time-units since yyyy-mm-dd hh:mm:ss
