@@ -5,7 +5,7 @@ import operator
 import sys
 import unittest
 from collections import namedtuple
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, MINYEAR
 
 import numpy as np
 import pytest
@@ -17,7 +17,7 @@ from cftime import real_datetime
 from cftime import (DateFromJulianDay, Datetime360Day, DatetimeAllLeap,
                     DatetimeGregorian, DatetimeJulian, DatetimeNoLeap,
                     DatetimeProlepticGregorian, JulianDayFromDate, _parse_date,
-                    date2index, date2num, num2date, utime)
+                    date2index, date2num, num2date, utime, num2date_int)
 
 try:
     from datetime import timezone
@@ -1589,6 +1589,272 @@ def test_exact_datetime_difference(date_type):
     result = b - a
     expected = timedelta(microseconds=5)
     assert result == expected
+
+
+_SHAPES = [(4, ), (2, 2)]
+_MICROSECOND_UNITS = ["microseconds", "microsecond", "microsec", "microsecs"]
+_MILLISECOND_UNITS = ["milliseconds", "millisecond", "millisec", "millisecs", "ms"]
+_SECOND_UNITS = ["seconds", "second", "sec", "secs", "s"]
+_MINUTE_UNITS = ["minutes", "minute", "min", "mins"]
+_HOUR_UNITS = ["hours", "hour", "hr", "hrs", "h"]
+_DAY_UNITS = ["day", "days", "d"]
+_MONTH_UNITS = ["month", "months"]
+_DTYPES = [np.dtype("int64"), np.dtype("float64")]
+_STANDARD_CALENDARS = [
+    "standard",
+    "gregorian",
+    "proleptic_gregorian"
+]
+_REAL_WORLD_CALENDARS = [
+    "julian",
+    "standard",
+    "gregorian",
+    "proleptic_gregorian"
+]
+_ARTIFICIAL_CALENDARS = ["noleap", "all_leap", "360_day"]
+
+
+@pytest.fixture(params=_SHAPES)
+def shape(request):
+    return request.param
+
+
+@pytest.fixture(params=_DTYPES)
+def dtype(request):
+    return request.param
+
+
+@pytest.fixture(params=list(_EXPECTED_DATE_TYPES.keys()))
+def calendar(request):
+    return request.param
+
+
+@pytest.mark.parametrize("unit", _MICROSECOND_UNITS)
+def test_num2date_int_microsecond_units(calendar, unit, shape, dtype):
+    date_type = _EXPECTED_DATE_TYPES[calendar]
+    expected = np.array([date_type(2000, 1, 1, 0, 0, 0, 1),
+                         date_type(2000, 1, 1, 0, 0, 0, 2),
+                         date_type(2000, 1, 1, 0, 0, 0, 3),
+                         date_type(2000, 1, 1, 0, 0, 0, 4)]).reshape(shape)
+    numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
+    units = "{} since 2000-01-01".format(unit)
+    result = num2date_int(numeric_times, units=units, calendar=calendar)
+    np.testing.assert_equal(result, expected)
+
+
+@pytest.mark.parametrize("unit", _MILLISECOND_UNITS)
+def test_num2date_int_millisecond_units(calendar, unit, shape, dtype):
+    date_type = _EXPECTED_DATE_TYPES[calendar]
+    expected = np.array([date_type(2000, 1, 1, 0, 0, 0, 1000),
+                         date_type(2000, 1, 1, 0, 0, 0, 2000),
+                         date_type(2000, 1, 1, 0, 0, 0, 3000),
+                         date_type(2000, 1, 1, 0, 0, 0, 4000)]).reshape(shape)
+    numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
+    units = "{} since 2000-01-01".format(unit)
+    result = num2date_int(numeric_times, units=units, calendar=calendar)
+    np.testing.assert_equal(result, expected)
+
+
+@pytest.mark.parametrize("unit", _SECOND_UNITS)
+def test_num2date_int_second_units(calendar, unit, shape, dtype):
+    date_type = _EXPECTED_DATE_TYPES[calendar]
+    expected = np.array([date_type(2000, 1, 1, 0, 0, 1, 0),
+                         date_type(2000, 1, 1, 0, 0, 2, 0),
+                         date_type(2000, 1, 1, 0, 0, 3, 0),
+                         date_type(2000, 1, 1, 0, 0, 4, 0)]).reshape(shape)
+    numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
+    units = "{} since 2000-01-01".format(unit)
+    result = num2date_int(numeric_times, units=units, calendar=calendar)
+    np.testing.assert_equal(result, expected)
+
+
+@pytest.mark.parametrize("unit", _MINUTE_UNITS)
+def test_num2date_int_minute_units(calendar, unit, shape, dtype):
+    date_type = _EXPECTED_DATE_TYPES[calendar]
+    expected = np.array([date_type(2000, 1, 1, 0, 1, 0, 0),
+                         date_type(2000, 1, 1, 0, 2, 0, 0),
+                         date_type(2000, 1, 1, 0, 3, 0, 0),
+                         date_type(2000, 1, 1, 0, 4, 0, 0)]).reshape(shape)
+    numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
+    units = "{} since 2000-01-01".format(unit)
+    result = num2date_int(numeric_times, units=units, calendar=calendar)
+    np.testing.assert_equal(result, expected)
+
+
+@pytest.mark.parametrize("unit", _HOUR_UNITS)
+def test_num2date_int_hour_units(calendar, unit, shape, dtype):
+    date_type = _EXPECTED_DATE_TYPES[calendar]
+    expected = np.array([date_type(2000, 1, 1, 1, 0, 0, 0),
+                         date_type(2000, 1, 1, 2, 0, 0, 0),
+                         date_type(2000, 1, 1, 3, 0, 0, 0),
+                         date_type(2000, 1, 1, 4, 0, 0, 0)]).reshape(shape)
+    numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
+    units = "{} since 2000-01-01".format(unit)
+    result = num2date_int(numeric_times, units=units, calendar=calendar)
+    np.testing.assert_equal(result, expected)
+
+
+@pytest.mark.parametrize("unit", _DAY_UNITS)
+def test_num2date_int_day_units(calendar, unit, shape, dtype):
+    date_type = _EXPECTED_DATE_TYPES[calendar]
+    expected = np.array([date_type(2000, 1, 2, 0, 0, 0, 0),
+                         date_type(2000, 1, 3, 0, 0, 0, 0),
+                         date_type(2000, 1, 4, 0, 0, 0, 0),
+                         date_type(2000, 1, 5, 0, 0, 0, 0)]).reshape(shape)
+    numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
+    units = "{} since 2000-01-01".format(unit)
+    result = num2date_int(numeric_times, units=units, calendar=calendar)
+    np.testing.assert_equal(result, expected)
+
+
+@pytest.mark.parametrize("unit", _MONTH_UNITS)
+def test_num2date_int_month_units(calendar, unit, shape, dtype):
+    date_type = _EXPECTED_DATE_TYPES[calendar]
+    expected = np.array([date_type(2000, 2, 1, 0, 0, 0, 0),
+                         date_type(2000, 3, 1, 0, 0, 0, 0),
+                         date_type(2000, 4, 1, 0, 0, 0, 0),
+                         date_type(2000, 5, 1, 0, 0, 0, 0)]).reshape(shape)
+    numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
+    units = "{} since 2000-01-01".format(unit)
+
+    if calendar != "360_day":
+        with pytest.raises(ValueError):
+            num2date_int(numeric_times, units=units, calendar=calendar)
+    else:
+        result = num2date_int(numeric_times, units=units, calendar=calendar)
+        np.testing.assert_equal(result, expected)
+
+
+def test_num2date_int_only_use_python_datetimes(calendar, shape, dtype):
+    date_type = real_datetime
+    expected = np.array([date_type(2000, 1, 2, 0, 0, 0, 0),
+                         date_type(2000, 1, 3, 0, 0, 0, 0),
+                         date_type(2000, 1, 4, 0, 0, 0, 0),
+                         date_type(2000, 1, 5, 0, 0, 0, 0)]).reshape(shape)
+    numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
+    units = "days since 2000-01-01"
+    if calendar not in _STANDARD_CALENDARS:
+        with pytest.raises(ValueError):
+            num2date_int(numeric_times, units=units, calendar=calendar,
+                         only_use_python_datetimes=True,
+                         only_use_cftime_datetimes=False)
+    else:
+        result = num2date_int(numeric_times, units=units, calendar=calendar,
+                              only_use_python_datetimes=True,
+                              only_use_cftime_datetimes=False)
+        np.testing.assert_equal(result, expected)
+
+
+def test_num2date_int_use_pydatetime_if_possible(calendar, shape, dtype):
+    if calendar not in _STANDARD_CALENDARS:
+        date_type = _EXPECTED_DATE_TYPES[calendar]
+    else:
+        date_type = real_datetime
+
+    expected = np.array([date_type(2000, 1, 2, 0, 0, 0, 0),
+                         date_type(2000, 1, 3, 0, 0, 0, 0),
+                         date_type(2000, 1, 4, 0, 0, 0, 0),
+                         date_type(2000, 1, 5, 0, 0, 0, 0)]).reshape(shape)
+    numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
+    units = "days since 2000-01-01"
+    result = num2date_int(numeric_times, units=units, calendar=calendar,
+                          only_use_python_datetimes=False,
+                          only_use_cftime_datetimes=False)
+    np.testing.assert_equal(result, expected)
+
+
+@pytest.mark.parametrize(
+    ["standard_calendar", "breakpoint"],
+    [("proleptic_gregorian", "{}-12-31T23:59:59.999999".format(MINYEAR - 1)),
+     ("gregorian", "1582-10-15"),
+     ("standard", "1582-10-15")]
+)
+def test_num2date_int_only_use_python_datetimes_invalid_basedate(
+    standard_calendar,
+    breakpoint
+):
+    units = "days since {}".format(breakpoint)
+    numeric_times = np.array([1, 2, 3, 4])
+    with pytest.raises(ValueError, match="illegal calendar or reference date"):
+        num2date_int(
+            numeric_times,
+            units=units,
+            calendar=standard_calendar,
+            only_use_python_datetimes=True,
+            only_use_cftime_datetimes=False
+        )
+
+
+@pytest.mark.parametrize("real_world_calendar", _REAL_WORLD_CALENDARS)
+def test_num2date_int_invalid_zero_reference_year(real_world_calendar):
+    units = "days since 0000-01-01"
+    numeric_times = np.array([1, 2, 3, 4])
+    with pytest.raises(ValueError, match="zero not allowed as a reference"):
+        num2date_int(
+            numeric_times,
+            units=units,
+            calendar=real_world_calendar
+        )
+
+
+@pytest.mark.parametrize("artificial_calendar", _ARTIFICIAL_CALENDARS)
+def test_num2date_int_valid_zero_reference_year(artificial_calendar):
+    units = "days since 0000-01-01"
+    numeric_times = np.array([1, 2, 3, 4])
+    num2date_int(numeric_times, units=units, calendar=artificial_calendar)
+
+
+def test_num2date_int_uncastable_values(calendar):
+    units = "days since 2000-01-01"
+    numeric_times = np.array([1.0, np.pi])
+    with pytest.warns(UserWarning, match="Falling back to the older inexact"):
+        num2date_int(numeric_times, units=units, calendar=calendar)
+
+
+def test_num2date_int_masked_array(calendar):
+    date_type = _EXPECTED_DATE_TYPES[calendar]
+    expected = np.array([date_type(2000, 1, 1, 1, 0, 0, 0),
+                         date_type(2000, 1, 1, 2, 0, 0, 0),
+                         date_type(2000, 1, 1, 3, 0, 0, 0),
+                         date_type(2000, 1, 1, 4, 0, 0, 0)])
+    mask = [False, False, True, False]
+    expected = np.ma.masked_array(expected, mask=mask)
+    numeric_times = np.ma.masked_array([1, 2, 3, 4], mask=mask)
+    units = "hours since 2000-01-01"
+    result = num2date_int(numeric_times, units=units, calendar=calendar)
+    np.testing.assert_equal(result, expected)
+
+
+def test_num2date_int_out_of_range():
+    numeric_times = 12 * np.array([200000, 400000, 600000])
+    units = "months since 2000-01-01"
+    with pytest.warns(UserWarning, match="Falling back to the older inexact"):
+        num2date_int(numeric_times, units=units, calendar="360_day")
+
+
+def test_num2date_int_list_input(calendar):
+    date_type = _EXPECTED_DATE_TYPES[calendar]
+    expected = np.array([date_type(2000, 1, 1, 1, 0, 0, 0),
+                         date_type(2000, 1, 1, 2, 0, 0, 0),
+                         date_type(2000, 1, 1, 3, 0, 0, 0),
+                         date_type(2000, 1, 1, 4, 0, 0, 0)])
+    numeric_times = [1, 2, 3, 4]
+    units = "hours since 2000-01-01"
+    result = num2date_int(numeric_times, units=units, calendar=calendar)
+    np.testing.assert_equal(result, expected)
+
+
+def test_num2date_int_integer_upcast_required():
+    numeric_times = np.array([30, 60, 90, 120], dtype=np.int32)
+    units = "minutes since 2000-01-01"
+    expected = np.array([
+        Datetime360Day(2000, 1, 1, 0, 30, 0),
+        Datetime360Day(2000, 1, 1, 1, 0, 0),
+        Datetime360Day(2000, 1, 1, 1, 30, 0),
+        Datetime360Day(2000, 1, 1, 2, 0, 0)
+    ])
+    result = num2date_int(numeric_times, units=units, calendar="360_day")
+    np.testing.assert_equal(result, expected)
 
 
 if __name__ == '__main__':
