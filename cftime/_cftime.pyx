@@ -145,26 +145,6 @@ def _dateparse(timestr):
             raise ValueError('cannot use utc_offset for reference years <= 0')
     return basedate
 
-def _round_half_up(x):
-    # 'round half up' so 0.5 rounded to 1 (instead of 0 as in numpy.round)
-    return np.ceil(np.floor(2.*x)/2.)
-
-cdef _parse_date_and_units(timestr,calendar='standard'):
-    """parse a string of the form time-units since yyyy-mm-dd hh:mm:ss
-    return a tuple (units,utc_offset, datetimeinstance)"""
-    (units, isostring) = _datesplit(timestr)
-    if not ((units in month_units and calendar=='360_day') or units in _units):
-        if units in month_units and calendar != '360_day':
-            raise ValueError("'months since' units only allowed for '360_day' calendar")
-        else:
-            raise ValueError(
-            "units must be one of 'seconds', 'minutes', 'hours' or 'days' (or singular version of these), got '%s'" % units)
-    # parse the date string.
-    year, month, day, hour, minute, second, microsecond, utc_offset = _parse_date(
-        isostring.strip())
-    return units, utc_offset, datetime(year, month, day, hour, minute, second, calendar=calendar)
-
-
 def date2num(dates,units,calendar='standard'):
         """date2num(dates,units,calendar='standard')
 
@@ -1775,6 +1755,25 @@ cdef _IntJulianDayToDate_360day(int jday):
     return year,month,day,dow,doy
 
 # deprecated code
+
+def _round_half_up(x):
+    # 'round half up' so 0.5 rounded to 1 (instead of 0 as in numpy.round)
+    return np.ceil(np.floor(2.*x)/2.)
+
+cdef _parse_date_and_units(timestr,calendar='standard'):
+    """parse a string of the form time-units since yyyy-mm-dd hh:mm:ss
+    return a tuple (units,utc_offset, datetimeinstance)"""
+    (units, isostring) = _datesplit(timestr)
+    if not ((units in month_units and calendar=='360_day') or units in _units):
+        if units in month_units and calendar != '360_day':
+            raise ValueError("'months since' units only allowed for '360_day' calendar")
+        else:
+            raise ValueError(
+            "units must be one of 'seconds', 'minutes', 'hours' or 'days' (or singular version of these), got '%s'" % units)
+    # parse the date string.
+    year, month, day, hour, minute, second, microsecond, utc_offset = _parse_date(
+        isostring.strip())
+    return units, utc_offset, datetime(year, month, day, hour, minute, second, calendar=calendar)
 def JulianDayFromDate(date, calendar='standard'):
     """JulianDayFromDate(date, calendar='standard')
 
