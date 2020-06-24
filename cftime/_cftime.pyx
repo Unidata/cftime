@@ -209,7 +209,7 @@ def date2num(dates,units,calendar='standard'):
             shape = dates.shape
         times = []
         for date in dates.flat:
-            if use_python_datetime and date.year > MINYEAR:
+            if use_python_datetime and date.year >= MINYEAR:
                 if not isinstance(basedate, datetime_python):
                     basedate = real_datetime(basedate.year, basedate.month, basedate.day, 
                                basedate.hour, basedate.minute, basedate.second,
