@@ -345,9 +345,9 @@ def cast_to_int(num):
         return num
     else:
         if isinstance(num, np.ma.core.MaskedArray):
-            int_num = np.ma.masked_array(num, dtype=np.int64)
+            int_num = np.ma.masked_array(np.rint(num), dtype=np.int64)
         else:
-            int_num = np.array(num, dtype=np.int64)
+            int_num = np.array(np.rint(num), dtype=np.int64)
         return int_num
 
 

@@ -774,10 +774,10 @@ class cftimeTestCase(unittest.TestCase):
         units='days since 1858-11-17 00:00:00'
         dates = num2date(times, units=units, calendar='standard',\
         only_use_cftime_datetimes=False, only_use_python_datetimes=True)
-        test = dates == np.ma.masked_array([datetime(1848, 1, 17, 6, 0, 0, 41), None],mask=[0,1])
+        test = dates == np.ma.masked_array([datetime(1848, 1, 17, 6, 0, 0, 40), None],mask=[0,1])
         assert(test.all())
         dates = num2date(times, units=units, calendar='standard')
-        assert(str(dates)=='[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 41) --]')
+        assert(str(dates)=='[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 40) --]')
 
 class TestDate2index(unittest.TestCase):
 
