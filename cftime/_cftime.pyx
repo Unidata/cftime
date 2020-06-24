@@ -53,7 +53,7 @@ cdef int32_t* days_per_month_array = [
 _rop_lookup = {Py_LT: '__gt__', Py_LE: '__ge__', Py_EQ: '__eq__',
                Py_GT: '__lt__', Py_GE: '__le__', Py_NE: '__ne__'}
 
-__version__ = '1.1.4'
+__version__ = '1.2.0'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
@@ -224,6 +224,7 @@ def date2num(dates,units,calendar='standard'):
             shape = dates.shape
         times = []
         for date in dates.flat:
+            # use python datetime if possible.
             if use_python_datetime and date.year >= MINYEAR:
                 if not isinstance(basedate, datetime_python):
                     basedate = real_datetime(basedate.year, basedate.month, basedate.day, 
@@ -232,9 +233,10 @@ def date2num(dates,units,calendar='standard'):
                 if not isinstance(date, datetime_python):
                     date = real_datetime(date.year, date.month, date.day, date.hour,
                                          date.minute, date.second, date.microsecond)
+                # adjust for time zone offset
                 if getattr(date, 'tzinfo',None) is not None:
                     date = date.replace(tzinfo=None) - date.utcoffset()
-            else:
+            else: # convert basedate and date to same calendar specific cftime.datetime instance
                 if not isinstance(basedate, DATE_TYPES[calendar]):
                     basedate =  to_calendar_specific_datetime(basedate, calendar, False)
                 if not isinstance(date, DATE_TYPES[calendar]):
@@ -379,7 +381,6 @@ def safely_scale_times(num, factor):
             return num.astype(np.longdouble) * factor
         else:
             return num * factor
-
 
 def num2date(
     times,
@@ -1771,7 +1772,7 @@ cdef _IntJulianDayToDate_360day(int jday):
 
     return year,month,day,dow,doy
 
-# deprecated code
+# stuff below no longer used, kept here for backwards compatibility.
 
 def _round_half_up(x):
     # 'round half up' so 0.5 rounded to 1 (instead of 0 as in numpy.round)
