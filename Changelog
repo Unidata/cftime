@@ -13,6 +13,7 @@ version 1.2.0 (not yet released)
  * utime.date2num/utime.num2date now just call module level functions.
    JulianDayFromDate/DateFromJulianDay no longer used internally (PR #180).
 
+
 version 1.1.3 (release tag v1.1.3rel)
 =====================================
  * add isoformat method for compatibility with python datetime (issue #152).
