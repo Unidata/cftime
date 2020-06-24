@@ -115,11 +115,8 @@ class cftimeTestCase(unittest.TestCase):
         t1 = self.cdftime_mixed.date2num(d1)
         d2 = datetime(1582, 10, 4, 18, tzinfo=est)
         t2 = self.cdftime_mixed.date2num(d2)
-        d3 = d2.replace(tzinfo=None)
-        t3 = self.cdftime_mixed.date2num(d3)
         assert_almost_equal(t1, 13865687.0)
-        assert_almost_equal(t2, 13865687.0)
-        assert_almost_equal(t3, 13865682.0)
+        assert_almost_equal(t2, 13865682.0) # est is 5 hours behind utc
 
     def test_tz_naive(self):
         """testing cftime"""
