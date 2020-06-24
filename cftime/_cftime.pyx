@@ -347,13 +347,8 @@ def cast_to_int(num):
         if isinstance(num, np.ma.core.MaskedArray):
             int_num = np.ma.masked_array(num, dtype=np.int64)
         else:
-            int_num =  np.array(num, dtype=np.int64)
+            int_num = np.array(num, dtype=np.int64)
         return int_num
-        #if (num == int_num).all():
-        #    num = int_num
-        #else:
-        #    num = np.rint(int_num)
-        #return num
 
 
 def upcast_times(num):
