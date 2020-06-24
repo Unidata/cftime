@@ -121,7 +121,7 @@ def _datesplit(timestr):
 
     return units.lower(), remainder
 
-def _dateparse(timestr,calendar='standard'):
+def _dateparse(timestr,calendar):
     """parse a string of the form time-units since yyyy-mm-dd hh:mm:ss,
     return a datetime instance"""
     # same as version in cftime, but returns a timezone naive
@@ -164,6 +164,10 @@ def _dateparse(timestr,calendar='standard'):
             'there are only 30 days in every month with the 360_day calendar')
     return basedate
 
+def _can_use_python_datetime(date,calendar):
+    return ((calendar == 'proleptic_gregorian' and date.year >= MINYEAR) or \
+           (calendar in ['gregorian','standard'] and date > gregorian))
+
 def date2num(dates,units,calendar='standard'):
         """date2num(dates,units,calendar='standard')
 
@@ -205,8 +209,7 @@ def date2num(dates,units,calendar='standard'):
         if unit in ["months", "month"] and calendar != "360_day":
             raise ValueError("Units of months only valid for 360_day calendar.")
         factor = UNIT_CONVERSION_FACTORS[unit]
-        use_python_datetime = (calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
-                              (calendar in ['gregorian','standard'] and basedate > gregorian)
+        use_python_datetime = _can_use_python_datetime(basedate,calendar)
 
         isscalar = False
         try:
@@ -432,9 +435,7 @@ def num2date(
     calendar = calendar.lower()
     basedate = _dateparse(units,calendar=calendar)
 
-    can_use_python_datetime=\
-      ((calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
-       (calendar in ['gregorian','standard'] and basedate > gregorian))
+    can_use_python_datetime=_can_use_python_datetime(basedate,calendar)
     if not only_use_cftime_datetimes and only_use_python_datetimes:
         if not can_use_python_datetime:
             msg='illegal calendar or reference date for python datetime'
