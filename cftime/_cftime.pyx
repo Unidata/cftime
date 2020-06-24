@@ -366,9 +366,8 @@ def upcast_times(num):
         return num.astype(np.int64)
 
 
-def safely_scale_times(num, factor):
-    """Scale times by a factor, casting to a longdouble if integer overflow
-    would occur."""
+def scale_times(num, factor):
+    """Scale times by a factor, raise an error if values will not fit in np.int64"""
     if num.dtype.kind == "f":
         return factor * num
     else:
@@ -378,7 +377,8 @@ def safely_scale_times(num, factor):
         minimum = np.min(num).item() * factor
         maximum = np.max(num).item() * factor
         if minimum < _MIN_INT64 or maximum > _MAX_INT64:
-            return num.astype(np.longdouble) * factor
+            # allowable time range = 292,471 years
+            raise OverflowError('time values outside range of 64 bit signed integers')
         else:
             return num * factor
 
@@ -473,7 +473,7 @@ def num2date(
     factor = UNIT_CONVERSION_FACTORS[unit]
     times = np.asanyarray(times)  # Allow list as input
     times = upcast_times(times)
-    scaled_times = safely_scale_times(times, factor)
+    scaled_times = scale_times(times, factor)
     scaled_times = cast_to_int(scaled_times)
 
     # Through np.timedelta64, convert integers scaled to have units of
