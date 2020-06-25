@@ -168,100 +168,101 @@ def _can_use_python_datetime(date,calendar):
     return ((calendar == 'proleptic_gregorian' and date.year >= MINYEAR) or \
            (calendar in ['gregorian','standard'] and date > gregorian))
 
+        #"""date2num(dates,units,calendar='standard')
+@cython.embedsignature(True)
 def date2num(dates,units,calendar='standard'):
-        """date2num(dates,units,calendar='standard')
-
+    """
     Return numeric time values given datetime objects. The units
-    of the numeric time values are described by the `units` argument
-    and the `calendar` keyword. The datetime objects must
+    of the numeric time values are described by the **units** argument
+    and the **calendar** keyword. The datetime objects must
     be in UTC with no time-zone offset.  If there is a
-    time-zone offset in `units`, it will be applied to the
+    time-zone offset in **units**, it will be applied to the
     returned numeric values.
 
-    **`dates`**: A datetime object or a sequence of datetime objects.
+    **dates**: A datetime object or a sequence of datetime objects.
     The datetime objects should not include a time-zone offset.
 
-    **`units`**: a string of the form `<time units> since <reference time>`
-    describing the time units. `<time units>` can be days, hours, minutes,
-    seconds, milliseconds or microseconds. `<reference time>` is the time
-    origin. `months_since` is allowed *only* for the `360_day` calendar.
+    **units**: a string of the form **<time units> since <reference time>**
+    describing the time units. **<time units>** can be days, hours, minutes,
+    seconds, milliseconds or microseconds. **<reference time>** is the time
+    origin. **months_since** is allowed *only* for the **360_day** calendar.
 
-    **`calendar`**: describes the calendar used in the time calculations.
+    **calendar**: describes the calendar used in the time calculations.
     All the values currently defined in the
     [CF metadata convention](http://cfconventions.org)
-    Valid calendars `'standard', 'gregorian', 'proleptic_gregorian'
-    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'`.
-    Default is `'standard'`, which is a mixed Julian/Gregorian calendar.
+    Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
+    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
+    Default is **'standard'**, which is a mixed Julian/Gregorian calendar.
 
     returns a numeric time value, or an array of numeric time values
-    with approximately 100 microsecond accuracy.
-        """
-        calendar = calendar.lower()
-        basedate = _dateparse(units,calendar=calendar)
-        (unit, isostring) = _datesplit(units)
-        # real-world calendars limited to positive reference years.
-        if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
-            if basedate.year == 0:
-                msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
-                raise ValueError(msg)
-        if unit not in UNIT_CONVERSION_FACTORS:
-            raise ValueError("Unsupported time units provided, {!r}.".format(unit))
-        if unit in ["months", "month"] and calendar != "360_day":
-            raise ValueError("Units of months only valid for 360_day calendar.")
-        factor = UNIT_CONVERSION_FACTORS[unit]
-        use_python_datetime = _can_use_python_datetime(basedate,calendar)
+    with approximately 1 microsecond accuracy.
+    """
+    calendar = calendar.lower()
+    basedate = _dateparse(units,calendar=calendar)
+    (unit, isostring) = _datesplit(units)
+    # real-world calendars limited to positive reference years.
+    if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
+        if basedate.year == 0:
+            msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
+            raise ValueError(msg)
+    if unit not in UNIT_CONVERSION_FACTORS:
+        raise ValueError("Unsupported time units provided, {!r}.".format(unit))
+    if unit in ["months", "month"] and calendar != "360_day":
+        raise ValueError("Units of months only valid for 360_day calendar.")
+    factor = UNIT_CONVERSION_FACTORS[unit]
+    use_python_datetime = _can_use_python_datetime(basedate,calendar)
 
-        isscalar = False
-        try:
-            dates[0]
-        except:
-            isscalar = True
-        ismasked = False
-        if np.ma.isMA(dates) and np.ma.is_masked(dates):
-            mask = dates.mask
-            ismasked = True
-        if isscalar:
-            dates = np.array([dates])
+    isscalar = False
+    try:
+        dates[0]
+    except:
+        isscalar = True
+    ismasked = False
+    if np.ma.isMA(dates) and np.ma.is_masked(dates):
+        mask = dates.mask
+        ismasked = True
+    if isscalar:
+        dates = np.array([dates])
+    else:
+        dates = np.array(dates)
+        shape = dates.shape
+    times = []
+    for date in dates.flat:
+        # use python datetime if possible.
+        if use_python_datetime and date.year >= MINYEAR:
+            if not isinstance(basedate, datetime_python):
+                basedate = real_datetime(basedate.year, basedate.month, basedate.day, 
+                           basedate.hour, basedate.minute, basedate.second,
+                           basedate.microsecond)
+            if not isinstance(date, datetime_python):
+                date = real_datetime(date.year, date.month, date.day, date.hour,
+                                     date.minute, date.second, date.microsecond)
+            # adjust for time zone offset
+            if getattr(date, 'tzinfo',None) is not None:
+                date = date.replace(tzinfo=None) - date.utcoffset()
+        else: # convert basedate and date to same calendar specific cftime.datetime instance
+            if not isinstance(basedate, DATE_TYPES[calendar]):
+                basedate =  to_calendar_specific_datetime(basedate, calendar, False)
+            if not isinstance(date, DATE_TYPES[calendar]):
+                date = to_calendar_specific_datetime(date, calendar, False)
+        if ismasked and not date:
+            times.append(None)
         else:
-            dates = np.array(dates)
-            shape = dates.shape
-        times = []
-        for date in dates.flat:
-            # use python datetime if possible.
-            if use_python_datetime and date.year >= MINYEAR:
-                if not isinstance(basedate, datetime_python):
-                    basedate = real_datetime(basedate.year, basedate.month, basedate.day, 
-                               basedate.hour, basedate.minute, basedate.second,
-                               basedate.microsecond)
-                if not isinstance(date, datetime_python):
-                    date = real_datetime(date.year, date.month, date.day, date.hour,
-                                         date.minute, date.second, date.microsecond)
-                # adjust for time zone offset
-                if getattr(date, 'tzinfo',None) is not None:
-                    date = date.replace(tzinfo=None) - date.utcoffset()
-            else: # convert basedate and date to same calendar specific cftime.datetime instance
-                if not isinstance(basedate, DATE_TYPES[calendar]):
-                    basedate =  to_calendar_specific_datetime(basedate, calendar, False)
-                if not isinstance(date, DATE_TYPES[calendar]):
-                    date = to_calendar_specific_datetime(date, calendar, False)
-            if ismasked and not date:
-                times.append(None)
-            else:
-                td = date - basedate
-                # timedelta division only works python >= 3.2
-                #times.append( (td/timedelta(microseconds=1)) / factor )
-                times.append( (td.total_seconds()*1.e6) / factor )
-        if ismasked: # convert to masked array if input was masked array
-            times = np.array(times)
-            times = np.ma.masked_where(times==None,times)
-            if isscalar:
-                return times[0]
-            else:
-                return np.reshape(times, shape)
+            td = date - basedate
+            # timedelta division only works python >= 3.2
+            #times.append( (td/timedelta(microseconds=1)) / factor )
+            times.append( (td.total_seconds()*1.e6) / factor )
+    if ismasked: # convert to masked array if input was masked array
+        times = np.array(times)
+        times = np.ma.masked_where(times==None,times)
         if isscalar:
             return times[0]
         else:
-            return np.reshape(np.array(times), shape)
+            return np.reshape(times, shape)
+    if isscalar:
+        return times[0]
+    else:
+        return np.reshape(np.array(times), shape)
 
 
 def num2pydate(times,units,calendar='standard'):
@@ -380,6 +381,7 @@ def scale_times(num, factor):
         else:
             return num * factor
 
+@cython.embedsignature(True)
 def num2date(
     times,
     units,
@@ -390,32 +392,32 @@ def num2date(
     """Decode times exactly with timedelta arithmetic.
 
     Return datetime objects given numeric time values. The units
-    of the numeric time values are described by the `units` argument
-    and the `calendar` keyword. The returned datetime objects represent
+    of the numeric time values are described by the **units** argument
+    and the **calendar** keyword. The returned datetime objects represent
     UTC with no time-zone offset, even if the specified
-    `units` contain a time-zone offset.
+    **units** contain a time-zone offset.
 
-    **`times`**: numeric time values.
+    **times**: numeric time values.
 
-    **`units`**: a string of the form `<time units> since <reference time>`
-    describing the time units. `<time units>` can be days, hours, minutes,
-    seconds, milliseconds or microseconds. `<reference time>` is the time
-    origin. `months_since` is allowed *only* for the `360_day` calendar.
+    **units**: a string of the form **<time units> since <reference time>**
+    describing the time units. **<time units>** can be days, hours, minutes,
+    seconds, milliseconds or microseconds. **<reference time>** is the time
+    origin. **months_since** is allowed *only* for the **360_day** calendar.
 
-    **`calendar`**: describes the calendar used in the time calculations.
+    **calendar**: describes the calendar used in the time calculations.
     All the values currently defined in the
     [CF metadata convention](http://cfconventions.org)
-    Valid calendars `'standard', 'gregorian', 'proleptic_gregorian'
-    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'`.
-    Default is `'standard'`, which is a mixed Julian/Gregorian calendar.
+    Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
+    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
+    Default is **'standard'**, which is a mixed Julian/Gregorian calendar.
 
-    **`only_use_cftime_datetimes`**: if False, python datetime.datetime
+    **only_use_cftime_datetimes**: if False, python datetime.datetime
     objects are returned from num2date where possible; if True dates which
-    subclass cftime.datetime are returned for all calendars. Default `True`.
+    subclass cftime.datetime are returned for all calendars. Default **True**.
 
-    **`only_use_python_datetimes`**: always return python datetime.datetime
+    **only_use_python_datetimes**: always return python datetime.datetime
     objects and raise an error if this is not possible. Ignored unless
-    `only_use_cftime_datetimes=False`. Default `False`.
+    **only_use_cftime_datetimes=False**. Default **False**.
 
     returns a datetime instance, or an array of datetime instances with
     microsecond accuracy, if possible.
@@ -423,13 +425,13 @@ def num2date(
     ***Note***: If only_use_cftime_datetimes=False and
     use_only_python_datetimes=False, the datetime instances
     returned are 'real' python datetime
-    objects if `calendar='proleptic_gregorian'`, or
-    `calendar='standard'` or `'gregorian'`
+    objects if **calendar='proleptic_gregorian'**, or
+    **calendar='standard'** or **'gregorian'**
     and the date is after the breakpoint between the Julian and
     Gregorian calendars (1582-10-15). Otherwise, they are ctime.datetime
     objects which support some but not all the methods of native python
     datetime objects. The datetime instances
-    do not contain a time-zone offset, even if the specified `units`
+    do not contain a time-zone offset, even if the specified **units**
     contains one.
     """
     calendar = calendar.lower()
@@ -482,31 +484,31 @@ def num2date(
         raise ValueError("OverflowError in datetime, possibly because year < datetime.MINYEAR")
 
 
+@cython.embedsignature(True)
 def date2index(dates, nctime, calendar=None, select='exact'):
-    """date2index(dates, nctime, calendar=None, select='exact')
-
+    """
     Return indices of a netCDF time variable corresponding to the given dates.
 
-    **`dates`**: A datetime object or a sequence of datetime objects.
+    **dates**: A datetime object or a sequence of datetime objects.
     The datetime objects should not include a time-zone offset.
 
-    **`nctime`**: A netCDF time variable object. The nctime object must have a
-    `units` attribute.
+    **nctime**: A netCDF time variable object. The nctime object must have a
+    **units** attribute.
 
-    **`calendar`**: describes the calendar used in the time calculations.
+    **calendar**: describes the calendar used in the time calculations.
     All the values currently defined in the
     [CF metadata convention](http://cfconventions.org)
-    Valid calendars `'standard', 'gregorian', 'proleptic_gregorian'
-    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'`.
-    Default is `'standard'`, which is a mixed Julian/Gregorian calendar.
-    If `calendar` is None, its value is given by `nctime.calendar` or
-    `standard` if no such attribute exists.
+    Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
+    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
+    Default is **'standard'**, which is a mixed Julian/Gregorian calendar.
+    If **calendar** is None, its value is given by **nctime.calendar** or
+    **standard** if no such attribute exists.
 
-    **`select`**: `'exact', 'before', 'after', 'nearest'`
-    The index selection method. `exact` will return the indices perfectly
-    matching the dates given. `before` and `after` will return the indices
+    **select**: **'exact', 'before', 'after', 'nearest'**
+    The index selection method. **exact** will return the indices perfectly
+    matching the dates given. **before** and **after** will return the indices
     corresponding to the dates just before or just after the given dates if
-    an exact match cannot be found. `nearest` will return the indices that
+    an exact match cannot be found. **nearest** will return the indices that
     correspond to the closest dates.
 
     returns an index (indices) of the netCDF time variable corresponding
@@ -664,21 +666,21 @@ def _date2index(dates, nctime, calendar=None, select='exact'):
 
     Return indices of a netCDF time variable corresponding to the given dates.
 
-    @param dates: A datetime object or a sequence of datetime objects.
+    **dates**: A datetime object or a sequence of datetime objects.
     The datetime objects should not include a time-zone offset.
 
-    @param nctime: A netCDF time variable object. The nctime object must have a
+    **nctime**: A netCDF time variable object. The nctime object must have a
     C{units} attribute. The entries are assumed to be stored in increasing
     order.
 
-    @param calendar: Describes the calendar used in the time calculation.
+    **calendar**: Describes the calendar used in the time calculation.
     Valid calendars C{'standard', 'gregorian', 'proleptic_gregorian'
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'}.
     Default is C{'standard'}, which is a mixed Julian/Gregorian calendar
     If C{calendar} is None, its value is given by C{nctime.calendar} or
     C{standard} if no such attribute exists.
 
-    @param select: C{'exact', 'before', 'after', 'nearest'}
+    **select**: C{'exact', 'before', 'after', 'nearest'}
     The index selection method. C{exact} will return the indices perfectly
     matching the dates given. C{before} and C{after} will return the indices
     corresponding to the dates just before or just after the given dates if
@@ -696,26 +698,25 @@ def _date2index(dates, nctime, calendar=None, select='exact'):
     return time2index(times, nctime, calendar=calendar, select=select)
 
 
+@cython.embedsignature(True)
 def time2index(times, nctime, calendar=None, select='exact'):
     """
-    time2index(times, nctime, calendar=None, select='exact')
-
     Return indices of a netCDF time variable corresponding to the given times.
 
-    @param times: A numeric time or a sequence of numeric times.
+    **param** times: A numeric time or a sequence of numeric times.
 
-    @param nctime: A netCDF time variable object. The nctime object must have a
+    **nctime**: A netCDF time variable object. The nctime object must have a
     C{units} attribute. The entries are assumed to be stored in increasing
     order.
 
-    @param calendar: Describes the calendar used in the time calculation.
+    **calendar**: Describes the calendar used in the time calculation.
     Valid calendars C{'standard', 'gregorian', 'proleptic_gregorian'
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'}.
     Default is C{'standard'}, which is a mixed Julian/Gregorian calendar
     If C{calendar} is None, its value is given by C{nctime.calendar} or
     C{standard} if no such attribute exists.
 
-    @param select: C{'exact', 'before', 'after', 'nearest'}
+    **select**: **'exact', 'before', 'after', 'nearest'**
     The index selection method. C{exact} will return the indices perfectly
     matching the times given. C{before} and C{after} will return the indices
     corresponding to the times just before or just after the given times if
@@ -763,14 +764,14 @@ def time2index(times, nctime, calendar=None, select='exact'):
 
         if select in ['before', 'exact'] and np.any(before):
             raise ValueError(
-                'Some of the times given are before the first time in `nctime`.')
+                'Some of the times given are before the first time in **nctime**.')
 
         if select in ['after', 'exact'] and np.any(after):
             raise ValueError(
-                'Some of the times given are after the last time in `nctime`.')
+                'Some of the times given are after the last time in **nctime**.')
 
         # Find the times for which the match is not perfect.
-        # Use list comprehension instead of the simpler `nctime[index]` since
+        # Use list comprehension instead of the simpler **nctime[index]** since
         # not all time objects support numpy integer indexing (eg dap).
         index[after] = N - 1
         ncnum = np.squeeze([nctime[i] for i in index])
@@ -779,7 +780,7 @@ def time2index(times, nctime, calendar=None, select='exact'):
         if select == 'exact':
             if len(mismatch) > 0:
                 raise ValueError(
-                    'Some of the times specified were not found in the `nctime` variable.')
+                    'Some of the times specified were not found in the **nctime** variable.')
 
         elif select == 'before':
             index[after] = N
@@ -795,7 +796,7 @@ def time2index(times, nctime, calendar=None, select='exact'):
 
         else:
             raise ValueError(
-                "%s is not an option for the `select` argument." % select)
+                "%s is not an option for the **select** argument." % select)
 
         # Correct for indices equal to -1
         index[before] = 0
@@ -1774,6 +1775,7 @@ def _round_half_up(x):
     # 'round half up' so 0.5 rounded to 1 (instead of 0 as in numpy.round)
     return np.ceil(np.floor(2.*x)/2.)
 
+@cython.embedsignature(True)
 def JulianDayFromDate(date, calendar='standard'):
     """JulianDayFromDate(date, calendar='standard')
 
@@ -1832,6 +1834,7 @@ def JulianDayFromDate(date, calendar='standard'):
     else:
         return jd
 
+@cython.embedsignature(True)
 def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=True,
                       return_tuple=False):
     """
@@ -2101,7 +2104,7 @@ cftime.datetime are returned for all calendars. Default True.
 
 @keyword only_use_python_datetimes: always return python datetime.datetime
 objects and raise an error if this is not possible. Ignored unless
-`only_use_cftime_datetimes=False`. Default `False`.
+**only_use_cftime_datetimes=False**. Default **False**.
 
 @returns: A class instance which may be used for converting times from netCDF
 units to datetime objects.
