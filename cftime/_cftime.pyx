@@ -2022,15 +2022,6 @@ leap year if it is divisible by 4.
 The C{L{num2date}} and C{L{date2num}} class methods can used to convert datetime
 instances to/from the specified time units using the specified calendar.
 
-The datetime instances returned by C{num2date} are native python datetime
-objects if the date falls in the Gregorian calendar (i.e.
-C{calendar='proleptic_gregorian', 'standard'} or C{'gregorian'} and
-the date is after 1582-10-15). Otherwise, they are native datetime
-objects which are actually instances of C{L{cftime.datetime}}.  This is
-because the python datetime module cannot handle the weird dates in some
-calendars (such as C{'360_day'} and C{'all_leap'}) which don't exist in any real
-world calendar.
-
 Example usage:
 
 >>> from cftime import utime
@@ -2071,7 +2062,7 @@ it should be noted that udunits treats 0 AD as identical to 1 AD."
     """
 
     def __init__(self, unit_string, calendar='standard',
-                 only_use_cftime_datetimes=True):
+                 only_use_cftime_datetimes=True,only_use_python_datetimes=False):
         """
 @param unit_string: a string of the form
 C{'time-units since <time-origin>'} defining the time units.
@@ -2108,6 +2099,10 @@ are:
 objects are returned from num2date where possible; if True dates which subclass
 cftime.datetime are returned for all calendars. Default True.
 
+@keyword only_use_python_datetimes: always return python datetime.datetime
+objects and raise an error if this is not possible. Ignored unless
+`only_use_cftime_datetimes=False`. Default `False`.
+
 @returns: A class instance which may be used for converting times from netCDF
 units to datetime objects.
         """
@@ -2122,6 +2117,7 @@ units to datetime objects.
         self.units = units
         self.unit_string = unit_string
         self.only_use_cftime_datetimes = only_use_cftime_datetimes
+        self.only_use_python_datetimes = only_use_python_datetimes
 
     def date2num(self, date):
         """
@@ -2156,14 +2152,5 @@ units to datetime objects.
 
         Works for scalars, sequences and numpy arrays.
         Returns a scalar if input is a scalar, else returns a numpy array.
-
-        The datetime instances returned by C{num2date} are native python datetime
-        objects if the date falls in the Gregorian calendar (i.e.
-        C{calendar='proleptic_gregorian'}, or C{calendar = 'standard'/'gregorian'} and
-        the date is after 1582-10-15). Otherwise, they are cftime.datetime
-        objects which are actually instances of cftime.datetime.  This is
-        because the python datetime module cannot handle the weird dates in some
-        calendars (such as C{'360_day'} and C{'all_leap'}) which
-        do not exist in any real world calendar.
         """
-        return num2date(time_value,self.unit_string,calendar=self.calendar,only_use_cftime_datetimes=self.only_use_cftime_datetimes)
+        return num2date(time_value,self.unit_string,calendar=self.calendar,only_use_cftime_datetimes=self.only_use_cftime_datetimes,only_use_python_datetimes=self.only_use_python_datetimes)

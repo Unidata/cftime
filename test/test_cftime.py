@@ -1339,13 +1339,13 @@ class issue57TestCase(unittest.TestCase):
         for datestr in ("days since2017-05-01 ", "dayssince 2017-05-01 00:00", "days snce 2017-05-01 00:00", "days_since_2017-05-01 00:00",
             "days_since_2017-05-01_00:00"):
             self.assertRaises(
-                ValueError, cftime._cftime._dateparse, datestr)
+                ValueError, cftime._cftime._dateparse, datestr, 'standard')
 
             self.assertRaises(
-                ValueError, cftime._cftime.num2date, 1, datestr)
+                ValueError, cftime._cftime.num2date, 1, datestr, 'standard')
 
             self.assertRaises(
-                ValueError, cftime._cftime.date2num, datetime(1900, 1, 1, 0), datestr)
+                ValueError, cftime._cftime.date2num, datetime(1900, 1, 1, 0), datestr, 'standard')
 
 
 _DATE_TYPES = [DatetimeNoLeap, DatetimeAllLeap, DatetimeJulian, Datetime360Day,
