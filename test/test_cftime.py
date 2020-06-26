@@ -781,10 +781,10 @@ class cftimeTestCase(unittest.TestCase):
 #  check that time range of 200,000 + years can be represented accurately
         calendar='standard'
         _MAX_INT64 = np.iinfo("int64").max
-        refdate = DatetimeGregorian(292084,12,9,0,0,1)
+        refdate = DatetimeGregorian(292277,10,24,0,0,1)
         for unit in ['microseconds','milliseconds','seconds']:
             units = '%s since 01-01-01' % unit
-            time = 292278*365*86400*(1000000//int(UNIT_CONVERSION_FACTORS[unit])) + 1000000//int(UNIT_CONVERSION_FACTORS[unit])
+            time = 292471*365*86400*(1000000//int(UNIT_CONVERSION_FACTORS[unit])) + 1000000//int(UNIT_CONVERSION_FACTORS[unit])
             date = num2date(time,units,calendar=calendar)
             assert(date == refdate)
             # check round-trip
