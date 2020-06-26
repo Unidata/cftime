@@ -790,7 +790,9 @@ class cftimeTestCase(unittest.TestCase):
             # check round-trip
             time2 = date2num(date,units,calendar=calendar)
             date2 = num2date(time2,units,calendar=calendar)
-            assert(date2 == refdate)
+            # windows doesn't have a longdouble type (it defaults to float64)
+            if np.finfo(np.longdouble).precision == 18:
+                assert(date2 == refdate)
 # microsecond roundtrip accuracy preserved over time ranges of 286 years
 # (float64 can only represent integers exactly up to 2**53-1)
         refdate=DatetimeGregorian(286,6,3,23,47,34,740992)
