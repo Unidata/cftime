@@ -791,6 +791,17 @@ class cftimeTestCase(unittest.TestCase):
             time2 = date2num(date,units,calendar=calendar)
             date2 = num2date(time2,units,calendar=calendar)
             assert(date2 == refdate)
+# microsecond rountrip accuracy preserved over time ranges of 286 years
+        refdate=DatetimeGregorian(286,6,3,23,47,34,740992)
+        for unit in ['microseconds','milliseconds','seconds','hours','days']:
+            units = '%s since 01-01-01' % unit
+            time = (2**53 - 1)*(1/UNIT_CONVERSION_FACTORS[unit]) + 1/UNIT_CONVERSION_FACTORS[unit]
+            date = num2date(time,units,calendar=calendar)
+            assert(date == refdate)
+            # check round-trip
+            time2 = date2num(date,units,calendar=calendar)
+            date2 = num2date(time2,units,calendar=calendar)
+            assert(date2 == refdate)
 
 class TestDate2index(unittest.TestCase):
 
