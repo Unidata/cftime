@@ -11,7 +11,7 @@ import re
 import sys
 import time
 from datetime import datetime as datetime_python
-from datetime import timedelta, MINYEAR
+from datetime import timedelta, MINYEAR, MAXYEAR
 import time                     # strftime
 import warnings
 try:
@@ -138,7 +138,7 @@ def _dateparse(timestr,calendar):
     year, month, day, hour, minute, second, microsecond, utc_offset =\
         _parse_date( isostring.strip() )
     basedate = None
-    if year >= MINYEAR:
+    if year >= MINYEAR and year <= MAXYEAR:
         try:
             basedate = real_datetime(year, month, day, hour, minute, second,
                     microsecond)
@@ -165,10 +165,9 @@ def _dateparse(timestr,calendar):
     return basedate
 
 def _can_use_python_datetime(date,calendar):
-    return ((calendar == 'proleptic_gregorian' and date.year >= MINYEAR) or \
+    return ((calendar == 'proleptic_gregorian' and date.year >= MINYEAR and date.year <= MAXYEAR) or \
            (calendar in ['gregorian','standard'] and date > gregorian))
 
-        #"""date2num(dates,units,calendar='standard')
 @cython.embedsignature(True)
 def date2num(dates,units,calendar='standard'):
     """
@@ -229,7 +228,7 @@ def date2num(dates,units,calendar='standard'):
     times = []
     for date in dates.flat:
         # use python datetime if possible.
-        if use_python_datetime and date.year >= MINYEAR:
+        if use_python_datetime and date.year >= MINYEAR and date.year <= MAXYEAR:
             if not isinstance(basedate, datetime_python):
                 basedate = real_datetime(basedate.year, basedate.month, basedate.day, 
                            basedate.hour, basedate.minute, basedate.second,
@@ -249,9 +248,13 @@ def date2num(dates,units,calendar='standard'):
             times.append(None)
         else:
             td = date - basedate
-            # timedelta division only works python >= 3.2
-            #times.append( (td/timedelta(microseconds=1)) / factor )
-            times.append( (td.total_seconds()*1.e6) / factor )
+            if factor == 1.0:
+                # units are microseconds, use integer division 
+                times.append(td // timedelta(microseconds=1) ) 
+            else:
+                # timedelta division only works python >= 3.2
+                #times.append( (td/timedelta(microseconds=1)) / factor )
+                times.append( (td.total_seconds()*1.e6) / factor )
     if ismasked: # convert to masked array if input was masked array
         times = np.array(times)
         times = np.ma.masked_where(times==None,times)
@@ -348,6 +351,8 @@ def cast_to_int(num):
     if num.dtype.kind in "iu":
         return num
     else:
+        if np.any(num < _MIN_INT64) or np.any(num > _MAX_INT64):
+            raise OverflowError('time values outside range of 64 bit signed integers')
         if isinstance(num, np.ma.core.MaskedArray):
             int_num = np.ma.masked_array(np.rint(num), dtype=np.int64)
         else:
@@ -528,8 +533,7 @@ def date2index(dates, nctime, calendar=None, select='exact'):
             msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
             raise ValueError(msg)
 
-    if (calendar == 'proleptic_gregorian' and basedate.year >= MINYEAR) or \
-       (calendar in ['gregorian','standard'] and basedate > gregorian):
+    if _can_use_python_datetime(basedate,calendar):
         # use python datetime
         times = date2num(dates,nctime.units,calendar=calendar)
         return time2index(times, nctime, calendar, select)

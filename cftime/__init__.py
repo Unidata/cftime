@@ -1,4 +1,4 @@
-from ._cftime import utime, JulianDayFromDate, DateFromJulianDay
+from ._cftime import utime, JulianDayFromDate, DateFromJulianDay, UNIT_CONVERSION_FACTORS
 from ._cftime import _parse_date, date2index, time2index
 from ._cftime import datetime, real_datetime
 from ._cftime import DatetimeNoLeap, DatetimeAllLeap, Datetime360Day, DatetimeJulian, \
