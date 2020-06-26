@@ -17,7 +17,7 @@ from cftime import real_datetime
 from cftime import (DateFromJulianDay, Datetime360Day, DatetimeAllLeap,
                     DatetimeGregorian, DatetimeJulian, DatetimeNoLeap,
                     DatetimeProlepticGregorian, JulianDayFromDate, _parse_date,
-                    date2index, date2num, num2date, utime)
+                    date2index, date2num, num2date, utime, UNIT_CONVERSION_FACTORS)
 
 try:
     from datetime import timezone
@@ -778,6 +778,19 @@ class cftimeTestCase(unittest.TestCase):
         assert(test.all())
         dates = num2date(times, units=units, calendar='standard')
         assert(str(dates)=='[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 40) --]')
+#  check that time range of 200,000 + years can be represented accurately
+        calendar='standard'
+        _MAX_INT64 = np.iinfo("int64").max
+        refdate = DatetimeGregorian(292084,12,9,0,0,1)
+        for unit in ['microseconds','milliseconds','seconds']:
+            units = '%s since 01-01-01' % unit
+            time = 292278*365*86400*(1000000//int(UNIT_CONVERSION_FACTORS[unit])) + 1000000//int(UNIT_CONVERSION_FACTORS[unit])
+            date = num2date(time,units,calendar=calendar)
+            assert(date == refdate)
+            # check round-trip
+            time2 = date2num(date,units,calendar=calendar)
+            date2 = num2date(time2,units,calendar=calendar)
+            assert(date2 == refdate)
 
 class TestDate2index(unittest.TestCase):
 
