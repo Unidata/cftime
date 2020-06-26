@@ -791,7 +791,8 @@ class cftimeTestCase(unittest.TestCase):
             time2 = date2num(date,units,calendar=calendar)
             date2 = num2date(time2,units,calendar=calendar)
             assert(date2 == refdate)
-# microsecond rountrip accuracy preserved over time ranges of 286 years
+# microsecond roundtrip accuracy preserved over time ranges of 286 years
+# (float64 can only represent integers exactly up to 2**53-1)
         refdate=DatetimeGregorian(286,6,3,23,47,34,740992)
         for unit in ['microseconds','milliseconds','seconds','hours','days']:
             units = '%s since 01-01-01' % unit
