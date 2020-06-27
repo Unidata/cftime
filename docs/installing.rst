@@ -4,7 +4,7 @@ Installation
 Required dependencies
 ---------------------
 
-- Python 2.7, 3.4, 3.5, or 3.6
+- Python: >3.2
 - `numpy <http://www.numpy.org/>`__ (1.7 or later)
 
 
