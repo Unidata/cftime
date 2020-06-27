@@ -252,9 +252,8 @@ def date2num(dates,units,calendar='standard'):
                 # units are microseconds, use integer division 
                 times.append(td // timedelta(microseconds=1) ) 
             else:
-                # timedelta division only works python >= 3.2
-                #times.append( (td/timedelta(microseconds=1)) / factor )
-                times.append( (td.total_seconds()*1.e6) / factor )
+                times.append( (td/timedelta(microseconds=1)) / factor )
+                #times.append( (td.total_seconds()*1.e6) / factor )
     if ismasked: # convert to masked array if input was masked array
         times = np.array(times)
         times = np.ma.masked_where(times==None,times)
