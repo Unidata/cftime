@@ -249,11 +249,13 @@ def date2num(dates,units,calendar='standard'):
         else:
             td = date - basedate
             if factor == 1.0:
-                # units are microseconds, use integer division 
-                times.append(td // timedelta(microseconds=1) ) 
+                # units are microseconds, use integer division
+                # (fails on python 2.7)
+                times.append(td // timedelta(microseconds=1) )
             else:
-                times.append( (td/timedelta(microseconds=1)) / factor )
-                #times.append( (td.total_seconds()*1.e6) / factor )
+                #times.append( (td/timedelta(microseconds=1)) / factor )
+                # this works for python 2.7
+                times.append( (td.total_seconds()*1.e6) / factor )
     if ismasked: # convert to masked array if input was masked array
         times = np.array(times)
         times = np.ma.masked_where(times==None,times)
