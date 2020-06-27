@@ -11,7 +11,6 @@ matrix:
   include:
     - name: "python-2.7"
       env: PY=2.7
-      allow_failures: true
     - name: "python-3.7"
       env: PY=3.7
     - name: "python-3.8"
@@ -20,6 +19,10 @@ matrix:
       env: PY=3
     - name: "docs"
       env: PY=3
+
+jobs:
+  allow_failures:
+    - env: PY=2.7
 
 before_install:
   # Build the conda testing environment.
