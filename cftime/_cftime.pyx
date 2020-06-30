@@ -943,7 +943,7 @@ Gregorial calendar.
     def __repr__(self):
         return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7})".format('cftime',
                                      self.__class__.__name__,
-                                     self.year,self.month,self.day,self.hour,self.second,self.microsecond)
+                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
     def __str__(self):
         return self.isoformat(' ')
 
