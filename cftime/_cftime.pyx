@@ -169,16 +169,30 @@ def _can_use_python_datetime(date,calendar):
            (calendar in ['gregorian','standard'] and date > gregorian))
 
 def date2num_array(dates, units):
-    calendar = dates.flat[0].calendar
+    if not np.ma.isMA(dates):
+        dates = np.asarray(dates)
+        isMA = False
+    else:
+        isMA = True
+    calendar = dates.ravel()[0].calendar
     basedate = _dateparse(units,calendar=calendar.lower())
-    if not isinstance(basedate, DATE_TYPES[calendar]):
-        basedate =  to_calendar_specific_datetime(basedate, calendar, False)
     (unit, isostring) = _datesplit(units)
     factor = UNIT_CONVERSION_FACTORS[unit]
-    basedates =\
-    np.array(dates.size*[basedate],dtype='object').reshape(dates.shape)
-    deltas =\
-    np.array(dates.size*[timedelta(microseconds=1)],dtype='object').reshape(dates.shape)
+    if not isinstance(basedate, DATE_TYPES[calendar]):
+        basedate =  to_calendar_specific_datetime(basedate, calendar, False)
+    if isMA:
+        basedates =\
+        np.ma.array(dates.size*[basedate],dtype='object',mask=dates.mask).reshape(dates.shape)
+        deltas =\
+        np.ma.array(dates.size*[timedelta(microseconds=1)],dtype='object',mask=dates.mask).reshape(dates.shape)
+    else:
+        basedates =\
+        np.array(dates.size*[basedate],dtype='object').reshape(dates.shape)
+        deltas =\
+        np.array(dates.size*[timedelta(microseconds=1)],dtype='object').reshape(dates.shape)
+    print(dates)
+    print(basedates)
+    print(deltas)
     return ((dates - basedates)/deltas)/factor
 
 @cython.embedsignature(True)
@@ -265,8 +279,8 @@ def date2num(dates,units,calendar='standard'):
                 # units are microseconds, use integer division
                 times.append(td // timedelta(microseconds=1) )
             else:
-                times.append( (td / timedelta(microseconds=1)) / factor )
-                #times.append( (td.total_seconds()*1.e6) / factor )
+                #times.append( (td / timedelta(microseconds=1)) / factor )
+                times.append( (td.total_seconds()*1.e6) / factor )
         n += 1
     if ismasked: # convert to masked array if input was masked array
         times = np.array(times)
