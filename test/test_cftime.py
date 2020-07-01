@@ -777,7 +777,9 @@ class cftimeTestCase(unittest.TestCase):
         test = dates == np.ma.masked_array([datetime(1848, 1, 17, 6, 0, 0, 40), None],mask=[0,1])
         assert(test.all())
         dates = num2date(times, units=units, calendar='standard')
-        assert(str(dates)=='[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 40) --]')
+        # this will fail on windows (requires numpy longdouble)
+        if not sys.platform == 'win32':
+            assert(str(dates)=='[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 40) --]')
 #  check that time range of 200,000 + years can be represented accurately
         calendar='standard'
         _MAX_INT64 = np.iinfo("int64").max
@@ -1828,13 +1830,6 @@ def test_num2date_valid_zero_reference_year(artificial_calendar):
     num2date(numeric_times, units=units, calendar=artificial_calendar)
 
 
-#def test_num2date_uncastable_values(calendar):
-#    units = "days since 2000-01-01"
-#    numeric_times = np.array([1.0, np.pi])
-#    with pytest.warns(UserWarning, match="Falling back to the older inexact"):
-#        num2date(numeric_times, units=units, calendar=calendar)
-
-
 def test_num2date_masked_array(calendar):
     date_type = _EXPECTED_DATE_TYPES[calendar]
     expected = np.array([date_type(2000, 1, 1, 1, 0, 0, 0),
@@ -1853,7 +1848,6 @@ def test_num2date_out_of_range():
     numeric_times = 12 * np.array([200000, 400000, 600000])
     units = "months since 2000-01-01"
     with pytest.raises(OverflowError, match="time values outside range of 64 bit signed integers"):
-    #with pytest.warns(UserWarning, match="Falling back to the older inexact"):
         num2date(numeric_times, units=units, calendar="360_day")
 
 

@@ -225,7 +225,7 @@ def date2num(dates,units,calendar='standard'):
     else:
         dates = np.array(dates)
         shape = dates.shape
-    times = []
+    times = []; n = 0
     for date in dates.flat:
         # use python datetime if possible.
         if use_python_datetime and date.year >= MINYEAR and date.year <= MAXYEAR:
@@ -244,18 +244,16 @@ def date2num(dates,units,calendar='standard'):
                 basedate =  to_calendar_specific_datetime(basedate, calendar, False)
             if not isinstance(date, DATE_TYPES[calendar]):
                 date = to_calendar_specific_datetime(date, calendar, False)
-        if ismasked and not date:
+        if ismasked and mask.flat[n]:
             times.append(None)
         else:
             td = date - basedate
             if factor == 1.0:
                 # units are microseconds, use integer division
-                # (fails on python 2.7)
                 times.append(td // timedelta(microseconds=1) )
             else:
-                #times.append( (td/timedelta(microseconds=1)) / factor )
-                # this works for python 2.7
-                times.append( (td.total_seconds()*1.e6) / factor )
+                times.append( (td/timedelta(microseconds=1)) / factor )
+        n += 1
     if ismasked: # convert to masked array if input was masked array
         times = np.array(times)
         times = np.ma.masked_where(times==None,times)
