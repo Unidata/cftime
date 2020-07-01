@@ -75,64 +75,65 @@ day number within the current year starting with 1 for January 1st.</p>
 <dt id="cftime.date2num">
 <code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">date2num</code><span class="sig-paren">(</span><em class="sig-param">dates</em>, <em class="sig-param">units</em>, <em class="sig-param">calendar='standard'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.date2num" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return numeric time values given datetime objects. The units
-of the numeric time values are described by the <cite>units</cite> argument
-and the <cite>calendar</cite> keyword. The datetime objects must
+of the numeric time values are described by the <strong>units</strong> argument
+and the <strong>calendar</strong> keyword. The datetime objects must
 be in UTC with no time-zone offset.  If there is a
-time-zone offset in <cite>units</cite>, it will be applied to the
+time-zone offset in <strong>units</strong>, it will be applied to the
 returned numeric values.</p>
-<p><strong>`dates`</strong>: A datetime object or a sequence of datetime objects.
+<p><strong>dates</strong>: A datetime object or a sequence of datetime objects.
 The datetime objects should not include a time-zone offset.</p>
-<p><strong>`units`</strong>: a string of the form <cite>&lt;time units&gt; since &lt;reference time&gt;</cite>
-describing the time units. <cite>&lt;time units&gt;</cite> can be days, hours, minutes,
-seconds, milliseconds or microseconds. <cite>&lt;reference time&gt;</cite> is the time
-origin. <cite>months_since</cite> is allowed <em>only</em> for the <cite>360_day</cite> calendar.</p>
-<p><strong>`calendar`</strong>: describes the calendar used in the time calculations.
+<p><strong>units</strong>: a string of the form <strong>&lt;time units&gt; since &lt;reference time&gt;</strong>
+describing the time units. <strong>&lt;time units&gt;</strong> can be days, hours, minutes,
+seconds, milliseconds or microseconds. <strong>&lt;reference time&gt;</strong> is the time
+origin. <strong>months_since</strong> is allowed <em>only</em> for the <strong>360_day</strong> calendar.</p>
+<p><strong>calendar</strong>: describes the calendar used in the time calculations.
 All the values currently defined in the
 [CF metadata convention](<a class="reference external" href="http://cfconventions.org">http://cfconventions.org</a>)
-Valid calendars <cite>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
-‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</cite>.
-Default is <cite>‘standard’</cite>, which is a mixed Julian/Gregorian calendar.</p>
+Valid calendars <strong>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
+‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</strong>.
+Default is <strong>‘standard’</strong>, which is a mixed Julian/Gregorian calendar.</p>
 <p>returns a numeric time value, or an array of numeric time values
-with approximately 100 microsecond accuracy.</p>
+with approximately 1 microsecond accuracy.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="cftime.num2date">
 <code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">num2date</code><span class="sig-paren">(</span><em class="sig-param">times</em>, <em class="sig-param">units</em>, <em class="sig-param">calendar='standard'</em>, <em class="sig-param">only_use_cftime_datetimes=True</em>, <em class="sig-param">only_use_python_datetimes=False</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.num2date" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return datetime objects given numeric time values. The units
-of the numeric time values are described by the <cite>units</cite> argument
-and the <cite>calendar</cite> keyword. The returned datetime objects represent
+<dd><p>Decode times exactly with timedelta arithmetic.</p>
+<p>Return datetime objects given numeric time values. The units
+of the numeric time values are described by the <strong>units</strong> argument
+and the <strong>calendar</strong> keyword. The returned datetime objects represent
 UTC with no time-zone offset, even if the specified
-<cite>units</cite> contain a time-zone offset.</p>
-<p><strong>`times`</strong>: numeric time values.</p>
-<p><strong>`units`</strong>: a string of the form <cite>&lt;time units&gt; since &lt;reference time&gt;</cite>
-describing the time units. <cite>&lt;time units&gt;</cite> can be days, hours, minutes,
-seconds, milliseconds or microseconds. <cite>&lt;reference time&gt;</cite> is the time
-origin. <cite>months_since</cite> is allowed <em>only</em> for the <cite>360_day</cite> calendar.</p>
-<p><strong>`calendar`</strong>: describes the calendar used in the time calculations.
+<strong>units</strong> contain a time-zone offset.</p>
+<p><strong>times</strong>: numeric time values.</p>
+<p><strong>units</strong>: a string of the form <strong>&lt;time units&gt; since &lt;reference time&gt;</strong>
+describing the time units. <strong>&lt;time units&gt;</strong> can be days, hours, minutes,
+seconds, milliseconds or microseconds. <strong>&lt;reference time&gt;</strong> is the time
+origin. <strong>months_since</strong> is allowed <em>only</em> for the <strong>360_day</strong> calendar.</p>
+<p><strong>calendar</strong>: describes the calendar used in the time calculations.
 All the values currently defined in the
 [CF metadata convention](<a class="reference external" href="http://cfconventions.org">http://cfconventions.org</a>)
-Valid calendars <cite>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
-‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</cite>.
-Default is <cite>‘standard’</cite>, which is a mixed Julian/Gregorian calendar.</p>
-<p><strong>`only_use_cftime_datetimes`</strong>: if False, python datetime.datetime
+Valid calendars <strong>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
+‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</strong>.
+Default is <strong>‘standard’</strong>, which is a mixed Julian/Gregorian calendar.</p>
+<p><strong>only_use_cftime_datetimes</strong>: if False, python datetime.datetime
 objects are returned from num2date where possible; if True dates which
-subclass cftime.datetime are returned for all calendars. Default <cite>True</cite>.</p>
-<p><strong>`only_use_python_datetimes`</strong>: always return python datetime.datetime
+subclass cftime.datetime are returned for all calendars. Default <strong>True</strong>.</p>
+<p><strong>only_use_python_datetimes</strong>: always return python datetime.datetime
 objects and raise an error if this is not possible. Ignored unless
-<cite>only_use_cftime_datetimes=False</cite>. Default <cite>False</cite>.</p>
+<strong>only_use_cftime_datetimes=False</strong>. Default <strong>False</strong>.</p>
 <p>returns a datetime instance, or an array of datetime instances with
-approximately 100 microsecond accuracy.</p>
+microsecond accuracy, if possible.</p>
 <p><strong>*Note*</strong>: If only_use_cftime_datetimes=False and
 use_only_python_datetimes=False, the datetime instances
 returned are ‘real’ python datetime
-objects if <cite>calendar=’proleptic_gregorian’</cite>, or
-<cite>calendar=’standard’</cite> or <cite>‘gregorian’</cite>
+objects if <strong>calendar=’proleptic_gregorian’</strong>, or
+<strong>calendar=’standard’</strong> or <strong>‘gregorian’</strong>
 and the date is after the breakpoint between the Julian and
 Gregorian calendars (1582-10-15). Otherwise, they are ctime.datetime
 objects which support some but not all the methods of native python
 datetime objects. The datetime instances
-do not contain a time-zone offset, even if the specified <cite>units</cite>
+do not contain a time-zone offset, even if the specified <strong>units</strong>
 contains one.</p>
 </dd></dl>
 
@@ -149,23 +150,23 @@ num2date(times,units,calendar,only_use_cftime_datetimes=False,only_use_python_da
 <dt id="cftime.date2index">
 <code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">date2index</code><span class="sig-paren">(</span><em class="sig-param">dates</em>, <em class="sig-param">nctime</em>, <em class="sig-param">calendar=None</em>, <em class="sig-param">select='exact'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.date2index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return indices of a netCDF time variable corresponding to the given dates.</p>
-<p><strong>`dates`</strong>: A datetime object or a sequence of datetime objects.
+<p><strong>dates</strong>: A datetime object or a sequence of datetime objects.
 The datetime objects should not include a time-zone offset.</p>
-<p><strong>`nctime`</strong>: A netCDF time variable object. The nctime object must have a
-<cite>units</cite> attribute.</p>
-<p><strong>`calendar`</strong>: describes the calendar used in the time calculations.
+<p><strong>nctime</strong>: A netCDF time variable object. The nctime object must have a
+<strong>units</strong> attribute.</p>
+<p><strong>calendar</strong>: describes the calendar used in the time calculations.
 All the values currently defined in the
 [CF metadata convention](<a class="reference external" href="http://cfconventions.org">http://cfconventions.org</a>)
-Valid calendars <cite>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
-‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</cite>.
-Default is <cite>‘standard’</cite>, which is a mixed Julian/Gregorian calendar.
-If <cite>calendar</cite> is None, its value is given by <cite>nctime.calendar</cite> or
-<cite>standard</cite> if no such attribute exists.</p>
-<p><strong>`select`</strong>: <cite>‘exact’, ‘before’, ‘after’, ‘nearest’</cite>
-The index selection method. <cite>exact</cite> will return the indices perfectly
-matching the dates given. <cite>before</cite> and <cite>after</cite> will return the indices
+Valid calendars <strong>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
+‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</strong>.
+Default is <strong>‘standard’</strong>, which is a mixed Julian/Gregorian calendar.
+If <strong>calendar</strong> is None, its value is given by <strong>nctime.calendar</strong> or
+<strong>standard</strong> if no such attribute exists.</p>
+<p><strong>select</strong>: <strong>‘exact’, ‘before’, ‘after’, ‘nearest’</strong>
+The index selection method. <strong>exact</strong> will return the indices perfectly
+matching the dates given. <strong>before</strong> and <strong>after</strong> will return the indices
 corresponding to the dates just before or just after the given dates if
-an exact match cannot be found. <cite>nearest</cite> will return the indices that
+an exact match cannot be found. <strong>nearest</strong> will return the indices that
 correspond to the closest dates.</p>
 <p>returns an index (indices) of the netCDF time variable corresponding
 to the given datetime object(s).</p>
@@ -174,7 +175,8 @@ to the given datetime object(s).</p>
 <dl class="function">
 <dt id="cftime.JulianDayFromDate">
 <code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">JulianDayFromDate</code><span class="sig-paren">(</span><em class="sig-param">date</em>, <em class="sig-param">calendar='standard'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.JulianDayFromDate" title="Permalink to this definition">¶</a></dt>
-<dd><p>creates a Julian Day from a ‘datetime-like’ object.  Returns the fractional
+<dd><p>JulianDayFromDate(date, calendar=’standard’)</p>
+<p>creates a Julian Day from a ‘datetime-like’ object.  Returns the fractional
 Julian Day (approximately 100 microsecond accuracy).</p>
 <p>if calendar=’standard’ or ‘gregorian’ (default), Julian day follows Julian
 Calendar on and before 1582-10-5, Gregorian calendar after 1582-10-15.</p>
@@ -235,6 +237,44 @@ by 1582-10-15, using the Gregorian calendar.</p>
 datetime.datetime instances and used to compute time differences
 (datetime.timedelta) by subtracting a DatetimeGregorian instance from
 a datetime.datetime instance or vice versa.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="cftime.DateFromJulianDay">
+<code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">DateFromJulianDay</code><span class="sig-paren">(</span><em class="sig-param">JD</em>, <em class="sig-param">calendar='standard'</em>, <em class="sig-param">only_use_cftime_datetimes=True</em>, <em class="sig-param">return_tuple=False</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.DateFromJulianDay" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a ‘datetime-like’ object given Julian Day. Julian Day is a
+fractional day with approximately 100 microsecond accuracy.</p>
+<p>if calendar=’standard’ or ‘gregorian’ (default), Julian day follows Julian
+Calendar on and before 1582-10-5, Gregorian calendar after  1582-10-15.</p>
+<p>if calendar=’proleptic_gregorian’, Julian Day follows gregorian calendar.</p>
+<p>if calendar=’julian’, Julian Day follows julian calendar.</p>
+<p>If only_use_cftime_datetimes is set to True, then cftime.datetime
+objects are returned for all calendars.  Otherwise the datetime object is a
+native python datetime object if the date falls in the Gregorian calendar
+(i.e. calendar=’proleptic_gregorian’, or  calendar = ‘standard’/’gregorian’
+and the date is after 1582-10-15).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="cftime.time2index">
+<code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">time2index</code><span class="sig-paren">(</span><em class="sig-param">times</em>, <em class="sig-param">nctime</em>, <em class="sig-param">calendar=None</em>, <em class="sig-param">select='exact'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.time2index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return indices of a netCDF time variable corresponding to the given times.</p>
+<p><strong>param</strong> times: A numeric time or a sequence of numeric times.</p>
+<p><strong>nctime</strong>: A netCDF time variable object. The nctime object must have a
+C{units} attribute. The entries are assumed to be stored in increasing
+order.</p>
+<p><strong>calendar</strong>: Describes the calendar used in the time calculation.
+Valid calendars C{‘standard’, ‘gregorian’, ‘proleptic_gregorian’
+‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’}.
+Default is C{‘standard’}, which is a mixed Julian/Gregorian calendar
+If C{calendar} is None, its value is given by C{nctime.calendar} or
+C{standard} if no such attribute exists.</p>
+<p><strong>select</strong>: <strong>‘exact’, ‘before’, ‘after’, ‘nearest’</strong>
+The index selection method. C{exact} will return the indices perfectly
+matching the times given. C{before} and C{after} will return the indices
+corresponding to the times just before or just after the given times if
+an exact match cannot be found. C{nearest} will return the indices that
+correspond to the closest times.</p>
 </dd></dl>
 
 </div>
