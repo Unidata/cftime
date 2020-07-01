@@ -252,8 +252,9 @@ def date2num(dates,units,calendar='standard'):
                 # units are microseconds, use integer division
                 times.append(td // timedelta(microseconds=1) )
             else:
-                times.append( (td / timedelta(microseconds=1)) / factor )
-                #times.append( (td.total_seconds()*1.e6) / factor )
+                #times.append( (td / timedelta(microseconds=1)) / factor )
+                # this appears to be faster.
+                times.append( (td.total_seconds()*1.e6) / factor )
         n += 1
     if ismasked: # convert to masked array if input was masked array
         times = np.array(times)
