@@ -168,6 +168,17 @@ def _can_use_python_datetime(date,calendar):
     return ((calendar == 'proleptic_gregorian' and date.year >= MINYEAR and date.year <= MAXYEAR) or \
            (calendar in ['gregorian','standard'] and date > gregorian))
 
+def date2num_array(dates, units):
+    calendar = dates.flat[0].calendar
+    basedate = _dateparse(units,calendar=calendar.lower())
+    (unit, isostring) = _datesplit(units)
+    factor = UNIT_CONVERSION_FACTORS[unit]
+    basedates =\
+    np.array(dates.size*[basedate],dtype='object',mask=dates.mask).reshape(dates.shape)
+    deltas =\
+    np.array(dates.size*[timedelta(microseconds=1)],dtype='object').reshape(dates.shape)
+    return ((dates - basedates)/deltas)/factor
+
 @cython.embedsignature(True)
 def date2num(dates,units,calendar='standard'):
     """
