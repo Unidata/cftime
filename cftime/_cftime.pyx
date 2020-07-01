@@ -171,10 +171,12 @@ def _can_use_python_datetime(date,calendar):
 def date2num_array(dates, units):
     calendar = dates.flat[0].calendar
     basedate = _dateparse(units,calendar=calendar.lower())
+    if not isinstance(basedate, DATE_TYPES[calendar]):
+        basedate =  to_calendar_specific_datetime(basedate, calendar, False)
     (unit, isostring) = _datesplit(units)
     factor = UNIT_CONVERSION_FACTORS[unit]
     basedates =\
-    np.array(dates.size*[basedate],dtype='object',mask=dates.mask).reshape(dates.shape)
+    np.array(dates.size*[basedate],dtype='object').reshape(dates.shape)
     deltas =\
     np.array(dates.size*[timedelta(microseconds=1)],dtype='object').reshape(dates.shape)
     return ((dates - basedates)/deltas)/factor
