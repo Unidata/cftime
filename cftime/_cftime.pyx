@@ -252,7 +252,8 @@ def date2num(dates,units,calendar='standard'):
                 # units are microseconds, use integer division
                 times.append(td // timedelta(microseconds=1) )
             else:
-                times.append( (td/timedelta(microseconds=1)) / factor )
+                times.append( (td / timedelta(microseconds=1)) / factor )
+                #times.append( (td.total_seconds()*1.e6) / factor )
         n += 1
     if ismasked: # convert to masked array if input was masked array
         times = np.array(times)
@@ -939,7 +940,7 @@ Gregorial calendar.
                              self.microsecond)
 
     def __repr__(self):
-        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7})".format('cftime',
+        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
                                      self.__class__.__name__,
                                      self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
     def __str__(self):

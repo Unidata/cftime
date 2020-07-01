@@ -777,9 +777,7 @@ class cftimeTestCase(unittest.TestCase):
         test = dates == np.ma.masked_array([datetime(1848, 1, 17, 6, 0, 0, 40), None],mask=[0,1])
         assert(test.all())
         dates = num2date(times, units=units, calendar='standard')
-        # this will fail on windows (requires numpy longdouble)
-        if not sys.platform == 'win32':
-            assert(str(dates)=='[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 40) --]')
+        assert(str(dates)=='[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 0, 40) --]')
 #  check that time range of 200,000 + years can be represented accurately
         calendar='standard'
         _MAX_INT64 = np.iinfo("int64").max
