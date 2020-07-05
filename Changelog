@@ -1,5 +1,5 @@
-version 1.2.0 (not yet released)
-================================
+version 1.2.0 (release tag v1.2.0rel)
+=====================================
  * Return the default values of dayofwk and dayofyr when calendar
    is '' (issue #173).
  * fix treatment of masked arrays in num2date and date2num (issue #175).
