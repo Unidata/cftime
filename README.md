@@ -12,7 +12,7 @@ Time-handling functionality from netcdf4-python
 ## News
 For details on the latest updates, see the [Changelog](https://github.com/Unidata/cftime/blob/master/Changelog).
 
-7/06/2020:  version 1.2.0 released. New microsecond accurate algorithm for date2num/num2date contributed by @spencerkclark. Bugs fixed in masked array handling.
+7/06/2020:  version 1.2.0 released. New microsecond accurate algorithm for date2num/num2date contributed by [spencerkclark](https://github.com/spencerkclark). Bugs fixed in masked array handling.
 
 5/12/2020:  version 1.1.3 released.  Add isoformat method for compatibility with python datetime (issue #152).
  Make 'standard' default calendar for cftime.datetime so that dayofwk,dayofyr methods don't fail (issue #169).
