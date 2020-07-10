@@ -843,6 +843,8 @@ class TestDate2index(unittest.TestCase):
     def setUp(self):
         self.standardtime = self.TestTime(datetime(1950, 1, 1), 366, 24,
                                           'hours since 1900-01-01', 'standard')
+        self.prolgregtime = self.TestTime(datetime(1950, 1, 1), 366, 24,
+                                          'hours since 1900-01-01', 'proleptic_gregorian')
 
         self.time_vars = {}
         self.time_vars['time'] = CFTimeVariable(
@@ -873,7 +875,7 @@ class TestDate2index(unittest.TestCase):
         t1 = date2index(dutc, self.standardtime)
         assert_equal(t1, 31)
         dest = datetime(1950, 1, 31, 19, tzinfo=est)
-        t2 = date2index(dest, self.standardtime)
+        t2 = date2index(dest, self.prolgregtime)
         assert_equal(t2, 31)
 
     def test_simple(self):

@@ -209,7 +209,7 @@ def date2num(dates,units,calendar='standard'):
     if unit in ["months", "month"] and calendar != "360_day":
         raise ValueError("Units of months only valid for 360_day calendar.")
     factor = UNIT_CONVERSION_FACTORS[unit]
-    use_python_datetime = _can_use_python_datetime(basedate,calendar)
+    use_python_datetime = _can_use_python_datetime(basedate,calendar) and calendar == 'proleptic_gregorian'
 
     isscalar = False
     try:
