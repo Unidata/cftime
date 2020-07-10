@@ -111,12 +111,12 @@ class cftimeTestCase(unittest.TestCase):
     def test_tz_aware(self):
         """testing with timezone"""
         self.assertTrue(self.cdftime_mixed.units == 'hours')
-        d1 = datetime(1582, 10, 15, 23, tzinfo=utc)
+        d1 = datetime(1582, 10, 4, 23, tzinfo=utc)
         t1 = self.cdftime_mixed.date2num(d1)
-        d2 = datetime(1582, 10, 15, 18, tzinfo=est)
+        d2 = datetime(1582, 10, 4, 18, tzinfo=est)
         t2 = self.cdftime_mixed.date2num(d2)
-        assert_almost_equal(t1, 13865711.0)
-        assert_almost_equal(t2, 13865706.0) # est is 5 hours behind utc
+        assert_almost_equal(t1, 13865687.0)
+        assert_almost_equal(t2, 13865682.0) # est is 5 hours behind utc
 
     def test_tz_naive(self):
         """testing cftime"""
