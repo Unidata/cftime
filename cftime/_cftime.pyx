@@ -239,6 +239,9 @@ def date2num(dates,units,calendar='standard'):
                        basedate.microsecond)
     else:
         use_python_datetime = False
+        # convert basedate to specified calendar
+        if not isinstance(basedate, DATE_TYPES[calendar]):
+            basedate =  to_calendar_specific_datetime(basedate, calendar, False)
     times = []; n = 0
     for date in dates.flat:
         # use python datetime if possible.
@@ -246,9 +249,7 @@ def date2num(dates,units,calendar='standard'):
             # remove time zone offset
             if getattr(date, 'tzinfo',None) is not None:
                 date = date.replace(tzinfo=None) - date.utcoffset()
-        else: # convert basedate and date to same calendar specific cftime.datetime instance
-            if not isinstance(basedate, DATE_TYPES[calendar]):
-                basedate =  to_calendar_specific_datetime(basedate, calendar, False)
+        else: # convert date to same calendar specific cftime.datetime instance
             if not isinstance(date, DATE_TYPES[calendar]):
                 date = to_calendar_specific_datetime(date, calendar, False)
         if ismasked and mask.flat[n]:
