@@ -17,7 +17,7 @@ For details on the latest updates, see the [Changelog](https://github.com/Unidat
 5/12/2020:  version 1.1.3 released.  Add isoformat method for compatibility with python datetime (issue #152).
  Make 'standard' default calendar for cftime.datetime so that dayofwk,dayofyr methods don't fail (issue #169).
 
-4/20/2020:  version 1.1.2 released.  Code optimization, fix logic so `only_use_cftime_datimes=False` works as 
+4/20/2020:  version 1.1.2 released.  Code optimization, fix logic so `only_use_cftime_datetimes=False` works as 
  expected (issues [#158](https://github.com/Unidata/cftime/issues/158) and [#165](https://github.com/Unidata/cftime/issues/165)).
 
 3/16/2020:  version 1.1.1 released.  Fix bug in microsecond formatting, ensure identical num2date results if input is an array of times, or a single scalar ([issue #143](https://github.com/Unidata/cftime/issues/143)).
