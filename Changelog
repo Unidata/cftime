@@ -1,3 +1,8 @@
+version 1.2.1 (not yeat released)
+=================================
+ * num2date uses 'proleptic_gregorian' scheme when basedate is post-Gregorian but date is pre-Gregorian
+   (issue #182).
+
 version 1.2.0 (release tag v1.2.0rel)
 =====================================
  * Return the default values of dayofwk and dayofyr when calendar

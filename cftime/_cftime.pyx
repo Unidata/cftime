@@ -166,7 +166,7 @@ def _dateparse(timestr,calendar):
 
 def _can_use_python_datetime(date,calendar):
     return ((calendar == 'proleptic_gregorian' and date.year >= MINYEAR and date.year <= MAXYEAR) or \
-           (calendar in ['gregorian','standard'] and date > gregorian))
+           (calendar in ['gregorian','standard'] and date > gregorian and date.year <= MAXYEAR))
 
 @cython.embedsignature(True)
 def date2num(dates,units,calendar='standard'):
@@ -209,7 +209,7 @@ def date2num(dates,units,calendar='standard'):
     if unit in ["months", "month"] and calendar != "360_day":
         raise ValueError("Units of months only valid for 360_day calendar.")
     factor = UNIT_CONVERSION_FACTORS[unit]
-    use_python_datetime = _can_use_python_datetime(basedate,calendar)
+    can_use_python_basedatetime = _can_use_python_datetime(basedate,calendar)
 
     isscalar = False
     try:
@@ -225,23 +225,31 @@ def date2num(dates,units,calendar='standard'):
     else:
         dates = np.array(dates)
         shape = dates.shape
+    # are all dates python datetime instances?
+    all_python_datetimes = True
+    for date in dates.flat:
+        if not isinstance(date,datetime_python):
+           all_python_datetimes = False
+           break
+    if can_use_python_basedatetime and all_python_datetimes:
+        use_python_datetime = True
+        if not isinstance(basedate, datetime_python):
+            basedate = real_datetime(basedate.year, basedate.month, basedate.day, 
+                       basedate.hour, basedate.minute, basedate.second,
+                       basedate.microsecond)
+    else:
+        use_python_datetime = False
+        # convert basedate to specified calendar
+        if not isinstance(basedate, DATE_TYPES[calendar]):
+            basedate =  to_calendar_specific_datetime(basedate, calendar, False)
     times = []; n = 0
     for date in dates.flat:
         # use python datetime if possible.
-        if use_python_datetime and date.year >= MINYEAR and date.year <= MAXYEAR:
-            if not isinstance(basedate, datetime_python):
-                basedate = real_datetime(basedate.year, basedate.month, basedate.day, 
-                           basedate.hour, basedate.minute, basedate.second,
-                           basedate.microsecond)
-            if not isinstance(date, datetime_python):
-                date = real_datetime(date.year, date.month, date.day, date.hour,
-                                     date.minute, date.second, date.microsecond)
-            # adjust for time zone offset
+        if use_python_datetime:
+            # remove time zone offset
             if getattr(date, 'tzinfo',None) is not None:
                 date = date.replace(tzinfo=None) - date.utcoffset()
-        else: # convert basedate and date to same calendar specific cftime.datetime instance
-            if not isinstance(basedate, DATE_TYPES[calendar]):
-                basedate =  to_calendar_specific_datetime(basedate, calendar, False)
+        else: # convert date to same calendar specific cftime.datetime instance
             if not isinstance(date, DATE_TYPES[calendar]):
                 date = to_calendar_specific_datetime(date, calendar, False)
         if ismasked and mask.flat[n]:
