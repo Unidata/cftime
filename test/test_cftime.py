@@ -805,6 +805,9 @@ class cftimeTestCase(unittest.TestCase):
             time2 = date2num(date,units,calendar=calendar)
             date2 = num2date(time2,units,calendar=calendar)
             assert(date2 == refdate)
+# issue #185: date2num should work the numpy scalar array of dates (1.2.0 regression)
+        dates = np.array(datetime(2010, 2, 2, 0, 0))
+        assert (date2num(dates, units="hours since 2010-02-01 00:00:00") == 24.)
 
 class TestDate2index(unittest.TestCase):
 

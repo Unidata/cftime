@@ -1,7 +1,8 @@
-version 1.2.1 (not yeat released)
+version 1.2.1 (not yet released)
 =================================
  * num2date uses 'proleptic_gregorian' scheme when basedate is post-Gregorian but date is pre-Gregorian
    (issue #182).
+ * fix 1.2.0 regression (date2num no longer works with numpy scalar array inputs, issue #185).
 
 version 1.2.0 (release tag v1.2.0rel)
 =====================================
