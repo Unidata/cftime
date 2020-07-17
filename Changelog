@@ -1,7 +1,10 @@
-version 1.2.1 (not yeat released)
+version 1.2.1 (not yet released)
 =================================
  * num2date uses 'proleptic_gregorian' scheme when basedate is post-Gregorian but date is pre-Gregorian
    (issue #182).
+ * Fix for issue #187 (have date2num round to the nearest second when within 1
+   microsecond).
+ 
 
 version 1.2.0 (release tag v1.2.0rel)
 =====================================
