@@ -1509,9 +1509,9 @@ cdef _is_leap(int year, calendar):
     if calendar == 'proleptic_gregorian' or (calendar == 'standard' and year > 1581):
         if tyear % 4: # not divisible by 4
             leap = False
-        elif year % 100: # not divisible by 100
+        elif tyear % 100: # not divisible by 100
             leap = True
-        elif year % 400: # not divisible by 400
+        elif tyear % 400: # not divisible by 400
             leap = False
         else:
             leap = True
