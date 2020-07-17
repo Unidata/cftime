@@ -805,6 +805,11 @@ class cftimeTestCase(unittest.TestCase):
             time2 = date2num(date,units,calendar=calendar)
             date2 = num2date(time2,units,calendar=calendar)
             assert(date2 == refdate)
+# issue #187 - roundtrip near second boundary
+            dt1 = datetime(1810, 4, 24, 16, 15, 10)
+            units = 'days since -4713-01-01 12:00'
+            dt2 = num2date(date2num(dt1, units), units)
+            assert(dt1 == dt2)
 
 class TestDate2index(unittest.TestCase):
 

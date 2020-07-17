@@ -363,15 +363,19 @@ def cast_to_int(num):
         if np.any(num < _MIN_INT64) or np.any(num > _MAX_INT64):
             raise OverflowError('time values outside range of 64 bit signed integers')
         if isinstance(num, np.ma.core.MaskedArray):
-            #int_num = np.ma.masked_array(np.rint(num), dtype=np.int64)
-            # use ceil instead of rint to preserve microseconds on roundtrip
-            # (issue #187)
-            int_num = np.ma.masked_array(np.ceil(num), dtype=np.int64)
+            int_num = np.ma.masked_array(np.rint(num), dtype=np.int64)
+            # use ceil instead of rint if 1 microsec less than a second
+            # or floor if 1 microsec greater than a second (issue #187)
+            int_num = np.ma.where(int_num%10000000 == 1, \
+                      np.ma.masked_array(np.floor(num),dtype=np.int64), int_num)
+            int_num = np.ma.where(int_num%10000000 == 9999999, \
+                      np.ma.masked_array(np.ceil(num),dtype=np.int64), int_num)
         else:
-            #int_num = np.array(np.rint(num), dtype=np.int64)
-            # use ceil instead of rint to preserve microseconds on roundtrip
-            # (issue #187)
-            int_num = np.array(np.ceil(num), dtype=np.int64)
+            int_num = np.array(np.rint(num), dtype=np.int64)
+            int_num = np.where(int_num%10000000 == 1, \
+                      np.array(np.floor(num),dtype=np.int64), int_num)
+            int_num = np.where(int_num%10000000 == 9999999, \
+                      np.array(np.ceil(num),dtype=np.int64), int_num)
         return int_num
 
 
