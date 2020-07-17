@@ -363,9 +363,15 @@ def cast_to_int(num):
         if np.any(num < _MIN_INT64) or np.any(num > _MAX_INT64):
             raise OverflowError('time values outside range of 64 bit signed integers')
         if isinstance(num, np.ma.core.MaskedArray):
-            int_num = np.ma.masked_array(np.rint(num), dtype=np.int64)
+            #int_num = np.ma.masked_array(np.rint(num), dtype=np.int64)
+            # use ceil instead of rint to preserve microseconds on roundtrip
+            # (issue #187)
+            int_num = np.ma.masked_array(np.ceil(num), dtype=np.int64)
         else:
-            int_num = np.array(np.rint(num), dtype=np.int64)
+            #int_num = np.array(np.rint(num), dtype=np.int64)
+            # use ceil instead of rint to preserve microseconds on roundtrip
+            # (issue #187)
+            int_num = np.array(np.ceil(num), dtype=np.int64)
         return int_num
 
 
