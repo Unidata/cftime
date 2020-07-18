@@ -808,6 +808,18 @@ class cftimeTestCase(unittest.TestCase):
 # issue #185: date2num should work the numpy scalar array of dates (1.2.0 regression)
         dates = np.array(datetime(2010, 2, 2, 0, 0))
         assert (date2num(dates, units="hours since 2010-02-01 00:00:00") == 24.)
+# issue #187 - roundtrip near second boundary
+        dt1 = datetime(1810, 4, 24, 16, 15, 10)
+        units = 'days since -4713-01-01 12:00'
+        dt2 = num2date(date2num(dt1, units), units)
+        assert(dt1 == dt2)
+# issue #189 - leap years calculated incorrectly for negative years in proleptic_gregorian calendar
+        dt1 = datetime(2020, 4, 24, 16, 15, 10)
+        units = 'days since -4713-01-01 12:00'
+        cal = 'proleptic_gregorian'
+        dt2 = num2date(date2num(dt1, units, cal), units, cal)
+        assert(dt1 == dt2)
+
 
 class TestDate2index(unittest.TestCase):
 

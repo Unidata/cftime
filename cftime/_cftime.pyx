@@ -53,7 +53,7 @@ cdef int32_t* days_per_month_array = [
 _rop_lookup = {Py_LT: '__gt__', Py_LE: '__ge__', Py_EQ: '__eq__',
                Py_GT: '__lt__', Py_GE: '__le__', Py_NE: '__ne__'}
 
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
@@ -353,7 +353,7 @@ _MAX_INT64 = np.iinfo("int64").max
 _MIN_INT64 = np.iinfo("int64").min
 
 
-def cast_to_int(num):
+def cast_to_int(num, units=None):
     if num.dtype.kind in "iu":
         return num
     else:
@@ -361,8 +361,20 @@ def cast_to_int(num):
             raise OverflowError('time values outside range of 64 bit signed integers')
         if isinstance(num, np.ma.core.MaskedArray):
             int_num = np.ma.masked_array(np.rint(num), dtype=np.int64)
+            # use ceil instead of rint if 1 microsec less than a second
+            # or floor if 1 microsec greater than a second (issue #187)
+            if units not in microsec_units and units not in millisec_units:
+                int_num = np.ma.where(int_num%1000000 == 1, \
+                          np.ma.masked_array(np.floor(num),dtype=np.int64), int_num)
+                int_num = np.ma.where(int_num%1000000 == 999999, \
+                          np.ma.masked_array(np.ceil(num),dtype=np.int64), int_num)
         else:
             int_num = np.array(np.rint(num), dtype=np.int64)
+            if units not in microsec_units and units not in millisec_units:
+                int_num = np.where(int_num%1000000 == 1, \
+                          np.array(np.floor(num),dtype=np.int64), int_num)
+                int_num = np.where(int_num%1000000 == 999999, \
+                          np.array(np.ceil(num),dtype=np.int64), int_num)
         return int_num
 
 
@@ -483,7 +495,7 @@ def num2date(
     times = np.asanyarray(times)  # Allow list as input
     times = upcast_times(times)
     scaled_times = scale_times(times, factor)
-    scaled_times = cast_to_int(scaled_times)
+    scaled_times = cast_to_int(scaled_times,units=unit)
 
     # Through np.timedelta64, convert integers scaled to have units of
     # microseconds to datetime.timedelta objects, the timedelta type compatible
@@ -1494,9 +1506,9 @@ cdef _is_leap(int year, calendar):
     if calendar == 'proleptic_gregorian' or (calendar == 'standard' and year > 1581):
         if tyear % 4: # not divisible by 4
             leap = False
-        elif year % 100: # not divisible by 100
+        elif tyear % 100: # not divisible by 100
             leap = True
-        elif year % 400: # not divisible by 400
+        elif tyear % 400: # not divisible by 400
             leap = False
         else:
             leap = True
