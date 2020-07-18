@@ -220,11 +220,8 @@ def date2num(dates,units,calendar='standard'):
     if np.ma.isMA(dates) and np.ma.is_masked(dates):
         mask = dates.mask
         ismasked = True
-    if isscalar:
-        dates = np.array([dates])
-    else:
-        dates = np.array(dates)
-        shape = dates.shape
+    dates = np.asanyarray(dates)
+    shape = dates.shape
     # are all dates python datetime instances?
     all_python_datetimes = True
     for date in dates.flat:
