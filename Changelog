@@ -5,7 +5,7 @@ version 1.2.1 (not yet released)
  * fix 1.2.0 regression (date2num no longer works with numpy scalar array inputs, issue #185).
  * Fix for issue #187 (have date2num round to the nearest second when within 1
    microsecond).
- * Fix for issue #188 (leap years calculated incorrectly for negative years in
+ * Fix for issue #189 (leap years calculated incorrectly for negative years in
    proleptic_gregorian calendar).
 
 version 1.2.0 (release tag v1.2.0rel)
