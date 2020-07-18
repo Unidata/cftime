@@ -12,7 +12,7 @@ Time-handling functionality from netcdf4-python
 ## News
 For details on the latest updates, see the [Changelog](https://github.com/Unidata/cftime/blob/master/Changelog).
 
-??/??/2020: Version 1.2.1 released.  Fixes a couple of regressions introduced in 1.2.0. See Changelog for details.
+07/20/2020: Version 1.2.1 released.  Fixes a couple of regressions introduced in 1.2.0. See Changelog for details.
 
 7/06/2020:  version 1.2.0 released. New microsecond accurate algorithm for date2num/num2date contributed by [spencerkclark](https://github.com/spencerkclark). Bugs fixed in masked array handling.
 
