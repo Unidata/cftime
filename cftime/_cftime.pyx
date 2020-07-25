@@ -1112,6 +1112,17 @@ datetime object."""
                 return self - other._to_real_datetime()
             else:
                 return NotImplemented
+    
+    def toordinal(self):
+        """
+        returns integer days since 1-1-1, like python's datetime toordinal.
+        """
+        if self.calendar == '':
+            raise ValueError('calendar must be specified to compute ordinal')
+        else:
+            epoch = _IntJulianDayFromDate(1,1,1,self.calendar)
+            jd = _IntJulianDayFromDate(self.year,self.month,self.day,self.calendar)
+            return jd - epoch + 1
 
 @cython.embedsignature(True)
 cdef class DatetimeNoLeap(datetime):
