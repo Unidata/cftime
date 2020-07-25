@@ -332,7 +332,13 @@ DATE_TYPES = {
 }
 
 
+@cython.embedsignature(True)
 def to_calendar_specific_datetime(datetime, calendar, use_python_datetime):
+    """
+    convert from one calendar-specific datetime instance to another.
+    If use_python_datetime=True, convert to python datetime (and ignore
+    calendar kwarg).
+    """
     if use_python_datetime:
         date_type = real_datetime
     else:
@@ -1112,7 +1118,7 @@ datetime object."""
                 return self - other._to_real_datetime()
             else:
                 return NotImplemented
-    
+
     def toordinal(self):
         """
         returns integer days since 1-1-1, like python's datetime toordinal.
