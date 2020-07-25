@@ -1,3 +1,7 @@
+since version 1.2.1 release
+===========================
+ * add tooridinal() to cftime.datetime, expose to_calendar_specific_datetime.
+
 version 1.2.1 (release tag v1.2.1rel)
 =====================================
  * num2date uses 'proleptic_gregorian' scheme when basedate is post-Gregorian but date is pre-Gregorian
