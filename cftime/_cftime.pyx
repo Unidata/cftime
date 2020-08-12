@@ -412,8 +412,7 @@ def num2date(
     only_use_cftime_datetimes=True,
     only_use_python_datetimes=False
 ):
-    """Decode times exactly with timedelta arithmetic.
-
+    """
     Return datetime objects given numeric time values. The units
     of the numeric time values are described by the **units** argument
     and the **calendar** keyword. The returned datetime objects represent
