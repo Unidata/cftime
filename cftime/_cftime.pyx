@@ -724,7 +724,7 @@ def time2index(times, nctime, calendar=None, select='exact'):
     """
     Return indices of a netCDF time variable corresponding to the given times.
 
-    **param** times: A numeric time or a sequence of numeric times.
+    **times**: A numeric time or a sequence of numeric times.
 
     **nctime**: A netCDF time variable object. The nctime object must have a
     C{units} attribute. The entries are assumed to be stored in increasing
