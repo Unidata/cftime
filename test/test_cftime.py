@@ -248,7 +248,7 @@ class cftimeTestCase(unittest.TestCase):
         # check date2num,num2date methods.
         # use datetime from cftime, since this date doesn't
         # exist in "normal" calendars.
-        d = datetimex(2000, 2, 30)
+        d = datetimex(2000, 2, 30, calendar='360_day')
         t1 = self.cdftime_360day.date2num(d)
         assert_almost_equal(t1, 360 * 400.)
         d2 = self.cdftime_360day.num2date(t1)
@@ -1581,7 +1581,7 @@ def test_num2date_only_use_cftime_datetimes_post_gregorian(
 
 def test_repr():
     #expected = 'cftime.datetime(2000-01-01 00:00:00)'
-    expected = 'cftime.datetime(2000, 1, 1, 0, 0, 0, 0)'
+    expected = 'cftime.DatetimeGregorian(2000, 1, 1, 0, 0, 0, 0)'
     assert repr(datetimex(2000, 1, 1)) == expected
 
 
