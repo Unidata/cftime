@@ -2,7 +2,7 @@ version 1.2.2 (not yet released)
 ================================
  * zero pad years in strtime (issue #194)
  * have cftime.datetime create calendar-specific instances that support
-   addition and subtraction (issue #198.)
+   addition and subtraction (issue #198).
 
 version 1.2.1 (release tag v1.2.1rel)
 =====================================
