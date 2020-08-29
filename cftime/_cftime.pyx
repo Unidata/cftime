@@ -857,7 +857,8 @@ cdef class datetime_base(object):
     """
 The base class implementing most methods of datetime classes that
 mimic datetime.datetime but support calendars other than the proleptic
-Gregorial calendar.
+Gregorial calendar. The factory function cftime.datetime should be used
+to create calendar-specific sub-class instances.
     """
     cdef readonly int year, month, day, hour, minute
     cdef readonly int second, microsecond
