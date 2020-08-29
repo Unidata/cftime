@@ -148,7 +148,7 @@ def _dateparse(timestr,calendar):
             pass
     if not basedate:
         if not utc_offset:
-            basedate = _datetime(year, month, day, hour, minute, second,
+            basedate = datetime_base(year, month, day, hour, minute, second,
                                  microsecond)
         else:
             raise ValueError('cannot use utc_offset for this reference date/calendar')
@@ -246,7 +246,7 @@ def date2num(dates,units,calendar='standard'):
             # remove time zone offset
             if getattr(date, 'tzinfo',None) is not None:
                 date = date.replace(tzinfo=None) - date.utcoffset()
-        else: # convert date to same calendar specific cftime._datetime instance
+        else: # convert date to same calendar specific cftime.datetime_base instance
             if not isinstance(date, DATE_TYPES[calendar]):
                 date = to_calendar_specific_datetime(date, calendar, False)
         if ismasked and mask.flat[n]:
@@ -435,7 +435,7 @@ def num2date(
 
     **only_use_cftime_datetimes**: if False, python datetime.datetime
     objects are returned from num2date where possible; if True dates which
-    subclass cftime._datetime are returned for all calendars. Default **True**.
+    subclass cftime.datetime_base are returned for all calendars. Default **True**.
 
     **only_use_python_datetimes**: always return python datetime.datetime
     objects and raise an error if this is not possible. Ignored unless
@@ -498,7 +498,7 @@ def num2date(
 
     # Through np.timedelta64, convert integers scaled to have units of
     # microseconds to datetime.timedelta objects, the timedelta type compatible
-    # with all cftime._datetime objects.
+    # with all cftime.datetime_base objects.
     deltas = scaled_times.astype("timedelta64[us]").astype(timedelta)
     try:
         return basedate + deltas
@@ -848,12 +848,12 @@ def datetime(year, month, day, hour=0, minute=0,
 Create a calendar specific datetime instance.
     """
     if calendar == '':
-        return _datetime(year,month,day,hour,minute,second,microsecond,dayofwk,dayofyr,calendar=calendar)
+        return datetime_base(year,month,day,hour,minute,second,microsecond,dayofwk,dayofyr,calendar=calendar)
     else:
         date_type = DATE_TYPES[calendar]
         return date_type(year,month,day,hour,minute,second,microsecond,dayofwk,dayofyr)
 
-cdef class _datetime(object):
+cdef class datetime_base(object):
     """
 The base class implementing most methods of datetime classes that
 mimic datetime.datetime but support calendars other than the proleptic
@@ -866,7 +866,7 @@ Gregorial calendar.
 
     # Python's datetime.datetime uses the proleptic Gregorian
     # calendar. This boolean is used to decide whether a
-    # cftime._datetime instance can be converted to
+    # cftime.datetime_base instance can be converted to
     # datetime.datetime.
     cdef readonly bint datetime_compatible
 
@@ -1009,9 +1009,9 @@ Gregorial calendar.
                 self.second, self.microsecond)
 
     def __richcmp__(self, other, int op):
-        cdef _datetime dt, dt_other
+        cdef datetime_base dt, dt_other
         dt = self
-        if isinstance(other, _datetime):
+        if isinstance(other, datetime_base):
             dt_other = other
             # comparing two datetime instances
             if dt.calendar == dt_other.calendar:
@@ -1066,11 +1066,11 @@ Gregorial calendar.
         return NotImplemented
 
     def __add__(self, other):
-        cdef _datetime dt
-        if isinstance(self, _datetime) and isinstance(other, timedelta):
+        cdef datetime_base dt
+        if isinstance(self, datetime_base) and isinstance(other, timedelta):
             dt = self
             delta = other
-        elif isinstance(self, timedelta) and isinstance(other, _datetime):
+        elif isinstance(self, timedelta) and isinstance(other, datetime_base):
             dt = other
             delta = self
         else:
@@ -1078,10 +1078,10 @@ Gregorial calendar.
         return dt._add_timedelta(delta)
 
     def __sub__(self, other):
-        cdef _datetime dt
-        if isinstance(self, _datetime): # left arg is a datetime instance
+        cdef datetime_base dt
+        if isinstance(self, datetime_base): # left arg is a datetime instance
             dt = self
-            if isinstance(other, _datetime):
+            if isinstance(other, datetime_base):
                 # datetime - datetime
                 if dt.calendar != other.calendar:
                     raise ValueError("cannot compute the time difference between dates with different calendars")
@@ -1125,13 +1125,13 @@ datetime object."""
                 return NotImplemented
 
 @cython.embedsignature(True)
-cdef class DatetimeNoLeap(_datetime):
+cdef class DatetimeNoLeap(datetime_base):
     """
 Phony datetime object which mimics the python datetime object,
 but uses the "noleap" ("365_day") calendar.
     """
     def __init__(self, *args, **kwargs):
-        _datetime.__init__(self, *args, **kwargs)
+        datetime_base.__init__(self, *args, **kwargs)
         self.calendar = "noleap"
         self.datetime_compatible = False
         assert_valid_date(self, no_leap, False, has_year_zero=True)
@@ -1144,13 +1144,13 @@ but uses the "noleap" ("365_day") calendar.
         return _dpm[self.month-1]
 
 @cython.embedsignature(True)
-cdef class DatetimeAllLeap(_datetime):
+cdef class DatetimeAllLeap(datetime_base):
     """
 Phony datetime object which mimics the python datetime object,
 but uses the "all_leap" ("366_day") calendar.
     """
     def __init__(self, *args, **kwargs):
-        _datetime.__init__(self, *args, **kwargs)
+        datetime_base.__init__(self, *args, **kwargs)
         self.calendar = "all_leap"
         self.datetime_compatible = False
         assert_valid_date(self, all_leap, False, has_year_zero=True)
@@ -1163,13 +1163,13 @@ but uses the "all_leap" ("366_day") calendar.
         return _dpm_leap[self.month-1]
 
 @cython.embedsignature(True)
-cdef class Datetime360Day(_datetime):
+cdef class Datetime360Day(datetime_base):
     """
 Phony datetime object which mimics the python datetime object,
 but uses the "360_day" calendar.
     """
     def __init__(self, *args, **kwargs):
-        _datetime.__init__(self, *args, **kwargs)
+        datetime_base.__init__(self, *args, **kwargs)
         self.calendar = "360_day"
         self.datetime_compatible = False
         assert_valid_date(self, no_leap, False, has_year_zero=True, is_360_day=True)
@@ -1182,13 +1182,13 @@ but uses the "360_day" calendar.
         return _dpm_360[self.month-1]
 
 @cython.embedsignature(True)
-cdef class DatetimeJulian(_datetime):
+cdef class DatetimeJulian(datetime_base):
     """
 Phony datetime object which mimics the python datetime object,
 but uses the "julian" calendar.
     """
     def __init__(self, *args, **kwargs):
-        _datetime.__init__(self, *args, **kwargs)
+        datetime_base.__init__(self, *args, **kwargs)
         self.calendar = "julian"
         self.datetime_compatible = False
         assert_valid_date(self, is_leap_julian, False)
@@ -1197,7 +1197,7 @@ but uses the "julian" calendar.
         return DatetimeJulian(*add_timedelta(self, delta, is_leap_julian, False, False))
 
 @cython.embedsignature(True)
-cdef class DatetimeGregorian(_datetime):
+cdef class DatetimeGregorian(datetime_base):
     """
 Phony datetime object which mimics the python datetime object,
 but uses the mixed Julian-Gregorian ("standard", "gregorian") calendar.
@@ -1211,7 +1211,7 @@ datetime.datetime instances and used to compute time differences
 a datetime.datetime instance or vice versa.
     """
     def __init__(self, *args, **kwargs):
-        _datetime.__init__(self, *args, **kwargs)
+        datetime_base.__init__(self, *args, **kwargs)
         self.calendar = "gregorian"
 
         # dates after 1582-10-15 can be converted to and compared to
@@ -1226,7 +1226,7 @@ a datetime.datetime instance or vice versa.
         return DatetimeGregorian(*add_timedelta(self, delta, is_leap_gregorian, True, False))
 
 @cython.embedsignature(True)
-cdef class DatetimeProlepticGregorian(_datetime):
+cdef class DatetimeProlepticGregorian(datetime_base):
     """
 Phony datetime object which mimics the python datetime object,
 but allows for dates that don't exist in the proleptic gregorian calendar.
@@ -1237,14 +1237,14 @@ Has strftime, timetuple, replace, __repr__, and __str__ methods. The
 format of the string produced by __str__ is controlled by self.format
 (default %Y-%m-%d %H:%M:%S). Supports comparisons with other
 datetime instances using the same calendar; comparison with
-native python datetime instances is possible for cftime._datetime
+native python datetime instances is possible for cftime.datetime_base
 instances using 'gregorian' and 'proleptic_gregorian' calendars.
 
 Instance variables are year,month,day,hour,minute,second,microsecond,dayofwk,dayofyr,
 format, and calendar.
     """
     def __init__(self, *args, **kwargs):
-        _datetime.__init__(self, *args, **kwargs)
+        datetime_base.__init__(self, *args, **kwargs)
         self.calendar = "proleptic_gregorian"
         self.datetime_compatible = True
         assert_valid_date(self, is_leap_proleptic_gregorian, False)
@@ -1273,7 +1273,7 @@ cdef _findall(text, substr):
 # calendar.  ;)
 
 
-cdef _strftime(_datetime dt, fmt):
+cdef _strftime(datetime_base dt, fmt):
     if _illegal_s.search(fmt):
         raise TypeError("This strftime implementation does not handle %s")
     # don't use strftime method at all.
@@ -1333,7 +1333,7 @@ cdef int * month_lengths(bint (*is_leap)(int), int year):
     else:
         return _dpm
 
-cdef void assert_valid_date(_datetime dt, bint (*is_leap)(int),
+cdef void assert_valid_date(datetime_base dt, bint (*is_leap)(int),
                             bint julian_gregorian_mixed,
                             bint has_year_zero=False,
                             bint is_360_day=False) except *:
@@ -1368,7 +1368,7 @@ cdef void assert_valid_date(_datetime dt, bint (*is_leap)(int),
     if dt.microsecond < 0 or dt.microsecond > 999999:
         raise ValueError("invalid microsecond provided in {0!r}".format(dt))
 
-# Add a datetime.timedelta to a cftime._datetime instance. Uses
+# Add a datetime.timedelta to a cftime.datetime_base instance. Uses
 # integer arithmetic to avoid rounding errors and preserve
 # microsecond accuracy.
 #
@@ -1382,7 +1382,7 @@ cdef void assert_valid_date(_datetime dt, bint (*is_leap)(int),
 # The date of the transition from the Julian to Gregorian calendar and
 # the number of invalid dates are hard-wired (1582-10-4 is the last day
 # of the Julian calendar, after which follows 1582-10-15).
-cdef tuple add_timedelta(_datetime dt, delta, bint (*is_leap)(int), bint julian_gregorian_mixed, bint has_year_zero):
+cdef tuple add_timedelta(datetime_base dt, delta, bint (*is_leap)(int), bint julian_gregorian_mixed, bint has_year_zero):
     cdef int microsecond, second, minute, hour, day, month, year
     cdef int delta_microseconds, delta_seconds, delta_days
     cdef int* month_length
@@ -1456,13 +1456,13 @@ cdef tuple add_timedelta(_datetime dt, delta, bint (*is_leap)(int), bint julian_
 
     return (year, month, day, hour, minute, second, microsecond, -1, -1)
 
-# Add a datetime.timedelta to a cftime._datetime instance with the 360_day calendar.
+# Add a datetime.timedelta to a cftime.datetime_base instance with the 360_day calendar.
 #
 # Assumes that the 360_day,365_day and 366_day calendars (unlike the rest of supported
 # calendars) have the year 0. Also, there are no leap years and all
 # months are 30 days long, so we can compute month and year by using
 # "//" and "%".
-cdef tuple add_timedelta_360_day(_datetime dt, delta):
+cdef tuple add_timedelta_360_day(datetime_base dt, delta):
     cdef int microsecond, second, minute, hour, day, month, year
     cdef int delta_microseconds, delta_seconds, delta_days
 
@@ -1882,7 +1882,7 @@ def DateFromJulianDay(JD, calendar='standard', only_use_cftime_datetimes=True,
 
     if calendar='julian', Julian Day follows julian calendar.
 
-    If only_use_cftime_datetimes is set to True, then cftime._datetime
+    If only_use_cftime_datetimes is set to True, then cftime.datetime_base
     objects are returned for all calendars.  Otherwise the datetime object is a
     native python datetime object if the date falls in the Gregorian calendar
     (i.e. calendar='proleptic_gregorian', or  calendar = 'standard'/'gregorian'
@@ -2133,7 +2133,7 @@ are:
 
 @keyword only_use_cftime_datetimes: if False, datetime.datetime
 objects are returned from num2date where possible; if True dates which subclass
-cftime._datetime are returned for all calendars. Default True.
+cftime.datetime_base are returned for all calendars. Default True.
 
 @keyword only_use_python_datetimes: always return python datetime.datetime
 objects and raise an error if this is not possible. Ignored unless
