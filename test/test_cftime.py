@@ -819,6 +819,17 @@ class cftimeTestCase(unittest.TestCase):
         cal = 'proleptic_gregorian'
         dt2 = num2date(date2num(dt1, units, cal), units, cal)
         assert(dt1 == dt2)
+# issue #198 - cftime.datetime creates calendar specific datetimes that
+# support addition/subtraction of timedeltas.
+        dt = cftime.datetime(2020, 1, 1, calendar='')
+        assert(isinstance(dt, cftime.datetime_base))
+        dt = cftime.datetime(2020, 1, 1, calendar="julian")
+        dt += timedelta(hours=1)
+        assert(str(dt) == '2020-01-01 01:00:00')
+        assert(isinstance(dt, cftime.DatetimeJulian))
+        for cal in cftime.DATE_TYPES.keys():
+            dt = cftime.datetime(2020, 1, 1, calendar=cal)
+            assert(isinstance(dt, cftime.DATE_TYPES[cal]))
 
 
 class TestDate2index(unittest.TestCase):
@@ -1390,8 +1401,7 @@ class issue57TestCase(unittest.TestCase):
                 ValueError, cftime._cftime.date2num, datetime(1900, 1, 1, 0), datestr, 'standard')
 
 
-_DATE_TYPES = [DatetimeNoLeap, DatetimeAllLeap, DatetimeJulian, Datetime360Day,
-               DatetimeGregorian, DatetimeProlepticGregorian]
+_DATE_TYPES = cftime.DATE_TYPES.values()
 
 
 @pytest.fixture(params=_DATE_TYPES)
