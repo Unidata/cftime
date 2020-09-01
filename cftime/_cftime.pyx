@@ -53,7 +53,7 @@ cdef int32_t* days_per_month_array = [
 _rop_lookup = {Py_LT: '__gt__', Py_LE: '__ge__', Py_EQ: '__eq__',
                Py_GT: '__lt__', Py_GE: '__le__', Py_NE: '__ne__'}
 
-__version__ = '1.2.2'
+__version__ = '1.3.0'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
@@ -853,12 +853,25 @@ Create a calendar specific datetime instance.
         date_type = DATE_TYPES[calendar]
         return date_type(year,month,day,hour,minute,second,microsecond,dayofwk,dayofyr)
 
+@cython.embedsignature(True)
 cdef class datetime_base(object):
     """
 The base class implementing most methods of datetime classes that
 mimic datetime.datetime but support calendars other than the proleptic
-Gregorial calendar. The factory function cftime.datetime should be used
+Gregorian calendar. The factory function cftime.datetime should be used
 to create calendar-specific sub-class instances.
+
+Calendar specific sub-classes support timedelta operations by overloading +/-.
+Comparisons with other datetime_base sub-class instances using the same
+calendar are supported.
+Comparison with native python datetime instances is possible
+for cftime.datetime_base sub-class instances using
+'gregorian' and 'proleptic_gregorian' calendars.
+
+Has isoformat, strftime, timetuple, replace, dayofwk, dayofyr, daysinmonth,
+__repr__, and __str__ methods. 
+The default format of the string produced by strftime is controlled by self.format
+(default %Y-%m-%d %H:%M:%S).
     """
     cdef readonly int year, month, day, hour, minute
     cdef readonly int second, microsecond
@@ -1130,6 +1143,10 @@ cdef class DatetimeNoLeap(datetime_base):
     """
 Phony datetime object which mimics the python datetime object,
 but uses the "noleap" ("365_day") calendar.
+
+The factory function cftime.datetime should be used
+to create instances of this class using the `calendar` kwarg to specify
+the calendar.
     """
     def __init__(self, *args, **kwargs):
         datetime_base.__init__(self, *args, **kwargs)
@@ -1149,6 +1166,10 @@ cdef class DatetimeAllLeap(datetime_base):
     """
 Phony datetime object which mimics the python datetime object,
 but uses the "all_leap" ("366_day") calendar.
+
+The factory function cftime.datetime should be used
+to create instances of this class using the `calendar` kwarg to specify
+the calendar.
     """
     def __init__(self, *args, **kwargs):
         datetime_base.__init__(self, *args, **kwargs)
@@ -1168,6 +1189,10 @@ cdef class Datetime360Day(datetime_base):
     """
 Phony datetime object which mimics the python datetime object,
 but uses the "360_day" calendar.
+
+The factory function cftime.datetime should be used
+to create instances of this class using the `calendar` kwarg to specify
+the calendar.
     """
     def __init__(self, *args, **kwargs):
         datetime_base.__init__(self, *args, **kwargs)
@@ -1187,6 +1212,10 @@ cdef class DatetimeJulian(datetime_base):
     """
 Phony datetime object which mimics the python datetime object,
 but uses the "julian" calendar.
+
+The factory function cftime.datetime should be used
+to create instances of this class using the `calendar` kwarg to specify
+the calendar.
     """
     def __init__(self, *args, **kwargs):
         datetime_base.__init__(self, *args, **kwargs)
@@ -1210,6 +1239,10 @@ Instances using the date after 1582-10-15 can be compared to
 datetime.datetime instances and used to compute time differences
 (datetime.timedelta) by subtracting a DatetimeGregorian instance from
 a datetime.datetime instance or vice versa.
+
+The factory function cftime.datetime should be used
+to create instances of this class using the `calendar` kwarg to specify
+the calendar.
     """
     def __init__(self, *args, **kwargs):
         datetime_base.__init__(self, *args, **kwargs)
@@ -1232,17 +1265,9 @@ cdef class DatetimeProlepticGregorian(datetime_base):
 Phony datetime object which mimics the python datetime object,
 but allows for dates that don't exist in the proleptic gregorian calendar.
 
-Supports timedelta operations by overloading + and -.
-
-Has strftime, timetuple, replace, __repr__, and __str__ methods. The
-format of the string produced by __str__ is controlled by self.format
-(default %Y-%m-%d %H:%M:%S). Supports comparisons with other
-datetime instances using the same calendar; comparison with
-native python datetime instances is possible for cftime.datetime_base
-instances using 'gregorian' and 'proleptic_gregorian' calendars.
-
-Instance variables are year,month,day,hour,minute,second,microsecond,dayofwk,dayofyr,
-format, and calendar.
+The factory function cftime.datetime should be used
+to create instances of this class using the `calendar` kwarg to specify
+the calendar.
     """
     def __init__(self, *args, **kwargs):
         datetime_base.__init__(self, *args, **kwargs)
