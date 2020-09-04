@@ -1000,7 +1000,7 @@ class TestDate2index(unittest.TestCase):
                  datetime(1995, 11, 25, 18, 7, 59, 999999)]
         times2 = date2num(dates, units)
         dates2 = num2date(times2, units)
-        datediff = abs(dates-dates2)
+        datediff = abs(dates2-dates)
         for diff in datediff:
             assert(diff.microseconds < 100) # tolerance of 100 ms
 
@@ -1085,7 +1085,7 @@ class DateTime(unittest.TestCase):
                          dt.replace(day=dt.day + 1, hour=dt.hour + 1))
 
         # timedelta + datetime
-        self.assertEqual(self.delta + dt, # add 25 hours
+        self.assertEqual(dt + self.delta, # add 25 hours
                          dt.replace(day=dt.day + 1, hour=dt.hour + 1))
 
         # test the Julian/Gregorian transition
@@ -1138,9 +1138,9 @@ class DateTime(unittest.TestCase):
         self.assertEqual(total_seconds(delta), 86400)
 
         # subtracting cftime.datetime from datetime.datetime
-        delta = self.datetime_date1 - self.date3_gregorian
+        delta = self.date3_gregorian - self.datetime_date1
         # real_date2 and real_date1 are exactly one day apart
-        self.assertEqual(total_seconds(delta), 86400)
+        self.assertEqual(np.abs(total_seconds(delta)), 86400)
 
         # subtracting datetime.datetime from cftime.datetime
         delta = self.date3_gregorian - self.datetime_date1
@@ -1187,10 +1187,10 @@ class DateTime(unittest.TestCase):
         def invalid_sub_5():
             self.date3_gregorian - self.date1_365_day
 
-        for func in [invalid_sub_1, invalid_sub_2]:
+        for func in [invalid_sub_1, invalid_sub_2, invalid_sub_4]:
             self.assertRaises(TypeError, func)
 
-        for func in [invalid_sub_3, invalid_sub_4, invalid_sub_5]:
+        for func in [invalid_sub_3, invalid_sub_5]:
             self.assertRaises(ValueError, func)
 
     def test_replace(self):
