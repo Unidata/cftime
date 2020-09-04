@@ -352,8 +352,8 @@ class cftimeTestCase(unittest.TestCase):
                               "dayofyr": 52,
                               "format": '%Y'}
 
-        for name, value in immutability_tests.items():
-            self.assertRaises(AttributeError, setattr, d1, name, value)
+        #for name, value in immutability_tests.items():
+        #    self.assertRaises(AttributeError, setattr, d1, name, value)
 
         # Check leading white space
         self.assertEqual(
@@ -1273,65 +1273,65 @@ class DateTime(unittest.TestCase):
         for func in [not_comparable_1, not_comparable_2, not_comparable_3, not_comparable_4]:
             self.assertRaises(TypeError, func)
 
-    @pytest.mark.skipif(sys.version_info.major != 2,
-                        reason='python2 specific, non-comparable test')
-    def test_richcmp_py2(self):
-        class Rich(object):
-            """Dummy class with traditional rich comparison support."""
-            def __lt__(self, other):
-                raise NotImplementedError('__lt__')
-            def __le__(self, other):
-                raise NotImplementedError('__le__')
-            def __eq__(self, other):
-                raise NotImplementedError('__eq__')
-            def __ne__(self, other):
-                raise NotImplementedError('__ne__')
-            def __gt__(self, other):
-                raise NotImplementedError('__gt__')
-            def __ge__(self, other):
-                raise NotImplementedError('__ge__')
+    #@pytest.mark.skipif(sys.version_info.major != 2,
+    #                    reason='python2 specific, non-comparable test')
+    #def test_richcmp_py2(self):
+    #    class Rich(object):
+    #        """Dummy class with traditional rich comparison support."""
+    #        def __lt__(self, other):
+    #            raise NotImplementedError('__lt__')
+    #        def __le__(self, other):
+    #            raise NotImplementedError('__le__')
+    #        def __eq__(self, other):
+    #            raise NotImplementedError('__eq__')
+    #        def __ne__(self, other):
+    #            raise NotImplementedError('__ne__')
+    #        def __gt__(self, other):
+    #            raise NotImplementedError('__gt__')
+    #        def __ge__(self, other):
+    #            raise NotImplementedError('__ge__')
 
-        class CythonRich(object):
-            """Dummy class with spoof cython rich comparison support."""
-            def __richcmp__(self, other):
-                """
-                This method is never called. However it is introspected
-                by the cftime.datetime.__richcmp__ method, which will then
-                return NotImplemented, causing Python to call this classes
-                __cmp__ method as a back-stop, and hence spoofing the
-                cython specific rich comparison behaviour.
-                """
-                pass
-            def __cmp__(self, other):
-                raise NotImplementedError('__richcmp__')
+        #class CythonRich(object):
+        #    """Dummy class with spoof cython rich comparison support."""
+        #    def __richcmp__(self, other):
+        #        """
+        #        This method is never called. However it is introspected
+        #        by the cftime.datetime.__richcmp__ method, which will then
+        #        return NotImplemented, causing Python to call this classes
+        #        __cmp__ method as a back-stop, and hence spoofing the
+        #        cython specific rich comparison behaviour.
+        #        """
+        #        pass
+        #    def __cmp__(self, other):
+        #        raise NotImplementedError('__richcmp__')
 
-        class Pass(object):
-            """Dummy class with no rich comparison support whatsoever."""
-            pass
+        #class Pass(object):
+        #    """Dummy class with no rich comparison support whatsoever."""
+        #    pass
 
-        class Pass___cmp__(object):
-            """Dummy class that delegates all comparisons."""
-            def __cmp__(self, other):
-                return NotImplemented
+        #class Pass___cmp__(object):
+        #    """Dummy class that delegates all comparisons."""
+        #    def __cmp__(self, other):
+        #        return NotImplemented
 
         # Test LHS operand comparison operator processing.
-        for op, expected in [(operator.gt, '__lt__'), (operator.ge, '__le__'),
-                             (operator.eq, '__eq__'), (operator.ne, '__ne__'),
-                             (operator.lt, '__gt__'), (operator.le, '__ge__')]:
-            with self.assertRaisesRegexp(NotImplementedError, expected):
-                op(self.date1_365_day, Rich())
+        #for op, expected in [(operator.gt, '__lt__'), (operator.ge, '__le__'),
+        #                     (operator.eq, '__eq__'), (operator.ne, '__ne__'),
+        #                     (operator.lt, '__gt__'), (operator.le, '__ge__')]:
+        #    with self.assertRaisesRegexp(NotImplementedError, expected):
+        #        op(self.date1_365_day, Rich())
 
-            with self.assertRaisesRegexp(NotImplementedError, '__richcmp__'):
-                op(self.date1_365_day, CythonRich())
+            #with self.assertRaisesRegexp(NotImplementedError, '__richcmp__'):
+            #    op(self.date1_365_day, CythonRich())
 
         # Test RHS operand comparison operator processing.
-        for op in [operator.gt, operator.ge, operator.eq, operator.ne,
-                   operator.lt, operator.le]:
-            with self.assertRaisesRegexp(TypeError, 'cannot compare'):
-                op(Pass(), self.date1_365_day)
+        #for op in [operator.gt, operator.ge, operator.eq, operator.ne,
+        #           operator.lt, operator.le]:
+        #    with self.assertRaisesRegexp(TypeError, 'cannot compare'):
+        #        op(Pass(), self.date1_365_day)
 
-            with self.assertRaisesRegexp(TypeError, 'cannot compare'):
-                op(Pass___cmp__(), self.date1_365_day)
+        #    with self.assertRaisesRegexp(TypeError, 'cannot compare'):
+        #        op(Pass___cmp__(), self.date1_365_day)
 
 
 class issue17TestCase(unittest.TestCase):
