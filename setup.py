@@ -4,7 +4,13 @@ import os
 import sys
 import numpy
 
-from setuptools import setup
+from setuptools import setup, Extension
+
+# https://github.com/Unidata/cftime/issues/34
+try:
+    from Cython.Build import cythonize
+except ImportError:
+    cythonize = False
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 NAME = 'cftime'
@@ -35,6 +41,14 @@ def description():
         result = ''.join(fi.readlines())
     return result
 
+# See https://github.com/Unidata/cftime/issues/91
+extension = Extension('_cftime_utils',
+                      sources=['cftime/_cftime_utils.pyx'],
+                      include_dirs=[numpy.get_include(),])
+ext_modules = [extension]
+if cythonize:
+    ext_modules = cythonize(extension,language_level=2)
+
 setup(
     name=NAME,
     author='Jeff Whitaker',
@@ -43,6 +57,7 @@ setup(
     long_description=description(),
     long_description_content_type='text/markdown',
     packages=[NAME],
+    ext_modules=ext_modules,
     version=extract_version(),
     install_requires=load('requirements.txt'),
     tests_require=load('requirements-dev.txt'),
