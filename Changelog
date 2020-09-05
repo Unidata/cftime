@@ -3,9 +3,17 @@ version 1.3.0 (not yet released)
  * zero pad years in strtime (issue #194)
  * have `cftime.datetime` create calendar-specific instances that support
    addition and subtraction (issue #198). Name of base class changed
-   from `cftime.datetime` to `cftime.datetime_base` (if your are using 
-   `isinstance(my_datetime, cftime.datetime)` this will need to be changed
-   to `isinstance(my_datetime, cftime.datetime_base)`.
+   from `cftime.datetime` to `cftime.datetime_base` since `cftime.datetime`
+   is not a factory function.  Iif your are using 
+   `isinstance(my_datetime, cftime.datetime` this will need to be changed
+   to `isinstance(my_datetime, cftime.datetime_base)`. To maintain backward
+   compatibility with older versions of cftime, use
+   ```python
+   try:
+       from cftime import datetime_base
+   except ImportError:
+       datetime_base = datetime
+   ```
 
 version 1.2.1 (release tag v1.2.1rel)
 =====================================
