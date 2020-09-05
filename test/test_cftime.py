@@ -18,6 +18,10 @@ from cftime import (DateFromJulianDay, Datetime360Day, DatetimeAllLeap,
                     DatetimeGregorian, DatetimeJulian, DatetimeNoLeap,
                     DatetimeProlepticGregorian, JulianDayFromDate, _parse_date,
                     date2index, date2num, num2date, utime, UNIT_CONVERSION_FACTORS)
+try:
+    from cftime import datetime_base
+except ImportError:
+    datetime_base = datetime
 
 try:
     from datetime import timezone
@@ -830,6 +834,7 @@ class cftimeTestCase(unittest.TestCase):
         for cal in cftime.DATE_TYPES.keys():
             dt = cftime.datetime(2020, 1, 1, calendar=cal)
             assert(isinstance(dt, cftime.DATE_TYPES[cal]))
+            assert(isinstance(dt, datetime_base))
 
 
 class TestDate2index(unittest.TestCase):
