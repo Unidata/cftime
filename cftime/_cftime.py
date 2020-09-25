@@ -95,9 +95,6 @@ class real_datetime(datetime_python):
         return get_days_in_month(_is_leap(self.year,'proleptic_gregorian'), self.month)
     nanosecond = 0 # workaround for pandas bug (cftime issue #77)
 
-# start of the gregorian calendar
-gregorian = real_datetime(1582,10,15)
-
 def _datesplit(timestr):
     """split a time string into two components, units and the remainder
     after 'since'
@@ -156,6 +153,7 @@ def _dateparse(timestr,calendar):
     return basedate
 
 def _can_use_python_datetime(date,calendar):
+    gregorian = datetime(1582,10,15,calendar=calendar)
     return ((calendar == 'proleptic_gregorian' and date.year >= MINYEAR and date.year <= MAXYEAR) or \
            (calendar in ['gregorian','standard'] and date > gregorian and date.year <= MAXYEAR))
 

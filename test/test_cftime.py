@@ -297,7 +297,7 @@ class cftimeTestCase(unittest.TestCase):
             t2 = date2num(d, units='days since 0001-01-01 00:00:00')
             assert(abs(t2 - t) < 1e-5)  # values should be less than second
         # Check equality testing
-        d1 = datetimex(1979, 6, 21, 9, 23, 12)
+        d1 = datetimex(1979, 6, 21, 9, 23, 12, calendar='proleptic_gregorian')
         d2 = datetime(1979, 6, 21, 9, 23, 12)
         assert(d1 == d2)
         # check timezone offset
