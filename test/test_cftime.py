@@ -767,7 +767,7 @@ class cftimeTestCase(unittest.TestCase):
         assert isinstance(d, datetime)
         # issue #169: cftime.datetime has no calendar attribute, causing dayofwk,dayofyr methods
         # to fail.
-        c = cftime.datetime(*cftime._parse_date('7480-01-01 00:00:00'))
+        c = cftime.datetime(*cftime._parse_date('7480-01-01 00:00:00'),calendar='standard')
         assert(c.strftime() == '7480-01-01 00:00:00')
         # issue #175: masked values not treated properly in num2date
         times = np.ma.masked_array([-3956.7499999995343,-999999999999],mask=[False,True])
