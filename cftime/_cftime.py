@@ -818,17 +818,32 @@ class datetime(object):
     """
 The base class implementing most methods of datetime classes that
 mimic datetime.datetime but support calendars other than the proleptic
-Gregorial calendar.
-    """
-    # Python's datetime.datetime uses the proleptic Gregorian
-    # calendar. This boolean is used to decide whether a
-    # cftime.datetime instance can be converted to
-    # datetime.datetime.
+Gregorian calendar.
 
+Calendar specific sub-classes support timedelta operations by overloading +/-.
+Comparisons with other datetime_base sub-class instances using the same
+calendar are supported.
+
+Comparison with native python datetime instances is possible
+for cftime.datetime_base sub-class instances using
+'gregorian' and 'proleptic_gregorian' calendars.
+
+If a 'calendar' keyword argument is supplied to the constructor, then
+a calendar-aware instance is created.  If not calendar is specified, the 
+instance will not be calendar-aware and some methods will not work.
+
+Has isoformat, strftime, timetuple, replace, dayofwk, dayofyr, daysinmonth,
+__repr__, __add__, __sub__, __str__ and comparison methods. 
+
+dayofwk, dayofyr, daysinmonth, __add__ and __sub__ only work for calendar-aware
+instances.
+
+The default format of the string produced by strftime is controlled by self.format
+(default %Y-%m-%d %H:%M:%S).
+    """
     def __new__(cls,   year, month, day, hour=0, minute=0,
                        second=0, microsecond=0, dayofwk=-1, 
                        dayofyr = -1, calendar=None):
-
         if not calendar:
             # needed to avoid infinite recursion
             # if calendar is not set, then datetime instance
@@ -851,9 +866,13 @@ Gregorial calendar.
         self.second = second
         self.microsecond = microsecond
         self.calendar = calendar
-        self.datetime_compatible = False
         self._dayofwk = dayofwk
         self._dayofyr = dayofyr
+        # Python's datetime.datetime uses the proleptic Gregorian
+        # calendar. This boolean is used to decide whether a
+        # cftime.datetime instance can be converted to
+        # datetime.datetime.
+        self.datetime_compatible = False
 
     @property
     def format(self):
@@ -1102,8 +1121,7 @@ datetime object."""
 
 class DatetimeNoLeap(datetime):
     """
-Phony datetime object which mimics the python datetime object,
-but uses the "noleap" ("365_day") calendar.
+calendar-aware cftime.datetime subclass for the "noleap" ("365_day") calendar.
     """
     def __init__(self, *args, **kwargs):
         datetime.__init__(self, *args, **kwargs)
@@ -1120,8 +1138,7 @@ but uses the "noleap" ("365_day") calendar.
 
 class DatetimeAllLeap(datetime):
     """
-Phony datetime object which mimics the python datetime object,
-but uses the "all_leap" ("366_day") calendar.
+calendar-aware cftime.datetime subclass for the "allleap" ("366_day") calendar.
     """
     def __init__(self, *args, **kwargs):
         datetime.__init__(self, *args, **kwargs)
@@ -1138,8 +1155,7 @@ but uses the "all_leap" ("366_day") calendar.
 
 class Datetime360Day(datetime):
     """
-Phony datetime object which mimics the python datetime object,
-but uses the "360_day" calendar.
+calendar-aware cftime.datetime subclass for the "360_day" calendar.
     """
     def __init__(self, *args, **kwargs):
         datetime.__init__(self, *args, **kwargs)
@@ -1156,8 +1172,7 @@ but uses the "360_day" calendar.
 
 class DatetimeJulian(datetime):
     """
-Phony datetime object which mimics the python datetime object,
-but uses the "julian" calendar.
+calendar-aware cftime.datetime subclass for the "julian" calendar.
     """
     def __init__(self, *args, **kwargs):
         datetime.__init__(self, *args, **kwargs)
@@ -1170,8 +1185,8 @@ but uses the "julian" calendar.
 
 class DatetimeGregorian(datetime):
     """
-Phony datetime object which mimics the python datetime object,
-but uses the mixed Julian-Gregorian ("standard", "gregorian") calendar.
+calendar-aware cftime.datetime subclass for the mixed Julian-Gregorian
+("standard" or "gregorian") calendar.
 
 The last date of the Julian calendar is 1582-10-4, which is followed
 by 1582-10-15, using the Gregorian calendar.
@@ -1198,8 +1213,8 @@ a datetime.datetime instance or vice versa.
 
 class DatetimeProlepticGregorian(datetime):
     """
-Phony datetime object which mimics the python datetime object,
-but allows for dates that don't exist in the proleptic gregorian calendar.
+calendar-aware cftime.datetime subclass for the "proleptic_gregorian" calendar.
+but allows for dates not allowed in the python datetime module
 
 Supports timedelta operations by overloading + and -.
 
