@@ -825,10 +825,20 @@ Gregorial calendar.
     # cftime.datetime instance can be converted to
     # datetime.datetime.
 
+    def __new__(cls,   year, month, day, hour=0, minute=0,
+                       second=0, microsecond=0, dayofwk=-1, 
+                       dayofyr = -1, calendar=''):
+
+        self = object.__new__(cls)
+        if calendar == '':
+            return self
+        else:
+            date_type = DATE_TYPES[calendar]
+            return date_type(year,month,day,hour,minute,second,microsecond)
+
     def __init__(self, year, month, day, hour=0, minute=0,
                        second=0, microsecond=0, dayofwk=-1, 
                        dayofyr = -1, calendar='standard'):
-
         self.year = year
         self.month = month
         self.day = day
