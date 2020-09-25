@@ -829,9 +829,8 @@ Gregorial calendar.
                        second=0, microsecond=0, dayofwk=-1, 
                        dayofyr = -1, calendar=''):
 
-        self = object.__new__(cls)
         if calendar == '':
-            return self
+            return object.__new__(cls)
         else:
             date_type = DATE_TYPES[calendar]
             return date_type(year,month,day,hour,minute,second,microsecond)
