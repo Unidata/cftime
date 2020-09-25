@@ -827,9 +827,10 @@ Gregorial calendar.
 
     def __new__(cls,   year, month, day, hour=0, minute=0,
                        second=0, microsecond=0, dayofwk=-1, 
-                       dayofyr = -1, calendar=''):
+                       dayofyr = -1, calendar=None):
 
-        if calendar == '':
+        if not calendar:
+            # needed to avoid infinite recursion
             return object.__new__(cls)
         else:
             date_type = DATE_TYPES[calendar]
@@ -1056,7 +1057,7 @@ Gregorial calendar.
                 # datetime - datetime
                 if dt.calendar != other.calendar:
                     raise ValueError("cannot compute the time difference between dates with different calendars")
-                if dt.calendar == "":
+                if not dt.calendar:
                     raise ValueError("cannot compute the time difference between dates that are not calendar-aware")
                 ordinal_self = _IntJulianDayFromDate(dt.year, dt.month, dt.day, dt.calendar)
                 ordinal_other = _IntJulianDayFromDate(other.year, other.month, other.day, other.calendar)
