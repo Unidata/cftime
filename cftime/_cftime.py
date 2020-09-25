@@ -137,7 +137,7 @@ def _dateparse(timestr,calendar):
     if not basedate:
         if not utc_offset:
             basedate = datetime(year, month, day, hour, minute, second,
-                    microsecond)
+                                microsecond, calendar=calendar)
         else:
             raise ValueError('cannot use utc_offset for this reference date/calendar')
     if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
