@@ -837,7 +837,7 @@ Gregorial calendar.
 
     def __init__(self, year, month, day, hour=0, minute=0,
                        second=0, microsecond=0, dayofwk=-1, 
-                       dayofyr = -1, calendar='standard'):
+                       dayofyr = -1, calendar=''):
         self.year = year
         self.month = month
         self.day = day
