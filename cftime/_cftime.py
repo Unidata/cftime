@@ -831,14 +831,18 @@ Gregorial calendar.
 
         if not calendar:
             # needed to avoid infinite recursion
+            # if calendar is not set, then datetime instance
+            # is not 'calendar aware', meaning dayofwk, dayofyr,
+            # daysinmonth, __add__ and __sub__ methods will not work.
             return object.__new__(cls)
         else:
+            # return calendar-aware subclass.
             date_type = DATE_TYPES[calendar]
             return date_type(year,month,day,hour,minute,second,microsecond)
 
     def __init__(self, year, month, day, hour=0, minute=0,
                        second=0, microsecond=0, dayofwk=-1, 
-                       dayofyr = -1, calendar=''):
+                       dayofyr = -1, calendar=None):
         self.year = year
         self.month = month
         self.day = day
@@ -847,7 +851,7 @@ Gregorial calendar.
         self.second = second
         self.microsecond = microsecond
         self.calendar = calendar
-        self.datetime_compatible = True
+        self.datetime_compatible = False
         self._dayofwk = dayofwk
         self._dayofyr = dayofyr
 
@@ -857,7 +861,7 @@ Gregorial calendar.
 
     @property
     def dayofwk(self):
-        if self._dayofwk < 0 and self.calendar != '':
+        if self._dayofwk < 0 and self.calendar:
             jd = _IntJulianDayFromDate(self.year,self.month,self.day,self.calendar)
             year,month,day,dayofwk,dayofyr = _IntJulianDayToDate(jd,self.calendar)
             # cache results for dayofwk, dayofyr
@@ -869,7 +873,7 @@ Gregorial calendar.
 
     @property
     def dayofyr(self):
-        if self._dayofyr < 0 and self.calendar != '':
+        if self._dayofyr < 0 and self.calendar:
             jd = _IntJulianDayFromDate(self.year,self.month,self.day,self.calendar)
             year,month,day,dayofwk,dayofyr = _IntJulianDayToDate(jd,self.calendar)
             # cache results for dayofwk, dayofyr
@@ -1055,10 +1059,10 @@ Gregorial calendar.
             dt = self
             if isinstance(other, datetime):
                 # datetime - datetime
-                if dt.calendar != other.calendar:
-                    raise ValueError("cannot compute the time difference between dates with different calendars")
-                if not dt.calendar:
+                if not dt.calendar or not other.calendar:
                     raise ValueError("cannot compute the time difference between dates that are not calendar-aware")
+                elif dt.calendar != other.calendar:
+                    raise ValueError("cannot compute the time difference between dates with different calendars")
                 ordinal_self = _IntJulianDayFromDate(dt.year, dt.month, dt.day, dt.calendar)
                 ordinal_other = _IntJulianDayFromDate(other.year, other.month, other.day, other.calendar)
                 days = ordinal_self - ordinal_other
