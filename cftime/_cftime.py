@@ -1303,32 +1303,6 @@ def _strftime(dt, fmt):
         s = s[:site] + syear + s[site + 4:]
     return s
 
-def is_leap_julian(year):
-    "Return 1 if year is a leap year in the Julian calendar, 0 otherwise."
-    return _is_leap(year, calendar='julian')
-
-def is_leap_proleptic_gregorian(year):
-    "Return 1 if year is a leap year in the Proleptic Gregorian calendar, 0 otherwise."
-    return _is_leap(year, calendar='proleptic_gregorian')
-
-def is_leap_gregorian(year):
-    "Return 1 if year is a leap year in the Gregorian calendar, 0 otherwise."
-    return _is_leap(year, calendar='standard')
-
-def all_leap(year):
-    "Return True for all years."
-    return True
-
-def no_leap(year):
-    "Return False for all years."
-    return False
-
-def month_lengths(is_leap, year):
-    if is_leap(year):
-        return _dpm_leap
-    else:
-        return _dpm
-
 def _round_half_up(x):
     # 'round half up' so 0.5 rounded to 1 (instead of 0 as in numpy.round)
     return np.ceil(np.floor(2.*x)/2.)
