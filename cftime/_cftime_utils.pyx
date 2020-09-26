@@ -33,7 +33,7 @@ def no_leap(year):
     "Return False for all years."
     return False
 
-cdef month_lengths(is_leap, year):
+def month_lengths(is_leap, year):
     if is_leap(year):
         return _dpm_leap
     else:

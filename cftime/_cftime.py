@@ -10,7 +10,9 @@ from datetime import datetime as datetime_python
 from datetime import timedelta, MINYEAR, MAXYEAR
 import time                     # strftime
 import warnings
-from _cftime_utils import add_timedelta, add_timedelta_360_day, _IntJulianDayFromDate, _is_leap, _IntJulianDayToDate
+from _cftime_utils import add_timedelta, add_timedelta_360_day, _IntJulianDayFromDate,\
+                          _is_leap, is_leap_julian, is_leap_proleptic_gregorian, all_leap,\
+                          no_leap, is_leap_gregorian, _IntJulianDayToDate, month_lengths
 try:
     from itertools import izip as zip
 except ImportError:  # python 3.x
@@ -1363,37 +1365,35 @@ def assert_valid_date(dt,is_leap,julian_gregorian_mixed,has_year_zero=False,
     if dt.microsecond < 0 or dt.microsecond > 999999:
         raise ValueError("invalid microsecond provided in {0!r}".format(dt))
 
-def is_leap_julian(year):
-    "Return 1 if year is a leap year in the Julian calendar, 0 otherwise."
-    return _is_leap(year, calendar='julian')
-
-def is_leap_proleptic_gregorian(year):
-    "Return 1 if year is a leap year in the Proleptic Gregorian calendar, 0 otherwise."
-    return _is_leap(year, calendar='proleptic_gregorian')
-
-def is_leap_gregorian( year):
-    "Return 1 if year is a leap year in the Gregorian calendar, 0 otherwise."
-    return _is_leap(year, calendar='standard')
-
-def all_leap(year):
-    "Return True for all years."
-    return True
-
-def no_leap(year):
-    "Return False for all years."
-    return False
-
-def month_lengths(is_leap, year):
-    if is_leap(year):
-        return _dpm_leap
-    else:
-        return _dpm
-
 ## beginning of block duplicated in _cftime_utils.pyx
-# if this block is commented out, and "from ._cftime_utils import" line up top
+## if this block is commented out, and "from ._cftime_utils import" line up top
 ## is uncommented, there is a ~50% performance improvement.
 #
+#def is_leap_julian(year):
+#    "Return 1 if year is a leap year in the Julian calendar, 0 otherwise."
+#    return _is_leap(year, calendar='julian')
 #
+#def is_leap_proleptic_gregorian(year):
+#    "Return 1 if year is a leap year in the Proleptic Gregorian calendar, 0 otherwise."
+#    return _is_leap(year, calendar='proleptic_gregorian')
+#
+#def is_leap_gregorian( year):
+#    "Return 1 if year is a leap year in the Gregorian calendar, 0 otherwise."
+#    return _is_leap(year, calendar='standard')
+#
+#def all_leap(year):
+#    "Return True for all years."
+#    return True
+#
+#def no_leap(year):
+#    "Return False for all years."
+#    return False
+#
+#def month_lengths(is_leap, year):
+#    if is_leap(year):
+#        return _dpm_leap
+#    else:
+#        return _dpm
 ## Add a datetime.timedelta to a cftime.datetime instance. Uses
 ## integer arithmetic to avoid rounding errors and preserve
 ## microsecond accuracy.
