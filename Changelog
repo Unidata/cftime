@@ -5,7 +5,8 @@ version 1.3.0 (not yet released)
    The default calendar is now None (the instance is not calendar-aware unless a valid
    calendar string is provided).  The previous default was 'standard', but the instances were
    not calendar-aware unless created directly by the various calendar-specific sub-class
-   constructors (issue #198).  
+   constructors (issue #198).   Much code moved from cython to python as part of this change,
+   so some performance degradation is expected.
 
 version 1.2.1 (release tag v1.2.1rel)
 =====================================

@@ -1339,7 +1339,7 @@ def assert_valid_date(dt,is_leap,julian_gregorian_mixed,has_year_zero=False,
     if dt.microsecond < 0 or dt.microsecond > 999999:
         raise ValueError("invalid microsecond provided in {0!r}".format(dt))
 
-## beginning of block duplicated in _cftime_utils.pyx
+## beginning of block duplicated in cython code _cftime_utils.pyx
 ## if this block is commented out, and "from ._cftime_utils import" line up top
 ## is uncommented, there is a ~50% performance improvement.
 #
@@ -1784,7 +1784,7 @@ def assert_valid_date(dt,is_leap,julian_gregorian_mixed,has_year_zero=False,
 #
 #    return year,month,day,dow,doy
 #
-#### end of block duplicated in _cftime_utils.pyx
+#### end of block duplicated in cython code _cftime_utils.pyx
 
 def JulianDayFromDate(date, calendar='standard'):
     """JulianDayFromDate(date, calendar='standard')
