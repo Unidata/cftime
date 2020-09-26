@@ -125,6 +125,16 @@ def _dateparse(timestr,calendar):
     # parse the date string.
     year, month, day, hour, minute, second, microsecond, utc_offset =\
         _parse_date( isostring.strip() )
+    if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
+        if year == 0:
+            msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
+            raise ValueError(msg)
+    if calendar in ['noleap', '365_day'] and month == 2 and day == 29:
+        raise ValueError(
+            'cannot specify a leap day as the reference time with the noleap calendar')
+    if calendar == '360_day' and day > 30:
+        raise ValueError(
+            'there are only 30 days in every month with the 360_day calendar')
     basedate = None
     if year >= MINYEAR and year <= MAXYEAR:
         try:
@@ -140,16 +150,6 @@ def _dateparse(timestr,calendar):
                                 microsecond, calendar=calendar)
         else:
             raise ValueError('cannot use utc_offset for this reference date/calendar')
-    if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
-        if basedate.year == 0:
-            msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
-            raise ValueError(msg)
-    if calendar in ['noleap', '365_day'] and basedate.month == 2 and basedate.day == 29:
-        raise ValueError(
-            'cannot specify a leap day as the reference time with the noleap calendar')
-    if calendar == '360_day' and basedate.day > 30:
-        raise ValueError(
-            'there are only 30 days in every month with the 360_day calendar')
     return basedate
 
 def _can_use_python_datetime(date,calendar):
