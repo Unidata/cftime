@@ -1,6 +1,11 @@
-since version 1.2.1
-===================
+version 1.3.0 (not yet released)
+================================
  * zero pad years in strtime (issue #194)
+ * have cftime.datetime constuctor create 'calendar-aware' instances if the calendar kwarg is provided.
+   The default calendar is now None (the instance is not calendar-aware unless a valid
+   calendar string is provided).  The previous default was 'standard', but the instances were
+   not calendar-aware unless created directly by the various calendar-specific sub-class
+   constructors (issue #198).  
 
 version 1.2.1 (release tag v1.2.1rel)
 =====================================
