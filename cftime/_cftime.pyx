@@ -884,8 +884,8 @@ Gregorial calendar.
             else:
                 self.datetime_compatible = False
             assert_valid_date(self, is_leap_gregorian, True)
-        elif calendar == 'no_leap' or calendar == '365_day':
-            self.calendar = 'no_leap'
+        elif calendar == 'noleap' or calendar == '365_day':
+            self.calendar = 'noleap'
             self.datetime_compatible = False
             assert_valid_date(self, no_leap, False, has_year_zero=True)
         elif calendar == 'all_leap' or calendar == '366_day':
@@ -938,9 +938,9 @@ Gregorial calendar.
 
     @property
     def daysinmonth(self):
-        if self.calendar == 'no_leap':
+        if self.calendar == 'noleap':
             return _dpm[self.month-1]
-        elif self.calendar == 'no_leap':
+        elif self.calendar == 'all_leap':
             return _dpm_leap[self.month-1]
         elif self.calendar == '360_day':
             return _dpm_360[self.month-1]
@@ -1108,7 +1108,7 @@ Gregorial calendar.
             return NotImplemented
         if calendar == '360_day':
             return dt.__class__(*add_timedelta_360_day(dt, delta))
-        elif calendar == 'no_leap':
+        elif calendar == 'noleap':
             return dt.__class__(*add_timedelta(dt, delta, no_leap, False, True))
         elif calendar == 'all_leap':
             return dt.__class__(*add_timedelta(dt, delta, all_leap, False, True))
@@ -1151,7 +1151,7 @@ datetime object."""
                 # datetime - timedelta
                 if self.calendar == '360_day':
                     return self.__class__(*add_timedelta_360_day(self, -other))
-                elif self.calendar == 'no_leap':
+                elif self.calendar == 'noleap':
                     return self.__class__(*add_timedelta(self, -other, no_leap, False, True))
                 elif self.calendar == 'all_leap':
                     return self.__class__(*add_timedelta(self, -other, all_leap, False, True))
@@ -1182,7 +1182,7 @@ Phony datetime object which mimics the python datetime object,
 but uses the "noleap" ("365_day") calendar.
     """
     def __init__(self, *args, **kwargs):
-        kwargs['calendar']='no_leap'
+        kwargs['calendar']='noleap'
         super().__init__(*args, **kwargs)
 
 @cython.embedsignature(True)
