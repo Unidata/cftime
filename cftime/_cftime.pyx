@@ -237,8 +237,7 @@ def date2num(dates,units,calendar='standard'):
     else:
         use_python_datetime = False
         # convert basedate to specified calendar
-        if not isinstance(basedate, DATE_TYPES[calendar]):
-            basedate =  to_calendar_specific_datetime(basedate, calendar, False)
+        basedate =  to_calendar_specific_datetime(basedate, calendar, False)
     times = []; n = 0
     for date in dates.flat:
         # use python datetime if possible.
@@ -247,8 +246,7 @@ def date2num(dates,units,calendar='standard'):
             if getattr(date, 'tzinfo',None) is not None:
                 date = date.replace(tzinfo=None) - date.utcoffset()
         else: # convert date to same calendar specific cftime.datetime instance
-            if not isinstance(date, DATE_TYPES[calendar]):
-                date = to_calendar_specific_datetime(date, calendar, False)
+            date = to_calendar_specific_datetime(date, calendar, False)
         if ismasked and mask.flat[n]:
             times.append(None)
         else:
@@ -332,21 +330,26 @@ DATE_TYPES = {
 }
 
 
-def to_calendar_specific_datetime(datetime, calendar, use_python_datetime):
+def to_calendar_specific_datetime(dt, calendar, use_python_datetime):
     if use_python_datetime:
-        date_type = real_datetime
+        return real_datetime(
+            dt.year,
+            dt.month,
+            dt.day,
+            dt.hour,
+            dt.minute,
+            dt.second,
+            dt.microsecond)
     else:
-        date_type = DATE_TYPES[calendar]
-
-    return date_type(
-        datetime.year,
-        datetime.month,
-        datetime.day,
-        datetime.hour,
-        datetime.minute,
-        datetime.second,
-        datetime.microsecond
-    )
+        return datetime(
+            dt.year,
+            dt.month,
+            dt.day,
+            dt.hour,
+            dt.minute,
+            dt.second,
+            dt.microsecond,
+            calendar=calendar)
 
 
 _MAX_INT64 = np.iinfo("int64").max
@@ -869,10 +872,41 @@ Gregorial calendar.
         self.minute = minute
         self.second = second
         self.microsecond = microsecond
-        self.calendar = calendar
-        self.datetime_compatible = True
         self._dayofwk = dayofwk
         self._dayofyr = dayofyr
+        calendar = calendar.lower()
+        if calendar == 'gregorian' or calendar == 'standard':
+            # dates after 1582-10-15 can be converted to and compared to
+            # proleptic Gregorian dates
+            self.calendar = 'gregorian'
+            if self.to_tuple() >= (1582, 10, 15, 0, 0, 0, 0):
+                self.datetime_compatible = True
+            else:
+                self.datetime_compatible = False
+            assert_valid_date(self, is_leap_gregorian, True)
+        elif calendar == 'no_leap' or calendar == '365_day':
+            self.calendar = 'no_leap'
+            self.datetime_compatible = False
+            assert_valid_date(self, no_leap, False, has_year_zero=True)
+        elif calendar == 'all_leap' or calendar == '366_day':
+            self.calendar = 'all_leap'
+            self.datetime_compatible = False
+            assert_valid_date(self, all_leap, False, has_year_zero=True)
+        elif calendar == '360_day':
+            self.calendar = calendar
+            self.datetime_compatible = False
+            assert_valid_date(self, no_leap, False, has_year_zero=True, is_360_day=True)
+        elif calendar == 'julian':
+            self.calendar = calendar
+            self.datetime_compatible = False
+            assert_valid_date(self, is_leap_julian, False)
+        elif calendar == 'proleptic_gregorian':
+            self.calendar = calendar
+            self.datetime_compatible = True
+            assert_valid_date(self, is_leap_proleptic_gregorian, False)
+        else:
+            raise ValueError(
+                "calendar must be one of %s, got '%s'" % (str(_calendars), calendar))
 
     @property
     def format(self):
@@ -880,7 +914,7 @@ Gregorial calendar.
 
     @property
     def dayofwk(self):
-        if self._dayofwk < 0 and self.calendar != '':
+        if self._dayofwk < 0:
             jd = _IntJulianDayFromDate(self.year,self.month,self.day,self.calendar)
             year,month,day,dayofwk,dayofyr = _IntJulianDayToDate(jd,self.calendar)
             # cache results for dayofwk, dayofyr
@@ -892,7 +926,7 @@ Gregorial calendar.
 
     @property
     def dayofyr(self):
-        if self._dayofyr < 0 and self.calendar != '':
+        if self._dayofyr < 0:
             jd = _IntJulianDayFromDate(self.year,self.month,self.day,self.calendar)
             year,month,day,dayofwk,dayofyr = _IntJulianDayToDate(jd,self.calendar)
             # cache results for dayofwk, dayofyr
@@ -904,7 +938,14 @@ Gregorial calendar.
 
     @property
     def daysinmonth(self):
-        return get_days_in_month(_is_leap(self.year,self.calendar), self.month)
+        if self.calendar == 'no_leap':
+            return _dpm[self.month-1]
+        elif self.calendar == 'no_leap':
+            return _dpm_leap[self.month-1]
+        elif self.calendar == '360_day':
+            return _dpm_360[self.month-1]
+        else:
+            return get_days_in_month(_is_leap(self.year,self.calendar), self.month)
 
     def strftime(self, format=None):
         """
@@ -1063,7 +1104,17 @@ Gregorial calendar.
             delta = self
         else:
             return NotImplemented
-        return dt._add_timedelta(delta)
+        if self.calendar == '360_day':
+            return self.__class__(*add_timedelta_360_day(self, delta))
+        elif self.calendar == 'no_leap':
+            return self.__class__(*add_timedelta(self, delta, no_leap, False, True))
+        elif self.calendar == 'all_leap':
+            return self.__class__(*add_timedelta(self, delta, all_leap, False, True))
+        elif self.calendar == 'julian':
+            return self.__class__(*add_timedelta(self, delta, is_leap_julian, False, False))
+        elif self.calendar == 'gregorian':
+            return self.__class__(*add_timedelta(self, delta, is_leap_gregorian, True, False))
+        print('here', self.calendar)
 
     def __sub__(self, other):
         cdef datetime dt
@@ -1095,7 +1146,16 @@ datetime object."""
                 return dt._to_real_datetime() - other
             elif isinstance(other, timedelta):
                 # datetime - timedelta
-                return dt._add_timedelta(-other)
+                if self.calendar == '360_day':
+                    return self.__class__(*add_timedelta_360_day(self, -other))
+                elif self.calendar == 'no_leap':
+                    return self.__class__(*add_timedelta(self, -other, no_leap, False, True))
+                elif self.calendar == 'all_leap':
+                    return self.__class__(*add_timedelta(self, -other, all_leap, False, True))
+                elif self.calendar == 'julian':
+                    return self.__class__(*add_timedelta(self, -other, is_leap_julian, False, False))
+                elif self.calendar == 'gregorian':
+                    return self.__class__(*add_timedelta(self, -other, is_leap_gregorian, True, False))
             else:
                 return NotImplemented
         else:
@@ -1119,17 +1179,8 @@ Phony datetime object which mimics the python datetime object,
 but uses the "noleap" ("365_day") calendar.
     """
     def __init__(self, *args, **kwargs):
-        datetime.__init__(self, *args, **kwargs)
-        self.calendar = "noleap"
-        self.datetime_compatible = False
-        assert_valid_date(self, no_leap, False, has_year_zero=True)
-
-    cdef _add_timedelta(self, delta):
-        return DatetimeNoLeap(*add_timedelta(self, delta, no_leap, False, True))
-
-    @property
-    def daysinmonth(self):
-        return _dpm[self.month-1]
+        kwargs['calendar']='no_leap'
+        super().__init__(self, *args, **kwargs)
 
 @cython.embedsignature(True)
 cdef class DatetimeAllLeap(datetime):
@@ -1138,17 +1189,8 @@ Phony datetime object which mimics the python datetime object,
 but uses the "all_leap" ("366_day") calendar.
     """
     def __init__(self, *args, **kwargs):
-        datetime.__init__(self, *args, **kwargs)
-        self.calendar = "all_leap"
-        self.datetime_compatible = False
-        assert_valid_date(self, all_leap, False, has_year_zero=True)
-
-    cdef _add_timedelta(self, delta):
-        return DatetimeAllLeap(*add_timedelta(self, delta, all_leap, False, True))
-
-    @property
-    def daysinmonth(self):
-        return _dpm_leap[self.month-1]
+        kwargs['calendar']='all_leap'
+        super().__init__(self, *args, **kwargs)
 
 @cython.embedsignature(True)
 cdef class Datetime360Day(datetime):
@@ -1157,17 +1199,8 @@ Phony datetime object which mimics the python datetime object,
 but uses the "360_day" calendar.
     """
     def __init__(self, *args, **kwargs):
-        datetime.__init__(self, *args, **kwargs)
-        self.calendar = "360_day"
-        self.datetime_compatible = False
-        assert_valid_date(self, no_leap, False, has_year_zero=True, is_360_day=True)
-
-    cdef _add_timedelta(self, delta):
-        return Datetime360Day(*add_timedelta_360_day(self, delta))
-
-    @property
-    def daysinmonth(self):
-        return _dpm_360[self.month-1]
+        kwargs['calendar']='360_day'
+        super().__init__(self, *args, **kwargs)
 
 @cython.embedsignature(True)
 cdef class DatetimeJulian(datetime):
@@ -1176,13 +1209,8 @@ Phony datetime object which mimics the python datetime object,
 but uses the "julian" calendar.
     """
     def __init__(self, *args, **kwargs):
-        datetime.__init__(self, *args, **kwargs)
-        self.calendar = "julian"
-        self.datetime_compatible = False
-        assert_valid_date(self, is_leap_julian, False)
-
-    cdef _add_timedelta(self, delta):
-        return DatetimeJulian(*add_timedelta(self, delta, is_leap_julian, False, False))
+        kwargs['calendar']='julian'
+        super().__init__(self, *args, **kwargs)
 
 @cython.embedsignature(True)
 cdef class DatetimeGregorian(datetime):
@@ -1199,19 +1227,8 @@ datetime.datetime instances and used to compute time differences
 a datetime.datetime instance or vice versa.
     """
     def __init__(self, *args, **kwargs):
-        datetime.__init__(self, *args, **kwargs)
-        self.calendar = "gregorian"
-
-        # dates after 1582-10-15 can be converted to and compared to
-        # proleptic Gregorian dates
-        if self.to_tuple() >= (1582, 10, 15, 0, 0, 0, 0):
-            self.datetime_compatible = True
-        else:
-            self.datetime_compatible = False
-        assert_valid_date(self, is_leap_gregorian, True)
-
-    cdef _add_timedelta(self, delta):
-        return DatetimeGregorian(*add_timedelta(self, delta, is_leap_gregorian, True, False))
+        kwargs['calendar']='gregorian'
+        super().__init__(self, *args, **kwargs)
 
 @cython.embedsignature(True)
 cdef class DatetimeProlepticGregorian(datetime):
@@ -1232,14 +1249,8 @@ Instance variables are year,month,day,hour,minute,second,microsecond,dayofwk,day
 format, and calendar.
     """
     def __init__(self, *args, **kwargs):
-        datetime.__init__(self, *args, **kwargs)
-        self.calendar = "proleptic_gregorian"
-        self.datetime_compatible = True
-        assert_valid_date(self, is_leap_proleptic_gregorian, False)
-
-    cdef _add_timedelta(self, delta):
-        return DatetimeProlepticGregorian(*add_timedelta(self, delta,
-                                                         is_leap_proleptic_gregorian, False, False))
+        kwargs['calendar']='proleptic_gregorian'
+        super().__init__(self, *args, **kwargs)
 
 _illegal_s = re.compile(r"((^|[^%])(%%)*%s)")
 
