@@ -1180,7 +1180,7 @@ but uses the "noleap" ("365_day") calendar.
     """
     def __init__(self, *args, **kwargs):
         kwargs['calendar']='no_leap'
-        super().__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 @cython.embedsignature(True)
 cdef class DatetimeAllLeap(datetime):
@@ -1190,7 +1190,7 @@ but uses the "all_leap" ("366_day") calendar.
     """
     def __init__(self, *args, **kwargs):
         kwargs['calendar']='all_leap'
-        super().__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 @cython.embedsignature(True)
 cdef class Datetime360Day(datetime):
@@ -1200,7 +1200,7 @@ but uses the "360_day" calendar.
     """
     def __init__(self, *args, **kwargs):
         kwargs['calendar']='360_day'
-        super().__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 @cython.embedsignature(True)
 cdef class DatetimeJulian(datetime):
@@ -1210,7 +1210,7 @@ but uses the "julian" calendar.
     """
     def __init__(self, *args, **kwargs):
         kwargs['calendar']='julian'
-        super().__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 @cython.embedsignature(True)
 cdef class DatetimeGregorian(datetime):
@@ -1228,7 +1228,7 @@ a datetime.datetime instance or vice versa.
     """
     def __init__(self, *args, **kwargs):
         kwargs['calendar']='gregorian'
-        super().__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 @cython.embedsignature(True)
 cdef class DatetimeProlepticGregorian(datetime):
@@ -1250,7 +1250,7 @@ format, and calendar.
     """
     def __init__(self, *args, **kwargs):
         kwargs['calendar']='proleptic_gregorian'
-        super().__init__(self, *args, **kwargs)
+        super().__init__( *args, **kwargs)
 
 _illegal_s = re.compile(r"((^|[^%])(%%)*%s)")
 
