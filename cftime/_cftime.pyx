@@ -904,6 +904,10 @@ Gregorial calendar.
             self.calendar = calendar
             self.datetime_compatible = True
             assert_valid_date(self, is_leap_proleptic_gregorian, False)
+        elif calendar == '':
+            # instance not calendar-aware, some method will not work
+            self.calendar = calendar
+            self.datetime_compatible = False
         else:
             raise ValueError(
                 "calendar must be one of %s, got '%s'" % (str(_calendars), calendar))
