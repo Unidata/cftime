@@ -1098,23 +1098,26 @@ Gregorial calendar.
         cdef datetime dt
         if isinstance(self, datetime) and isinstance(other, timedelta):
             dt = self
+            calendar = self.calendar
             delta = other
         elif isinstance(self, timedelta) and isinstance(other, datetime):
             dt = other
+            calendar = other.calendar
             delta = self
         else:
             return NotImplemented
-        if self.calendar == '360_day':
-            return self.__class__(*add_timedelta_360_day(self, delta))
-        elif self.calendar == 'no_leap':
-            return self.__class__(*add_timedelta(self, delta, no_leap, False, True))
-        elif self.calendar == 'all_leap':
-            return self.__class__(*add_timedelta(self, delta, all_leap, False, True))
-        elif self.calendar == 'julian':
-            return self.__class__(*add_timedelta(self, delta, is_leap_julian, False, False))
-        elif self.calendar == 'gregorian':
-            return self.__class__(*add_timedelta(self, delta, is_leap_gregorian, True, False))
-        print('here', self.calendar)
+        if calendar == '360_day':
+            return dt.__class__(*add_timedelta_360_day(dt, delta))
+        elif calendar == 'no_leap':
+            return dt.__class__(*add_timedelta(dt, delta, no_leap, False, True))
+        elif calendar == 'all_leap':
+            return dt.__class__(*add_timedelta(dt, delta, all_leap, False, True))
+        elif calendar == 'julian':
+            return dt.__class__(*add_timedelta(dt, delta, is_leap_julian, False, False))
+        elif calendar == 'gregorian':
+            return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, True, False))
+        else:
+            return NotImplemented
 
     def __sub__(self, other):
         cdef datetime dt
