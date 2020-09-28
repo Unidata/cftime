@@ -844,7 +844,15 @@ Comparison with native python datetime instances is possible
 for cftime.datetime instances using
 'gregorian' and 'proleptic_gregorian' calendars.
 
-If not the calendar kwarg is set to a blank string ('') the 
+All the calendars currently defined in the
+[CF metadata convention](http://cfconventions.org) are supported.
+Valid calendars are 'standard', 'gregorian', 'proleptic_gregorian'
+'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'.
+Default is 'standard', which is a mixed Julian/Gregorian calendar.
+'standard' and 'gregorian' are synonyms, as are 'all_leap'/'366_day'
+and 'noleap'/'365_day'.
+
+If the calendar kwarg is set to a blank string ('') the 
 instance will not be calendar-aware and some methods will not work.
 
 Has isoformat, strftime, timetuple, replace, dayofwk, dayofyr, daysinmonth,
