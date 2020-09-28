@@ -1109,7 +1109,7 @@ Gregorial calendar.
         elif calendar == 'gregorian':
             return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, True, False),calendar=calendar)
         elif calendar == 'proleptic_gregorian':
-            return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, False, False),calendar=calendar)
+            return dt.__class__(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, False),calendar=calendar)
         else:
             return NotImplemented
 
@@ -1154,7 +1154,8 @@ datetime object."""
                 elif self.calendar == 'gregorian':
                     return self.__class__(*add_timedelta(self, -other, is_leap_gregorian, True, False),calendar=self.calendar)
                 elif self.calendar == 'proleptic_gregorian':
-                    return self.__class__(*add_timedelta(self, -other, is_leap_gregorian, False, False),calendar=self.calendar)
+                    return self.__class__(*add_timedelta(self, -other,
+                        is_leap_proleptic_gregorian, False, False),calendar=self.calendar)
                 else:
                     return NotImplemented
             else:
