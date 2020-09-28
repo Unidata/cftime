@@ -834,9 +834,28 @@ cdef to_tuple(dt):
 @cython.embedsignature(True)
 cdef class datetime(object):
     """
-The base class implementing most methods of datetime classes that
-mimic datetime.datetime but support calendars other than the proleptic
-Gregorial calendar.
+This class mimics datetime.datetime but support calendars other than the proleptic
+Gregorian calendar.
+
+Supports timedelta operations by overloading +/-, and
+comparisons with other instances using the same calendar.
+
+Comparison with native python datetime instances is possible
+for cftime.datetime instances using
+'gregorian' and 'proleptic_gregorian' calendars.
+
+If not the calendar kwarg is set to a blank string ('') the 
+instance will not be calendar-aware and some methods will not work.
+
+Has isoformat, strftime, timetuple, replace, dayofwk, dayofyr, daysinmonth,
+__repr__, __add__, __sub__, __str__ and comparison methods. 
+
+dayofwk, dayofyr, daysinmonth, __add__ and __sub__ only work for calendar-aware
+instances.
+
+The default format of the string produced by strftime is controlled by self.format
+(default %Y-%m-%d %H:%M:%S).
+    """
     """
     cdef readonly int year, month, day, hour, minute
     cdef readonly int second, microsecond
@@ -1174,6 +1193,9 @@ datetime object."""
                 return self - other._to_real_datetime()
             else:
                 return NotImplemented
+
+# these calendar-specific sub-classes are no longer used, but stubs
+# remain for backward compatibility.
 
 @cython.embedsignature(True)
 cdef class DatetimeNoLeap(datetime):
