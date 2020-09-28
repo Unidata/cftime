@@ -1099,17 +1099,17 @@ Gregorial calendar.
         else:
             return NotImplemented
         if calendar == '360_day':
-            return dt.__class__(*add_timedelta_360_day(dt, delta))
+            return dt.__class__(*add_timedelta_360_day(dt, delta),calendar=calendar)
         elif calendar == 'noleap':
-            return dt.__class__(*add_timedelta(dt, delta, no_leap, False, True))
+            return dt.__class__(*add_timedelta(dt, delta, no_leap, False, True),calendar=calendar)
         elif calendar == 'all_leap':
-            return dt.__class__(*add_timedelta(dt, delta, all_leap, False, True))
+            return dt.__class__(*add_timedelta(dt, delta, all_leap, False, True),calendar=calendar)
         elif calendar == 'julian':
-            return dt.__class__(*add_timedelta(dt, delta, is_leap_julian, False, False))
+            return dt.__class__(*add_timedelta(dt, delta, is_leap_julian, False, False),calendar=calendar)
         elif calendar == 'gregorian':
-            return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, True, False))
+            return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, True, False),calendar=calendar)
         elif calendar == 'proleptic_gregorian':
-            return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, False, False))
+            return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, False, False),calendar=calendar)
         else:
             return NotImplemented
 
@@ -1144,17 +1144,17 @@ datetime object."""
             elif isinstance(other, timedelta):
                 # datetime - timedelta
                 if self.calendar == '360_day':
-                    return self.__class__(*add_timedelta_360_day(self, -other))
+                    return self.__class__(*add_timedelta_360_day(self, -other),calendar=self.calendar)
                 elif self.calendar == 'noleap':
-                    return self.__class__(*add_timedelta(self, -other, no_leap, False, True))
+                    return self.__class__(*add_timedelta(self, -other, no_leap, False, True),calendar=self.calendar)
                 elif self.calendar == 'all_leap':
-                    return self.__class__(*add_timedelta(self, -other, all_leap, False, True))
+                    return self.__class__(*add_timedelta(self, -other, all_leap, False, True),calendar=self.calendar)
                 elif self.calendar == 'julian':
-                    return self.__class__(*add_timedelta(self, -other, is_leap_julian, False, False))
+                    return self.__class__(*add_timedelta(self, -other, is_leap_julian, False, False),calendar=self.calendar)
                 elif self.calendar == 'gregorian':
-                    return self.__class__(*add_timedelta(self, -other, is_leap_gregorian, True, False))
+                    return self.__class__(*add_timedelta(self, -other, is_leap_gregorian, True, False),calendar=self.calendar)
                 elif self.calendar == 'proleptic_gregorian':
-                    return self.__class__(*add_timedelta(self, -other, is_leap_gregorian, False, False))
+                    return self.__class__(*add_timedelta(self, -other, is_leap_gregorian, False, False),calendar=self.calendar)
                 else:
                     return NotImplemented
             else:
