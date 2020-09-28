@@ -856,7 +856,6 @@ instances.
 The default format of the string produced by strftime is controlled by self.format
 (default %Y-%m-%d %H:%M:%S).
     """
-    """
     cdef readonly int year, month, day, hour, minute
     cdef readonly int second, microsecond
     cdef readonly str calendar
