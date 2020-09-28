@@ -51,6 +51,15 @@ est = timezone(timedelta(hours=-5), 'UTC')
 dtime = namedtuple('dtime', ('values', 'units', 'calendar'))
 dateformat =  '%Y-%m-%d %H:%M:%S'
 
+def adjust_calendar(calendar):
+        if calendar == 'gregorian' or calendar == 'standard':
+            return 'gregorian'
+        elif calendar == 'noleap' or calendar == '365_day':
+            return 'noleap'
+        elif calendar == 'all_leap' or calendar == '366_day':
+            return 'all_leap'
+        else:
+            return calendar
 
 class CFTimeVariable(object):
     '''dummy "netCDF" variable to hold time info'''
@@ -374,105 +383,54 @@ class cftimeTestCase(unittest.TestCase):
         calendars=['standard', 'gregorian', 'proleptic_gregorian', 'noleap', 'julian',\
                    'all_leap', '365_day', '366_day', '360_day']
         dateref = datetime(2015,2,28,12)
-        ntimes = 1001
         verbose = True # print out max error diagnostics
+        ntimes = 1001
+        def roundtrip(delta,eps,units):
+            times1 = date2num(dateref,units,calendar=calendar)
+            times1 += delta*np.arange(0,ntimes)
+            dates1 = num2date(times1,units,calendar=calendar)
+            times2 = date2num(dates1,units,calendar=calendar)
+            dates2 = num2date(times2,units,calendar=calendar)
+            err = np.abs(times1 - times2)
+            assert(np.all(err<eps))
+            dates1 = [date.strftime(dateformat) for date in dates1]
+            dates2 = [date.strftime(dateformat) for date in dates2]
+            assert(dates1==dates2)
+            return err.max()
         for calendar in calendars:
-            eps = 1.
+            eps = 1.; delta = 1.
             units = 'microseconds since 2000-01-30 01:01:01'
-            microsecs1 = date2num(dateref,units,calendar=calendar)
-            maxerr = 0
-            for n in range(ntimes):
-                microsecs1 += 1.
-                date1 = num2date(microsecs1, units, calendar=calendar)
-                microsecs2 = date2num(date1, units, calendar=calendar)
-                date2 = num2date(microsecs2, units, calendar=calendar)
-                err = np.abs(microsecs1 - microsecs2)
-                maxerr = max(err,maxerr)
-                assert(err < eps)
-                assert(date1.strftime(dateformat) == date2.strftime(dateformat))
+            maxerr = roundtrip(eps,delta,units)
             if verbose:
                 print('calendar = %s max abs err (microsecs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            units = 'milliseconds since 1800-01-30 01:01:01'
-            eps = 0.001
-            millisecs1 = date2num(dateref,units,calendar=calendar)
-            maxerr = 0.
-            for n in range(ntimes):
-                millisecs1 += 0.001
-                date1 = num2date(millisecs1, units, calendar=calendar)
-                millisecs2 = date2num(date1, units, calendar=calendar)
-                date2 = num2date(millisecs2, units, calendar=calendar)
-                err = np.abs(millisecs1 - millisecs2)
-                maxerr = max(err,maxerr)
-                assert(err < eps)
-                assert(date1.strftime(dateformat) == date2.strftime(dateformat))
+            eps = 0.001; delta = 0.001
+            units = 'milliseconds since 2000-01-30 01:01:01'
+            maxerr = roundtrip(eps,delta,units)
             if verbose:
                 print('calendar = %s max abs err (millisecs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 1.e-5
+            eps = 1.e-5; delta = 0.1
             units = 'seconds since 0001-01-30 01:01:01'
-            secs1 = date2num(dateref,units,calendar=calendar)
-            maxerr = 0.
-            for n in range(ntimes):
-                secs1 += 0.1
-                date1 = num2date(secs1, units, calendar=calendar)
-                secs2 = date2num(date1, units, calendar=calendar)
-                date2 = num2date(secs2, units, calendar=calendar)
-                err = np.abs(secs1 - secs2)
-                maxerr = max(err,maxerr)
-                assert(err < eps)
-                assert(date1.strftime(dateformat) == date2.strftime(dateformat))
+            maxerr = roundtrip(eps,delta,units)
             if verbose:
                 print('calendar = %s max abs err (secs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 1.e-6
+            eps = 1.e-6; delta = 0.01
             units = 'minutes since 0001-01-30 01:01:01'
-            mins1 = date2num(dateref,units,calendar=calendar)
-            maxerr = 0.
-            for n in range(ntimes):
-                mins1 += 0.01
-                date1 = num2date(mins1, units, calendar=calendar)
-                mins2 = date2num(date1, units, calendar=calendar)
-                date2 = num2date(mins2, units, calendar=calendar)
-                err = np.abs(mins1 - mins2)
-                maxerr = max(err,maxerr)
-                assert(err < eps)
-                diff = abs(date1-date2)
-                assert(diff.microseconds < 100)
+            maxerr = roundtrip(eps,delta,units)
             if verbose:
                 print('calendar = %s max abs err (mins) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 1.e-8
+            eps = 1.e-8; delta = 0.001
             units = 'hours since 0001-01-30 01:01:01'
-            hrs1 = date2num(dateref,units,calendar=calendar)
-            maxerr = 0.
-            for n in range(ntimes):
-                hrs1 += 0.001
-                date1 = num2date(hrs1, units, calendar=calendar)
-                hrs2 = date2num(date1, units, calendar=calendar)
-                date2 = num2date(hrs2, units, calendar=calendar)
-                err = np.abs(hrs1 - hrs2)
-                maxerr = max(err,maxerr)
-                assert(err < eps)
-                diff = abs(date1-date2)
-                assert(diff.microseconds < 100)
+            maxerr = roundtrip(eps,delta,units)
             if verbose:
                 print('calendar = %s max abs err (hours) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 1.e-9
+            eps = 1.e-9; delta = 0.00001
             units = 'days since 0001-01-30 01:01:01'
-            days1 = date2num(dateref,units,calendar=calendar)
-            maxerr = 0.
-            for n in range(ntimes):
-                days1 += 0.00001
-                date1 = num2date(days1, units, calendar=calendar)
-                days2 = date2num(date1, units, calendar=calendar)
-                date2 = num2date(days2, units, calendar=calendar)
-                err = np.abs(days1 - days2)
-                maxerr = max(err,maxerr)
-                assert(err < eps)
-                diff = abs(date1-date2)
-                assert(diff.microseconds < 100)
+            maxerr = roundtrip(eps,delta,units)
             if verbose:
                 print('calendar = %s max abs err (days) = %s eps = %s' % \
                      (calendar,maxerr,eps))
@@ -1554,7 +1512,9 @@ def test_num2date_only_use_cftime_datetimes_negative_years(
         calendar, expected_date_type):
     result = num2date(-1000., units='days since 0001-01-01', calendar=calendar,
                       only_use_cftime_datetimes=True)
-    assert isinstance(result, expected_date_type)
+    #assert isinstance(result, expected_date_type)
+    assert isinstance(result, datetimex)
+    assert (result.calendar == adjust_calendar(calendar))
 
 
 @pytest.mark.parametrize(
@@ -1565,7 +1525,9 @@ def test_num2date_only_use_cftime_datetimes_pre_gregorian(
         calendar, expected_date_type):
     result = num2date(1., units='days since 0001-01-01', calendar=calendar,
                       only_use_cftime_datetimes=True)
-    assert isinstance(result, expected_date_type)
+    #assert isinstance(result, expected_date_type)
+    assert isinstance(result, datetimex)
+    assert (result.calendar == adjust_calendar(calendar))
 
 
 @pytest.mark.parametrize(
@@ -1576,12 +1538,14 @@ def test_num2date_only_use_cftime_datetimes_post_gregorian(
         calendar, expected_date_type):
     result = num2date(0., units='days since 1582-10-15', calendar=calendar,
                       only_use_cftime_datetimes=True)
-    assert isinstance(result, expected_date_type)
+    #assert isinstance(result, expected_date_type)
+    assert isinstance(result, datetimex)
+    assert (result.calendar == adjust_calendar(calendar))
 
 
 def test_repr():
     #expected = 'cftime.datetime(2000-01-01 00:00:00)'
-    expected = 'cftime.datetime(2000, 1, 1, 0, 0, 0, 0)'
+    expected = "cftime.datetime(2000, 1, 1, 0, 0, 0, 0, calendar='gregorian')"
     assert repr(datetimex(2000, 1, 1)) == expected
 
 
