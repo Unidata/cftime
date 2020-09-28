@@ -104,9 +104,6 @@ class real_datetime(datetime_python):
         return get_days_in_month(_is_leap(self.year,'proleptic_gregorian'), self.month)
     nanosecond = 0 # workaround for pandas bug (cftime issue #77)
 
-# start of the gregorian calendar
-gregorian = real_datetime(1582,10,15)
-
 def _datesplit(timestr):
     """split a time string into two components, units and the remainder
     after 'since'
@@ -137,34 +134,24 @@ def _dateparse(timestr,calendar):
     # parse the date string.
     year, month, day, hour, minute, second, microsecond, utc_offset =\
         _parse_date( isostring.strip() )
-    basedate = None
-    if year >= MINYEAR and year <= MAXYEAR:
-        try:
-            basedate = real_datetime(year, month, day, hour, minute, second,
-                    microsecond)
-            # subtract utc_offset from basedate time instance (which is timezone naive)
-            basedate -= timedelta(days=utc_offset/1440.)
-        except ValueError:
-            pass
-    if not basedate:
-        if not utc_offset:
-            basedate = datetime(year, month, day, hour, minute, second,
-                    microsecond)
-        else:
-            raise ValueError('cannot use utc_offset for this reference date/calendar')
     if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
-        if basedate.year == 0:
+        if year == 0:
             msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
             raise ValueError(msg)
-    if calendar in ['noleap', '365_day'] and basedate.month == 2 and basedate.day == 29:
+    if calendar in ['noleap', '365_day'] and month == 2 and day == 29:
         raise ValueError(
             'cannot specify a leap day as the reference time with the noleap calendar')
-    if calendar == '360_day' and basedate.day > 30:
+    if calendar == '360_day' and day > 30:
         raise ValueError(
             'there are only 30 days in every month with the 360_day calendar')
+    basedate = datetime(year, month, day, hour, minute, second,
+                        microsecond,calendar=calendar)
+    # subtract utc_offset from basedate time instance (which is timezone naive)
+    basedate -= timedelta(days=utc_offset/1440.)
     return basedate
 
 def _can_use_python_datetime(date,calendar):
+    gregorian = datetime(1582,10,15,calendar=calendar)
     return ((calendar == 'proleptic_gregorian' and date.year >= MINYEAR and date.year <= MAXYEAR) or \
            (calendar in ['gregorian','standard'] and date > gregorian and date.year <= MAXYEAR))
 
@@ -1002,9 +989,10 @@ Gregorial calendar.
                              self.microsecond)
 
     def __repr__(self):
-        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
+        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8}, calendar='{9}')".format('cftime',
                                      self.__class__.__name__,
-                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond,self.calendar)
+
     def __str__(self):
         return self.isoformat(' ')
 
@@ -1120,6 +1108,8 @@ Gregorial calendar.
             return dt.__class__(*add_timedelta(dt, delta, is_leap_julian, False, False))
         elif calendar == 'gregorian':
             return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, True, False))
+        elif calendar == 'proleptic_gregorian':
+            return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, False, False))
         else:
             return NotImplemented
 
@@ -1163,6 +1153,10 @@ datetime object."""
                     return self.__class__(*add_timedelta(self, -other, is_leap_julian, False, False))
                 elif self.calendar == 'gregorian':
                     return self.__class__(*add_timedelta(self, -other, is_leap_gregorian, True, False))
+                elif self.calendar == 'proleptic_gregorian':
+                    return self.__class__(*add_timedelta(self, -other, is_leap_gregorian, False, False))
+                else:
+                    return NotImplemented
             else:
                 return NotImplemented
         else:

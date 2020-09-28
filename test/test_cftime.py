@@ -90,7 +90,7 @@ class cftimeTestCase(unittest.TestCase):
         self.cdftime_mixed = utime('hours since 0001-01-01 00:00:00')
         self.cdftime_julian = utime(
             'hours since 0001-01-01 00:00:00', calendar='julian')
-        self.cdftime_mixed_tz = utime('hours since 0001-01-01 00:00:00 -06:00')
+        self.cdftime_mixed_tz = utime('hours since 1583-01-01 00:00:00 -06:00')
         self.cdftime_pg = utime('seconds since 0001-01-01 00:00:00',
                                 calendar='proleptic_gregorian')
         self.cdftime_noleap = utime(
