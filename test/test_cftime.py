@@ -52,14 +52,16 @@ dtime = namedtuple('dtime', ('values', 'units', 'calendar'))
 dateformat =  '%Y-%m-%d %H:%M:%S'
 
 def adjust_calendar(calendar):
-        if calendar == 'gregorian' or calendar == 'standard':
-            return 'gregorian'
-        elif calendar == 'noleap' or calendar == '365_day':
-            return 'noleap'
-        elif calendar == 'all_leap' or calendar == '366_day':
-            return 'all_leap'
-        else:
-            return calendar
+    # check for and remove calendar synonyms.
+    calendar = calendar.lower()
+    if calendar == 'gregorian' or calendar == 'standard':
+        return 'gregorian'
+    elif calendar == 'noleap' or calendar == '365_day':
+        return 'noleap'
+    elif calendar == 'all_leap' or calendar == '366_day':
+        return 'all_leap'
+    else:
+        return calendar
 
 class CFTimeVariable(object):
     '''dummy "netCDF" variable to hold time info'''
