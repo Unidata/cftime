@@ -147,7 +147,8 @@ def _dateparse(timestr,calendar):
     basedate = datetime(year, month, day, hour, minute, second,
                         microsecond,calendar=calendar)
     # subtract utc_offset from basedate time instance (which is timezone naive)
-    basedate -= timedelta(days=utc_offset/1440.)
+    if utc_offset:
+        basedate -= timedelta(days=utc_offset/1440.)
     return basedate
 
 def _can_use_python_datetime(date,calendar):

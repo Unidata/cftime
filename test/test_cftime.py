@@ -90,7 +90,7 @@ class cftimeTestCase(unittest.TestCase):
         self.cdftime_mixed = utime('hours since 0001-01-01 00:00:00')
         self.cdftime_julian = utime(
             'hours since 0001-01-01 00:00:00', calendar='julian')
-        self.cdftime_mixed_tz = utime('hours since 1583-01-01 00:00:00 -06:00')
+        self.cdftime_mixed_tz = utime('hours since 0001-01-01 00:00:00 -06:00')
         self.cdftime_pg = utime('seconds since 0001-01-01 00:00:00',
                                 calendar='proleptic_gregorian')
         self.cdftime_noleap = utime(
@@ -248,7 +248,7 @@ class cftimeTestCase(unittest.TestCase):
         # check date2num,num2date methods.
         # use datetime from cftime, since this date doesn't
         # exist in "normal" calendars.
-        d = datetimex(2000, 2, 30)
+        d = datetimex(2000, 2, 30, calendar='')
         t1 = self.cdftime_360day.date2num(d)
         assert_almost_equal(t1, 360 * 400.)
         d2 = self.cdftime_360day.num2date(t1)
