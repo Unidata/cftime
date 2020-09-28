@@ -51,6 +51,8 @@ est = timezone(timedelta(hours=-5), 'UTC')
 dtime = namedtuple('dtime', ('values', 'units', 'calendar'))
 dateformat =  '%Y-%m-%d %H:%M:%S'
 
+calendars=['standard', 'gregorian', 'proleptic_gregorian', 'noleap', 'julian',\
+           'all_leap', '365_day', '366_day', '360_day']
 def adjust_calendar(calendar):
     # check for and remove calendar synonyms.
     calendar = calendar.lower()
@@ -382,11 +384,9 @@ class cftimeTestCase(unittest.TestCase):
 
         # test rountrip accuracy
         # also tests error found in issue #349
-        calendars=['standard', 'gregorian', 'proleptic_gregorian', 'noleap', 'julian',\
-                   'all_leap', '365_day', '366_day', '360_day']
         dateref = datetime(2015,2,28,12)
         verbose = True # print out max error diagnostics
-        ntimes = 1001
+        ntimes = 101
         def roundtrip(delta,eps,units):
             times1 = date2num(dateref,units,calendar=calendar)
             times1 += delta*np.arange(0,ntimes)
@@ -779,6 +779,12 @@ class cftimeTestCase(unittest.TestCase):
         cal = 'proleptic_gregorian'
         dt2 = num2date(date2num(dt1, units, cal), units, cal)
         assert(dt1 == dt2)
+# issue #198 - cftime.datetime creates calendar specific datetimes that
+# support addition/subtraction of timedeltas.
+        for cal in calendars:
+            dt = cftime.datetime(2020, 1, 1, calendar=cal)
+            dt += timedelta(hours=1)
+            assert(str(dt) == '2020-01-01 01:00:00')
 
 
 class TestDate2index(unittest.TestCase):
