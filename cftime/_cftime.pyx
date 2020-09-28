@@ -906,7 +906,7 @@ Gregorial calendar.
 
     @property
     def dayofwk(self):
-        if self._dayofwk < 0:
+        if self._dayofwk < 0 and self.calendar != '':
             jd = _IntJulianDayFromDate(self.year,self.month,self.day,self.calendar)
             year,month,day,dayofwk,dayofyr = _IntJulianDayToDate(jd,self.calendar)
             # cache results for dayofwk, dayofyr
@@ -918,7 +918,7 @@ Gregorial calendar.
 
     @property
     def dayofyr(self):
-        if self._dayofyr < 0:
+        if self._dayofyr < 0 and self.calendar != '':
             jd = _IntJulianDayFromDate(self.year,self.month,self.day,self.calendar)
             year,month,day,dayofwk,dayofyr = _IntJulianDayToDate(jd,self.calendar)
             # cache results for dayofwk, dayofyr
