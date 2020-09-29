@@ -682,21 +682,21 @@ def _date2index(dates, nctime, calendar=None, select='exact'):
     The datetime objects should not include a time-zone offset.
 
     **nctime**: A netCDF time variable object. The nctime object must have a
-    C{units} attribute. The entries are assumed to be stored in increasing
+    `units` attribute. The entries are assumed to be stored in increasing
     order.
 
     **calendar**: Describes the calendar used in the time calculation.
-    Valid calendars C{'standard', 'gregorian', 'proleptic_gregorian'
-    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'}.
-    Default is C{'standard'}, which is a mixed Julian/Gregorian calendar
-    If C{calendar} is None, its value is given by C{nctime.calendar} or
-    C{standard} if no such attribute exists.
+    Valid calendars 'standard', 'gregorian', 'proleptic_gregorian'
+    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'.
+    Default is 'standard', which is a mixed Julian/Gregorian calendar
+    If `calendar` is None, its value is given by `nctime.calendar` or
+    `standard` if no such attribute exists.
 
-    **select**: C{'exact', 'before', 'after', 'nearest'}
-    The index selection method. C{exact} will return the indices perfectly
-    matching the dates given. C{before} and C{after} will return the indices
+    **select**: 'exact', 'before', 'after', 'nearest'
+    The index selection method. `exact` will return the indices perfectly
+    matching the dates given. `before` and `after` will return the indices
     corresponding to the dates just before or just after the given dates if
-    an exact match cannot be found. C{nearest} will return the indices that
+    an exact match cannot be found. `nearest` will return the indices that
     correspond to the closest dates.
     """
     try:
@@ -718,21 +718,21 @@ def time2index(times, nctime, calendar=None, select='exact'):
     **times**: A numeric time or a sequence of numeric times.
 
     **nctime**: A netCDF time variable object. The nctime object must have a
-    C{units} attribute. The entries are assumed to be stored in increasing
+    `units` attribute. The entries are assumed to be stored in increasing
     order.
 
     **calendar**: Describes the calendar used in the time calculation.
-    Valid calendars C{'standard', 'gregorian', 'proleptic_gregorian'
-    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'}.
-    Default is C{'standard'}, which is a mixed Julian/Gregorian calendar
-    If C{calendar} is None, its value is given by C{nctime.calendar} or
-    C{standard} if no such attribute exists.
+    Valid calendars 'standard', 'gregorian', 'proleptic_gregorian'
+    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'.
+    Default is `standard`, which is a mixed Julian/Gregorian calendar
+    If `calendar` is None, its value is given by `nctime.calendar` or
+    `standard` if no such attribute exists.
 
     **select**: **'exact', 'before', 'after', 'nearest'**
-    The index selection method. C{exact} will return the indices perfectly
-    matching the times given. C{before} and C{after} will return the indices
+    The index selection method. `exact` will return the indices perfectly
+    matching the times given. `before` and `after` will return the indices
     corresponding to the times just before or just after the given times if
-    an exact match cannot be found. C{nearest} will return the indices that
+    an exact match cannot be found. `nearest` will return the indices that
     correspond to the closest times.
     """
     try:
@@ -2042,51 +2042,51 @@ class utime:
 Performs conversions of netCDF time coordinate
 data to/from datetime objects.
 
-To initialize: C{t = utime(unit_string,calendar='standard')}
+To initialize: `t = utime(unit_string,calendar='standard'`
 
 where
 
-B{C{unit_string}} is a string of the form
-C{'time-units since <time-origin>'} defining the time units.
+`unit_string` is a string of the form
+`ime-units since <time-origin>` defining the time units.
 
 Valid time-units are days, hours, minutes and seconds (the singular forms
-are also accepted). An example unit_string would be C{'hours
-since 0001-01-01 00:00:00'}. months is allowed as a time unit
+are also accepted). An example unit_string would be `hours
+since 0001-01-01 00:00:00`. months is allowed as a time unit
 *only* for the 360_day calendar.
 
-The B{C{calendar}} keyword describes the calendar used in the time calculations.
+The calendar keyword describes the calendar used in the time calculations.
 All the values currently defined in the U{CF metadata convention
 <http://cf-pcmdi.llnl.gov/documents/cf-conventions/1.1/cf-conventions.html#time-coordinate>}
-are accepted. The default is C{'standard'}, which corresponds to the mixed
-Gregorian/Julian calendar used by the C{udunits library}. Valid calendars
+are accepted. The default is 'standard', which corresponds to the mixed
+Gregorian/Julian calendar used by the udunits library. Valid calendars
 are:
 
-C{'gregorian'} or C{'standard'} (default):
+'gregorian' or 'standard' (default):
 
 Mixed Gregorian/Julian calendar as defined by udunits.
 
-C{'proleptic_gregorian'}:
+'proleptic_gregorian':
 
 A Gregorian calendar extended to dates before 1582-10-15. That is, a year
 is a leap year if either (i) it is divisible by 4 but not by 100 or (ii)
 it is divisible by 400.
 
-C{'noleap'} or C{'365_day'}:
+'noleap' or '365_day':
 
 Gregorian calendar without leap years, i.e., all years are 365 days long.
 all_leap or 366_day Gregorian calendar with every year being a leap year,
 i.e., all years are 366 days long.
 
-C{'360_day'}:
+'360_day':
 
 All years are 360 days divided into 30 day months.
 
-C{'julian'}:
+'julian':
 
 Proleptic Julian calendar, extended to dates after 1582-10-5. A year is a
 leap year if it is divisible by 4.
 
-The C{L{num2date}} and C{L{date2num}} class methods can used to convert datetime
+The num2date and date2num class methods can used to convert datetime
 instances to/from the specified time units using the specified calendar.
 
 Example usage:
@@ -2110,8 +2110,8 @@ Example usage:
 The resolution of the transformation operation is approximately a microsecond.
 
 Warning:  Dates between 1582-10-5 and 1582-10-15 do not exist in the
-C{'standard'} or C{'gregorian'} calendars.  An exception will be raised if you pass
-a 'datetime-like' object in that range to the C{L{date2num}} class method.
+'standard' or 'gregorian' calendars.  An exception will be raised if you pass
+a 'datetime-like' object in that range to the date2num class method.
 
 Words of Wisdom from the British MetOffice concerning reference dates:
 
@@ -2123,42 +2123,42 @@ that the reference date be later than 1582. If earlier dates must be used,
 it should be noted that udunits treats 0 AD as identical to 1 AD."
 
 @ivar origin: datetime instance defining the origin of the netCDF time variable.
-@ivar calendar:  the calendar used (as specified by the C{calendar} keyword).
+@ivar calendar:  the calendar used (as specified by the `calendar` keyword).
 @ivar unit_string:  a string defining the the netCDF time variable.
-@ivar units:  the units part of C{unit_string} (i.e. 'days', 'hours', 'seconds').
+@ivar units:  the units part of `unit_string` (i.e. 'days', 'hours', 'seconds').
     """
 
     def __init__(self, unit_string, calendar='standard',
                  only_use_cftime_datetimes=True,only_use_python_datetimes=False):
         """
 @param unit_string: a string of the form
-C{'time-units since <time-origin>'} defining the time units.
+`time-units since <time-origin>` defining the time units.
 
 Valid time-units are days, hours, minutes and seconds (the singular forms
-are also accepted). An example unit_string would be C{'hours
-since 0001-01-01 00:00:00'}. months is allowed as a time unit
+are also accepted). An example unit_string would be `hours
+since 0001-01-01 00:00:00`. months is allowed as a time unit
 *only* for the 360_day calendar.
 
 @keyword calendar: describes the calendar used in the time calculations.
 All the values currently defined in the U{CF metadata convention
 <http://cf-pcmdi.llnl.gov/documents/cf-conventions/1.1/cf-conventions.html#time-coordinate>}
-are accepted. The default is C{'standard'}, which corresponds to the mixed
-Gregorian/Julian calendar used by the C{udunits library}. Valid calendars
+are accepted. The default is `standard`, which corresponds to the mixed
+Gregorian/Julian calendar used by the udunits library. Valid calendars
 are:
- - C{'gregorian'} or C{'standard'} (default):
+ - `gregorian` or `standard` (default):
  Mixed Gregorian/Julian calendar as defined by udunits.
- - C{'proleptic_gregorian'}:
+ - `proleptic_gregorian`:
  A Gregorian calendar extended to dates before 1582-10-15. That is, a year
  is a leap year if either (i) it is divisible by 4 but not by 100 or (ii)
  it is divisible by 400.
- - C{'noleap'} or C{'365_day'}:
+ - `noleap` or `365_day`:
  Gregorian calendar without leap years, i.e., all years are 365 days long.
- - C{'all_leap'} or C{'366_day'}:
+ - `all_leap` or `366_day`:
  Gregorian calendar with every year being a leap year, i.e.,
  all years are 366 days long.
- -C{'360_day'}:
+ -`360_day`:
  All years are 360 days divided into 30 day months.
- -C{'julian'}:
+ -`julian`:
  Proleptic Julian calendar, extended to dates after 1582-10-5. A year is a
  leap year if it is divisible by 4.
 
@@ -2188,8 +2188,8 @@ units to datetime objects.
 
     def date2num(self, date):
         """
-        Returns C{time_value} in units described by L{unit_string}, using
-        the specified L{calendar}, given a 'datetime-like' object.
+        Returns `time_value` in units described by `unit_string`, using
+        the specified `calendar`, given a 'datetime-like' object.
 
         The datetime object must represent UTC with no time-zone offset.
         If there is a time-zone offset implied by L{unit_string}, it will
@@ -2197,7 +2197,7 @@ units to datetime objects.
 
         Resolution is approximately a microsecond.
 
-        If C{calendar = 'standard'} or C{'gregorian'} (indicating
+        If calendar = 'standard' or 'gregorian' (indicating
         that the mixed Julian/Gregorian calendar is to be used), an
         exception will be raised if the 'datetime-like' object describes
         a date between 1582-10-5 and 1582-10-15.
@@ -2209,8 +2209,8 @@ units to datetime objects.
 
     def num2date(self, time_value):
         """
-        Return a 'datetime-like' object given a C{time_value} in units
-        described by L{unit_string}, using L{calendar}.
+        Return a 'datetime-like' object given a `time_value` in units
+        described by `unit_string`, using `calendar`.
 
         dates are in UTC with no offset, even if L{unit_string} contains
         a time zone offset from UTC.
