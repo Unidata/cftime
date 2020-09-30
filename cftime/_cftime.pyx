@@ -885,6 +885,7 @@ The default format of the string produced by strftime is controlled by self.form
     cdef readonly int second, microsecond
     cdef readonly str calendar
     cdef readonly int _dayofwk, _dayofyr
+    cdef readonly bint has_year_zero
 
     # Python's datetime.datetime uses the proleptic Gregorian
     # calendar. This boolean is used to decide whether a
@@ -915,30 +916,37 @@ The default format of the string produced by strftime is controlled by self.form
             else:
                 self.datetime_compatible = False
             assert_valid_date(self, is_leap_gregorian, True)
+            self.has_year_zero = False
         elif calendar == 'noleap' or calendar == '365_day':
             self.calendar = 'noleap'
             self.datetime_compatible = False
             assert_valid_date(self, no_leap, False, has_year_zero=True)
+            self.has_year_zero = True
         elif calendar == 'all_leap' or calendar == '366_day':
             self.calendar = 'all_leap'
             self.datetime_compatible = False
             assert_valid_date(self, all_leap, False, has_year_zero=True)
+            self.has_year_zero = True
         elif calendar == '360_day':
             self.calendar = calendar
             self.datetime_compatible = False
             assert_valid_date(self, no_leap, False, has_year_zero=True, is_360_day=True)
+            self.has_year_zero = True
         elif calendar == 'julian':
             self.calendar = calendar
             self.datetime_compatible = False
             assert_valid_date(self, is_leap_julian, False)
+            self.has_year_zero = False
         elif calendar == 'proleptic_gregorian':
             self.calendar = calendar
             self.datetime_compatible = True
             assert_valid_date(self, is_leap_proleptic_gregorian, False)
+            self.has_year_zero = False
         elif calendar == '':
             # instance not calendar-aware, some method will not work
             self.calendar = calendar
             self.datetime_compatible = False
+            self.has_year_zero = False
         else:
             raise ValueError(
                 "calendar must be one of %s, got '%s'" % (str(_calendars), calendar))
@@ -950,8 +958,10 @@ The default format of the string produced by strftime is controlled by self.form
     @property
     def dayofwk(self):
         if self._dayofwk < 0 and self.calendar != '':
-            jd = _IntJulianDayFromDate(self.year,self.month,self.day,self.calendar)
-            year,month,day,dayofwk,dayofyr = _IntJulianDayToDate(jd,self.calendar)
+            jd = _IntJulianDayFromDate(self.year,self.month,self.day,self.calendar,
+                                       skip_transition=False,has_year_zero=self.has_year_zero)
+            year,month,day,dayofwk,dayofyr = _IntJulianDayToDate(jd,self.calendar,
+                                       skip_transition=False,has_year_zero=self.has_year_zero)
             # cache results for dayofwk, dayofyr
             self._dayofwk = dayofwk
             self._dayofyr = dayofyr
@@ -962,8 +972,10 @@ The default format of the string produced by strftime is controlled by self.form
     @property
     def dayofyr(self):
         if self._dayofyr < 0 and self.calendar != '':
-            jd = _IntJulianDayFromDate(self.year,self.month,self.day,self.calendar)
-            year,month,day,dayofwk,dayofyr = _IntJulianDayToDate(jd,self.calendar)
+            jd = _IntJulianDayFromDate(self.year,self.month,self.day,self.calendar,
+                                       skip_transition=False,has_year_zero=self.has_year_zero)
+            year,month,day,dayofwk,dayofyr = _IntJulianDayToDate(jd,self.calendar,
+                                       skip_transition=False,has_year_zero=self.has_year_zero)
             # cache results for dayofwk, dayofyr
             self._dayofwk = dayofwk
             self._dayofyr = dayofyr
@@ -1175,8 +1187,10 @@ The default format of the string produced by strftime is controlled by self.form
                     raise ValueError("cannot compute the time difference between dates with different calendars")
                 if dt.calendar == "":
                     raise ValueError("cannot compute the time difference between dates that are not calendar-aware")
-                ordinal_self = _IntJulianDayFromDate(dt.year, dt.month, dt.day, dt.calendar)
-                ordinal_other = _IntJulianDayFromDate(other.year, other.month, other.day, other.calendar)
+                ordinal_self = _IntJulianDayFromDate(dt.year, dt.month, dt.day, dt.calendar,
+                                       skip_transition=False,has_year_zero=self.has_year_zero)
+                ordinal_other = _IntJulianDayFromDate(other.year, other.month, other.day, other.calendar,
+                                       skip_transition=False,has_year_zero=self.has_year_zero)
                 days = ordinal_self - ordinal_other
                 seconds_self = dt.second + 60 * dt.minute + 3600 * dt.hour
                 seconds_other = other.second + 60 * other.minute + 3600 * other.hour
@@ -1619,7 +1633,7 @@ cdef _is_leap(int year, calendar):
         leap = False
     return leap
 
-cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=False):
+cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=False,has_year_zero=False):
     """Compute integer Julian Day from year,month,day and calendar.
 
     Allowed calendars are 'standard', 'gregorian', 'julian',
@@ -1641,7 +1655,7 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
     date is noon UTC 0-1-1 for other calendars.
 
     There is no year zero in standard (mixed), julian, or proleptic_gregorian
-    calendars.
+    calendars by default. If has_year_zero=True, then year zero is included.
 
     Subtract 0.5 to get 00 UTC on that day.
 
@@ -1669,7 +1683,7 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
         return _IntJulianDayFromDate_366day(year,month,day)
 
     # handle standard, julian, proleptic_gregorian calendars.
-    if year == 0:
+    if year == 0 and not has_year_zero:
         raise ValueError('year zero does not exist in the %s calendar' %\
                 calendar)
     if (calendar == 'proleptic_gregorian'         and year < -4714) or\
@@ -1680,7 +1694,7 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
         raise ValueError('%s is not a leap year' % year)
 
     # add year offset
-    if year < 0:
+    if year < 0 and not has_year_zero:
         year += 4801
     else:
         year += 4800
@@ -1716,7 +1730,7 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
 
     return jday
 
-cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False):
+cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False,has_year_zero=False):
     """Compute the year,month,day,dow,doy given the integer Julian day.
     and calendar. (dow = day of week with 0=Mon,6=Sun and doy is day of year).
 
@@ -1765,17 +1779,17 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False):
 
     # Advance years until we find the right one
     yp1 = year + 1
-    if yp1 == 0:
+    if yp1 == 0 and not has_year_zero:
        yp1 = 1 # no year 0
-    tjday = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True)
+    tjday = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True,has_year_zero=has_year_zero)
     while jday >= tjday:
         year += 1
-        if year == 0:
+        if year == 0 and not has_year_zero:
             year = 1
         yp1 = year + 1
-        if yp1 == 0:
+        if yp1 == 0 and not has_year_zero:
             yp1 = 1
-        tjday = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True)
+        tjday = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True,has_year_zero=has_year_zero)
     if _is_leap(year, calendar):
         dpm2use = _dpm_leap
         spm2use = _spm_366day
@@ -1784,12 +1798,12 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False):
         spm2use = _spm_365day
     month = 1
     tjday =\
-    _IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True)
+    _IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True,has_year_zero=has_year_zero)
     while jday > tjday:
         month += 1
         tjday =\
-        _IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True)
-    tjday = _IntJulianDayFromDate(year,month,1,calendar,skip_transition=True)
+        _IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True,has_year_zero=has_year_zero)
+    tjday = _IntJulianDayFromDate(year,month,1,calendar,skip_transition=True,has_year_zero=has_year_zero)
     day = jday - tjday + 1
     if month == 1:
         doy = day
