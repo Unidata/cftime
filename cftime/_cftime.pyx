@@ -318,6 +318,28 @@ DATE_TYPES = {
 }
 
 
+#def to_calendar_specific_datetime(dt, calendar, use_python_datetime):
+#    if use_python_datetime:
+#        return real_datetime(
+#               dt.year,
+#               dt.month,
+#               dt.day,
+#               dt.hour,
+#               dt.minute,
+#               dt.second,
+#               dt.microsecond)
+#    else:
+#        return datetime(
+#               dt.year,
+#               dt.month,
+#               dt.day,
+#               dt.hour,
+#               dt.minute,
+#               dt.second,
+#               dt.microsecond,
+#               calendar=calendar)
+# return calendar-specific subclasses for backward compatbility,
+# even though after 1.3.0 this is no longer necessary.
 def to_calendar_specific_datetime(dt, calendar, use_python_datetime):
     if use_python_datetime:
         date_type = real_datetime
@@ -1120,6 +1142,8 @@ The default format of the string produced by strftime is controlled by self.form
             delta = self
         else:
             return NotImplemented
+        # return calendar-specific subclasses for backward compatbility,
+        # even though after 1.3.0 this is no longer necessary.
         if calendar == '360_day':
             #return dt.__class__(*add_timedelta_360_day(dt, delta),calendar=calendar)
             return Datetime360Day(*add_timedelta_360_day(dt, delta))
@@ -1171,6 +1195,8 @@ datetime object."""
                 return dt._to_real_datetime() - other
             elif isinstance(other, timedelta):
                 # datetime - timedelta
+                # return calendar-specific subclasses for backward compatbility,
+                # even though after 1.3.0 this is no longer necessary.
                 if self.calendar == '360_day':
                     #return self.__class__(*add_timedelta_360_day(self, -other),calendar=self.calendar)
                     return Datetime360Day(*add_timedelta_360_day(self, -other))
