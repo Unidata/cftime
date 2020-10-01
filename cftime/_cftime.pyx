@@ -992,7 +992,8 @@ The default format of the string produced by strftime is controlled by self.form
         elif self.calendar == '360_day':
             return _dpm_360[self.month-1]
         else:
-            return get_days_in_month(_is_leap(self.year,self.calendar), self.month)
+            return get_days_in_month(_is_leap(self.year,self.calendar,
+                   has_year_zero=self.has_year_zero), self.month)
 
     def strftime(self, format=None):
         """
@@ -1603,16 +1604,16 @@ cdef tuple add_timedelta_360_day(datetime dt, delta):
 # Calendar calculations base on calcals.c by David W. Pierce
 # http://meteora.ucsd.edu/~pierce/calcalcs
 
-cdef _is_leap(int year, calendar):
+cdef _is_leap(int year, calendar, has_year_zero=False):
     cdef int tyear
     cdef bint leap
     calendar = _check_calendar(calendar)
-    if year == 0:
+    if year == 0 and not has_year_zero:
         raise ValueError('year zero does not exist in the %s calendar' %\
                 calendar)
     # Because there is no year 0 in the Julian calendar, years -1, -5, -9, etc
     # are leap years.
-    if year < 0:
+    if year < 0 and not has_year_zero:
         tyear = year + 1
     else:
         tyear = year
@@ -1689,7 +1690,7 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
     if (calendar == 'proleptic_gregorian'         and year < -4714) or\
        (calendar in ['julian','standard']  and year < -4713):
         raise ValueError('year out of range for %s calendar' % calendar)
-    leap = _is_leap(year,calendar)
+    leap = _is_leap(year,calendar,has_year_zero=has_year_zero)
     if not leap and month == 2 and day == 29:
         raise ValueError('%s is not a leap year' % year)
 
@@ -1790,7 +1791,7 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False,has_year_zero=F
         if yp1 == 0 and not has_year_zero:
             yp1 = 1
         tjday = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True,has_year_zero=has_year_zero)
-    if _is_leap(year, calendar):
+    if _is_leap(year, calendar,has_year_zero=has_year_zero):
         dpm2use = _dpm_leap
         spm2use = _spm_366day
     else:
