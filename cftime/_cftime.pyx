@@ -2119,7 +2119,7 @@ To initialize: `t = utime(unit_string,calendar='standard'`
 where
 
 `unit_string` is a string of the form
-`ime-units since <time-origin>` defining the time units.
+`time-units since <time-origin>` defining the time units.
 
 Valid time-units are days, hours, minutes and seconds (the singular forms
 are also accepted). An example unit_string would be `hours
