@@ -869,7 +869,7 @@ Default is 'standard', which is a mixed Julian/Gregorian calendar.
 'standard' and 'gregorian' are synonyms, as are 'all_leap'/'366_day'
 and 'noleap'/'365_day'.
 
-If the calendar kwarg is set to a blank string ('') the 
+If the calendar kwarg is set to a blank string ('') or None (default) the 
 instance will not be calendar-aware and some methods will not work.
 
 Has isoformat, strftime, timetuple, replace, dayofwk, dayofyr, daysinmonth,
@@ -895,7 +895,7 @@ The default format of the string produced by strftime is controlled by self.form
 
     def __init__(self, int year, int month, int day, int hour=0, int minute=0,
                        int second=0, int microsecond=0, int dayofwk=-1, 
-                       int dayofyr = -1, calendar='standard'):
+                       int dayofyr = -1, calendar=None):
 
         self.year = year
         self.month = month
@@ -906,7 +906,8 @@ The default format of the string produced by strftime is controlled by self.form
         self.microsecond = microsecond
         self._dayofwk = dayofwk
         self._dayofyr = dayofyr
-        calendar = calendar.lower()
+        if calendar:
+            calendar = calendar.lower()
         if calendar == 'gregorian' or calendar == 'standard':
             # dates after 1582-10-15 can be converted to and compared to
             # proleptic Gregorian dates
@@ -942,7 +943,7 @@ The default format of the string produced by strftime is controlled by self.form
             self.datetime_compatible = True
             assert_valid_date(self, is_leap_proleptic_gregorian, False)
             self.has_year_zero = False
-        elif calendar == '':
+        elif calendar == '' or calendar is None:
             # instance not calendar-aware, some method will not work
             self.calendar = calendar
             self.datetime_compatible = False
@@ -957,7 +958,7 @@ The default format of the string produced by strftime is controlled by self.form
 
     @property
     def dayofwk(self):
-        if self._dayofwk < 0 and self.calendar != '':
+        if self._dayofwk < 0 and self.calendar:
             jd = _IntJulianDayFromDate(self.year,self.month,self.day,self.calendar,
                                        skip_transition=False,has_year_zero=self.has_year_zero)
             year,month,day,dayofwk,dayofyr = _IntJulianDayToDate(jd,self.calendar,
@@ -971,7 +972,7 @@ The default format of the string produced by strftime is controlled by self.form
 
     @property
     def dayofyr(self):
-        if self._dayofyr < 0 and self.calendar != '':
+        if self._dayofyr < 0 and self.calendar:
             jd = _IntJulianDayFromDate(self.year,self.month,self.day,self.calendar,
                                        skip_transition=False,has_year_zero=self.has_year_zero)
             year,month,day,dayofwk,dayofyr = _IntJulianDayToDate(jd,self.calendar,

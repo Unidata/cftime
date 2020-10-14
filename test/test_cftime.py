@@ -310,7 +310,7 @@ class cftimeTestCase(unittest.TestCase):
             t2 = date2num(d, units='days since 0001-01-01 00:00:00')
             assert(abs(t2 - t) < 1e-5)  # values should be less than second
         # Check equality testing
-        d1 = datetimex(1979, 6, 21, 9, 23, 12)
+        d1 = datetimex(1979, 6, 21, 9, 23, 12, calendar='standard')
         d2 = datetime(1979, 6, 21, 9, 23, 12)
         assert(d1 == d2)
         # check timezone offset
@@ -727,7 +727,7 @@ class cftimeTestCase(unittest.TestCase):
         assert isinstance(d, datetime)
         # issue #169: cftime.datetime has no calendar attribute, causing dayofwk,dayofyr methods
         # to fail.
-        c = cftime.datetime(*cftime._parse_date('7480-01-01 00:00:00'))
+        c = cftime.datetime(*cftime._parse_date('7480-01-01 00:00:00'),calendar='standard')
         assert(c.strftime() == '7480-01-01 00:00:00')
         # issue #175: masked values not treated properly in num2date
         times = np.ma.masked_array([-3956.7499999995343,-999999999999],mask=[False,True])
