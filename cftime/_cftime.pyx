@@ -1047,9 +1047,14 @@ The default format of the string produced by strftime is controlled by self.form
                              self.microsecond)
 
     def __repr__(self):
-        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8}, calendar='{9}')".format('cftime',
-                                     self.__class__.__name__,
-                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond,self.calendar)
+        if self.calendar is None:
+            return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8}, calendar={9})".format('cftime',
+            self.__class__.__name__,
+            self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond,self.calendar)
+        else:
+            return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8}, calendar='{9}')".format('cftime',
+            self.__class__.__name__,
+            self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond,self.calendar)
 
     def __str__(self):
         return self.isoformat(' ')
