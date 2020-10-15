@@ -869,7 +869,7 @@ Default is 'standard', which is a mixed Julian/Gregorian calendar.
 'standard' and 'gregorian' are synonyms, as are 'all_leap'/'366_day'
 and 'noleap'/'365_day'.
 
-If the calendar kwarg is set to a blank string ('') or None (default) the 
+If the calendar kwarg is set to a blank string ('') or None (the default is 'standard') the 
 instance will not be calendar-aware and some methods will not work.
 
 Has isoformat, strftime, timetuple, replace, dayofwk, dayofyr, daysinmonth,
@@ -895,7 +895,7 @@ The default format of the string produced by strftime is controlled by self.form
 
     def __init__(self, int year, int month, int day, int hour=0, int minute=0,
                        int second=0, int microsecond=0, int dayofwk=-1, 
-                       int dayofyr = -1, calendar=None):
+                       int dayofyr = -1, calendar='standard'):
 
         self.year = year
         self.month = month
