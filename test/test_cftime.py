@@ -1552,9 +1552,9 @@ def test_num2date_only_use_cftime_datetimes_post_gregorian(
 
 
 def test_repr():
-    expected = 'cftime.datetime(2000, 1, 1, 0, 0, 0, 0, calendar='standard')'
+    expected = "cftime.datetime(2000, 1, 1, 0, 0, 0, 0, calendar='standard')"
     assert repr(datetimex(2000, 1, 1, calendar='standard')) == expected
-    expected = 'cftime.datetime(2000, 1, 1, 0, 0, 0, 0, calendar=None)'
+    expected = "cftime.datetime(2000, 1, 1, 0, 0, 0, 0, calendar=None)"
     assert repr(datetimex(2000, 1, 1, calendar=None)) == expected
 
 
