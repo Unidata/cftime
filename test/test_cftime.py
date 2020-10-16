@@ -1520,7 +1520,6 @@ def test_num2date_only_use_cftime_datetimes_negative_years(
         calendar, expected_date_type):
     result = num2date(-1000., units='days since 0001-01-01', calendar=calendar,
                       only_use_cftime_datetimes=True)
-    #assert isinstance(result, expected_date_type)
     assert isinstance(result, datetimex)
     assert (result.calendar == adjust_calendar(calendar))
 
@@ -1533,7 +1532,6 @@ def test_num2date_only_use_cftime_datetimes_pre_gregorian(
         calendar, expected_date_type):
     result = num2date(1., units='days since 0001-01-01', calendar=calendar,
                       only_use_cftime_datetimes=True)
-    #assert isinstance(result, expected_date_type)
     assert isinstance(result, datetimex)
     assert (result.calendar == adjust_calendar(calendar))
 
@@ -1546,7 +1544,6 @@ def test_num2date_only_use_cftime_datetimes_post_gregorian(
         calendar, expected_date_type):
     result = num2date(0., units='days since 1582-10-15', calendar=calendar,
                       only_use_cftime_datetimes=True)
-    #assert isinstance(result, expected_date_type)
     assert isinstance(result, datetimex)
     assert (result.calendar == adjust_calendar(calendar))
 
