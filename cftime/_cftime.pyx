@@ -945,7 +945,7 @@ The default format of the string produced by strftime is controlled by self.form
             self.has_year_zero = False
         elif calendar == '' or calendar is None:
             # instance not calendar-aware, some method will not work
-            self.calendar = calendar
+            self.calendar = ''
             self.datetime_compatible = False
             self.has_year_zero = False
         else:
@@ -1047,7 +1047,7 @@ The default format of the string produced by strftime is controlled by self.form
                              self.microsecond)
 
     def __repr__(self):
-        if self.calendar is None:
+        if self.calendar == None:
             return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8}, calendar={9})".format('cftime',
             self.__class__.__name__,
             self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond,self.calendar)
