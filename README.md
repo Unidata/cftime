@@ -12,12 +12,12 @@ Time-handling functionality from netcdf4-python
 ## News
 For details on the latest updates, see the [Changelog](https://github.com/Unidata/cftime/blob/master/Changelog).
 
-11/03/2020:  Version 1.3.0 released. *API change*: The cftime.datetime constructor now creates 
- 'calendar-aware' instances (default is 'standard' calendar, if calendar='' or None the instance.
- is not calendar aware and some methods, like dayofwk, dayofyr, __add__ and __sub__, will not work)
+11/03/2020:  Version 1.3.0 released. **API change**: The `cftime.datetime` constructor now creates 
+ 'calendar-aware' instances (default is `'standard'` calendar, if `calendar=''` or `None` the instance.
+ is not calendar aware and some methods, like `dayofwk`, `dayofyr`, `__add__` and `__sub__`, will not work)
  See discussion for issue [#198](https://github.com/Unidata/cftime/issues/198).
  The calendar specific sub-classes are now deprecated, but remain for now
- as stubs that just instantiate the base class and override __repr__.
+ as stubs that just instantiate the base class and override `__repr__`.
 
 07/20/2020: Version 1.2.1 released.  Fixes a couple of regressions introduced in 1.2.0. See Changelog for details.
 
