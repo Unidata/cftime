@@ -37,9 +37,28 @@
 <dt id="cftime.datetime">
 <em class="property">class </em><code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">datetime</code><span class="sig-paren">(</span><em class="sig-param">int year</em>, <em class="sig-param">int month</em>, <em class="sig-param">int day</em>, <em class="sig-param">int hour=0</em>, <em class="sig-param">int minute=0</em>, <em class="sig-param">int second=0</em>, <em class="sig-param">int microsecond=0</em>, <em class="sig-param">int dayofwk=-1</em>, <em class="sig-param">int dayofyr=-1</em>, <em class="sig-param">calendar='standard'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.datetime" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>The base class implementing most methods of datetime classes that
-mimic datetime.datetime but support calendars other than the proleptic
-Gregorial calendar.</p>
+<p>This class mimics datetime.datetime but support calendars other than the proleptic
+Gregorian calendar.</p>
+<p>Supports timedelta operations by overloading +/-, and
+comparisons with other instances using the same calendar.</p>
+<p>Comparison with native python datetime instances is possible
+for cftime.datetime instances using
+‘gregorian’ and ‘proleptic_gregorian’ calendars.</p>
+<p>All the calendars currently defined in the
+[CF metadata convention](<a class="reference external" href="http://cfconventions.org">http://cfconventions.org</a>) are supported.
+Valid calendars are ‘standard’, ‘gregorian’, ‘proleptic_gregorian’
+‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’.
+Default is ‘standard’, which is a mixed Julian/Gregorian calendar.
+‘standard’ and ‘gregorian’ are synonyms, as are ‘all_leap’/’366_day’
+and ‘noleap’/’365_day’.</p>
+<p>If the calendar kwarg is set to a blank string (‘’) the 
+instance will not be calendar-aware and some methods will not work.</p>
+<p>Has isoformat, strftime, timetuple, replace, dayofwk, dayofyr, daysinmonth,
+__repr__, __add__, __sub__, __str__ and comparison methods.</p>
+<p>dayofwk, dayofyr, daysinmonth, __add__ and __sub__ only work for calendar-aware
+instances.</p>
+<p>The default format of the string produced by strftime is controlled by self.format
+(default %Y-%m-%d %H:%M:%S).</p>
 <dl class="method">
 <dt id="cftime.datetime.isoformat">
 <code class="sig-name descname">isoformat</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">sep='T'</em>, <em class="sig-param">timespec='auto'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.datetime.isoformat" title="Permalink to this definition">¶</a></dt>
@@ -260,19 +279,19 @@ and the date is after 1582-10-15).</p>
 <dd><p>Return indices of a netCDF time variable corresponding to the given times.</p>
 <p><strong>times</strong>: A numeric time or a sequence of numeric times.</p>
 <p><strong>nctime</strong>: A netCDF time variable object. The nctime object must have a
-C{units} attribute. The entries are assumed to be stored in increasing
+<cite>units</cite> attribute. The entries are assumed to be stored in increasing
 order.</p>
 <p><strong>calendar</strong>: Describes the calendar used in the time calculation.
-Valid calendars C{‘standard’, ‘gregorian’, ‘proleptic_gregorian’
-‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’}.
-Default is C{‘standard’}, which is a mixed Julian/Gregorian calendar
-If C{calendar} is None, its value is given by C{nctime.calendar} or
-C{standard} if no such attribute exists.</p>
+Valid calendars ‘standard’, ‘gregorian’, ‘proleptic_gregorian’
+‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’.
+Default is <cite>standard</cite>, which is a mixed Julian/Gregorian calendar
+If <cite>calendar</cite> is None, its value is given by <cite>nctime.calendar</cite> or
+<cite>standard</cite> if no such attribute exists.</p>
 <p><strong>select</strong>: <strong>‘exact’, ‘before’, ‘after’, ‘nearest’</strong>
-The index selection method. C{exact} will return the indices perfectly
-matching the times given. C{before} and C{after} will return the indices
+The index selection method. <cite>exact</cite> will return the indices perfectly
+matching the times given. <cite>before</cite> and <cite>after</cite> will return the indices
 corresponding to the times just before or just after the given times if
-an exact match cannot be found. C{nearest} will return the indices that
+an exact match cannot be found. <cite>nearest</cite> will return the indices that
 correspond to the closest times.</p>
 </dd></dl>
 
