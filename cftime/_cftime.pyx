@@ -216,14 +216,14 @@ def date2num(dates,units,calendar='standard'):
             if isscalar:
                 d0 = dates.item()
             else:
-                d0 = dates[0]
+                d0 = dates.flat[0]
             if isinstance(d0,datetime_python):
                 calendar = 'proleptic_gregorian' 
             else:
                 try:
                     calendar = d0.calendar
                 except AttributeError:
-                    return ValueError('no calendar specified')
+                    raise ValueError('no calendar specified',type(d0))
 
     calendar = calendar.lower()
     basedate = _dateparse(units,calendar=calendar)
