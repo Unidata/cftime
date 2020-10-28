@@ -772,6 +772,9 @@ class cftimeTestCase(unittest.TestCase):
         dt1 = datetime(1810, 4, 24, 16, 15, 10)
         units = 'days since -4713-01-01 12:00'
         dt2 = num2date(date2num(dt1, units), units)
+        # switch to these if default calendar for date2num changed to None
+        #dt2 = num2date(date2num(dt1, units), units, calendar='proleptic_gregorian')
+        #dt2 = num2date(date2num(dt1, units, calendar='standard'), units)
         assert(dt1 == dt2)
 # issue #189 - leap years calculated incorrectly for negative years in proleptic_gregorian calendar
         dt1 = datetime(2020, 4, 24, 16, 15, 10)
@@ -798,6 +801,13 @@ class cftimeTestCase(unittest.TestCase):
         # if no calendar specified, default assumed 'standard'
         jd = cftime.date2num(d,units)
         assert(jd == 2459185.0)
+        # switch to these if default calendar for date2num switched to None
+        # if no calendar specified, use input date to determine calendar
+        #jd = cftime.date2num(d,units)
+        #assert(jd == 2459198.0)
+        ## use 'standard' calendar
+        #jd = cftime.date2num(d,units,calendar='standard')
+        #assert(jd == 2459185.0)
 
 
 class TestDate2index(unittest.TestCase):
