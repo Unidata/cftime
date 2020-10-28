@@ -184,10 +184,51 @@ def date2num(dates,units,calendar='standard'):
     returns a numeric time value, or an array of numeric time values
     with approximately 1 microsecond accuracy.
     """
+
+    # input a scale or array-like?
+    isscalar = False
+    try:
+        dates[0]
+    except:
+        isscalar = True
+
+    # masked array input?
+    ismasked = False
+    if np.ma.isMA(dates) and np.ma.is_masked(dates):
+        mask = dates.mask
+        ismasked = True
+
+    # are all input dates 'real' python datetime objects?
+    dates = np.asanyarray(dates) # convert to numpy array
+    shape = dates.shape # save shape of input
+    all_python_datetimes = True
+    for date in dates.flat:
+        if not isinstance(date,datetime_python):
+           all_python_datetimes = False
+           break
+
+    # if calendar is None or '', use calendar of first input cftime.datetime instances.
+    # if inputs are 'real' python datetime instances, use propleptic gregorian.
+    if not calendar:
+        if all_python_datetimes:
+            calendar = 'proleptic_gregorian'
+        else:
+            if isscalar:
+                d0 = dates.item()
+            else:
+                d0 = dates[0]
+            if isinstance(d0,datetime_python):
+                calendar = 'proleptic_gregorian' 
+            else:
+                try:
+                    calendar = d0.calendar
+                except AttributeError:
+                    return ValueError('no calendar specified')
+
     calendar = calendar.lower()
     basedate = _dateparse(units,calendar=calendar)
     (unit, isostring) = _datesplit(units)
-    # real-world calendars limited to positive reference years.
+    # real-world calendars cannot have zero as a reference year.
     if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
         if basedate.year == 0:
             msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
@@ -199,23 +240,6 @@ def date2num(dates,units,calendar='standard'):
     factor = UNIT_CONVERSION_FACTORS[unit]
     can_use_python_basedatetime = _can_use_python_datetime(basedate,calendar)
 
-    isscalar = False
-    try:
-        dates[0]
-    except:
-        isscalar = True
-    ismasked = False
-    if np.ma.isMA(dates) and np.ma.is_masked(dates):
-        mask = dates.mask
-        ismasked = True
-    dates = np.asanyarray(dates)
-    shape = dates.shape
-    # are all dates python datetime instances?
-    all_python_datetimes = True
-    for date in dates.flat:
-        if not isinstance(date,datetime_python):
-           all_python_datetimes = False
-           break
     if can_use_python_basedatetime and all_python_datetimes:
         use_python_datetime = True
         if not isinstance(basedate, datetime_python):
@@ -1555,7 +1579,7 @@ cdef tuple add_timedelta(datetime dt, delta, bint (*is_leap)(int), bint julian_g
             if month > 12:
                 month = 1
                 year += 1
-                if year == 0:
+                if year == 0 and not has_year_zero:
                     year = 1
                 month_length = month_lengths(is_leap, year)
             day = 1
