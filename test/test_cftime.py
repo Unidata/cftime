@@ -788,7 +788,20 @@ class cftimeTestCase(unittest.TestCase):
 # issue #193 - years with more than four digits in reference date
         assert(cftime.date2num(cftime.datetime(18000, 12, 1, 0, 0), 'days since 18000-1-1', '360_day') == 330.0)
         # julian day not including year zero
-        assert(cftime.date2num(cftime.datetime(2020, 12, 1, 12), 'days since -4713-1-1-12', 'julian') == 2459198.0)
+        d = cftime.datetime(2020, 12, 1, 12, calendar='julian')
+        units = 'days since -4713-1-1 12:00'
+        jd = cftime.date2num(d,units,calendar='julian')
+        assert(jd == 2459198.0)
+        # if calendar=None, use input date to determine calendar
+        jd = cftime.date2num(d,units,calendar=None)
+        assert(jd == 2459198.0)
+        # if no calendar specified, default assumed 'standard'
+        jd = cftime.date2num(d,units)
+        assert(jd == 2459185.0)
+        # allow year zero to exist.
+        d = cftime.datetime(2020, 12, 1, 12, calendar='julian', has_year_zero=True)
+        jd = cftime.date2num(d,units,calendar=None)
+        assert(jd == 2459563.0)
 
 
 class TestDate2index(unittest.TestCase):
