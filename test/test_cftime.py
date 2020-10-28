@@ -798,10 +798,6 @@ class cftimeTestCase(unittest.TestCase):
         # if no calendar specified, default assumed 'standard'
         jd = cftime.date2num(d,units)
         assert(jd == 2459185.0)
-        # allow year zero to exist.
-        d = cftime.datetime(2020, 12, 1, 12, calendar='julian', has_year_zero=True)
-        jd = cftime.date2num(d,units,calendar=None)
-        assert(jd == 2459563.0)
 
 
 class TestDate2index(unittest.TestCase):
