@@ -787,6 +787,8 @@ class cftimeTestCase(unittest.TestCase):
             assert(str(dt) == '2020-01-01 01:00:00')
 # issue #193 - years with more than four digits in reference date
         assert(cftime.date2num(cftime.datetime(18000, 12, 1, 0, 0), 'days since 18000-1-1', '360_day') == 330.0)
+        # julian day not including year zero
+        assert(cftime.date2num(cftime.datetime(2020, 12, 1, 12), 'days since -4713-1-1-12', 'julian') == 2459198.0)
 
 
 class TestDate2index(unittest.TestCase):
