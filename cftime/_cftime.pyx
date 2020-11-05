@@ -157,7 +157,7 @@ def _can_use_python_datetime(date,calendar):
            (calendar in ['gregorian','standard'] and date > gregorian and date.year <= MAXYEAR))
 
 @cython.embedsignature(True)
-def date2num(dates,units,calendar='standard'):
+def date2num(dates,units,calendar=None):
     """
     Return numeric time values given datetime objects. The units
     of the numeric time values are described by the **units** argument
@@ -167,19 +167,22 @@ def date2num(dates,units,calendar='standard'):
     returned numeric values.
 
     **dates**: A datetime object or a sequence of datetime objects.
-    The datetime objects should not include a time-zone offset.
+    The datetime objects should not include a time-zone offset. They
+    can be either native python datetime instances (which use
+    the proleptic gregorian calendar) or cftime.datetime instances.
 
     **units**: a string of the form **<time units> since <reference time>**
     describing the time units. **<time units>** can be days, hours, minutes,
     seconds, milliseconds or microseconds. **<reference time>** is the time
     origin. **months_since** is allowed *only* for the **360_day** calendar.
 
-    **calendar**: describes the calendar used in the time calculations.
+    **calendar**: describes the calendar to be used in the time calculations.
     All the values currently defined in the
     [CF metadata convention](http://cfconventions.org)
     Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
-    Default is **'standard'**, which is a mixed Julian/Gregorian calendar.
+    Default is `None` which means the calendar associated with the rist
+    input datetime instance will be used.
 
     returns a numeric time value, or an array of numeric time values
     with approximately 1 microsecond accuracy.
