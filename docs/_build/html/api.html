@@ -92,7 +92,7 @@ day number within the current year starting with 1 for January 1st.</p>
 
 <dl class="function">
 <dt id="cftime.date2num">
-<code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">date2num</code><span class="sig-paren">(</span><em class="sig-param">dates</em>, <em class="sig-param">units</em>, <em class="sig-param">calendar='standard'</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.date2num" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">date2num</code><span class="sig-paren">(</span><em class="sig-param">dates</em>, <em class="sig-param">units</em>, <em class="sig-param">calendar=None</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.date2num" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return numeric time values given datetime objects. The units
 of the numeric time values are described by the <strong>units</strong> argument
 and the <strong>calendar</strong> keyword. The datetime objects must
@@ -100,17 +100,20 @@ be in UTC with no time-zone offset.  If there is a
 time-zone offset in <strong>units</strong>, it will be applied to the
 returned numeric values.</p>
 <p><strong>dates</strong>: A datetime object or a sequence of datetime objects.
-The datetime objects should not include a time-zone offset.</p>
+The datetime objects should not include a time-zone offset. They
+can be either native python datetime instances (which use
+the proleptic gregorian calendar) or cftime.datetime instances.</p>
 <p><strong>units</strong>: a string of the form <strong>&lt;time units&gt; since &lt;reference time&gt;</strong>
 describing the time units. <strong>&lt;time units&gt;</strong> can be days, hours, minutes,
 seconds, milliseconds or microseconds. <strong>&lt;reference time&gt;</strong> is the time
 origin. <strong>months_since</strong> is allowed <em>only</em> for the <strong>360_day</strong> calendar.</p>
-<p><strong>calendar</strong>: describes the calendar used in the time calculations.
+<p><strong>calendar</strong>: describes the calendar to be used in the time calculations.
 All the values currently defined in the
 [CF metadata convention](<a class="reference external" href="http://cfconventions.org">http://cfconventions.org</a>)
 Valid calendars <strong>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
 ‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</strong>.
-Default is <strong>‘standard’</strong>, which is a mixed Julian/Gregorian calendar.</p>
+Default is <cite>None</cite> which means the calendar associated with the rist
+input datetime instance will be used.</p>
 <p>returns a numeric time value, or an array of numeric time values
 with approximately 1 microsecond accuracy.</p>
 </dd></dl>
