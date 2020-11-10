@@ -771,7 +771,8 @@ class cftimeTestCase(unittest.TestCase):
 # issue #187 - roundtrip near second boundary
         dt1 = datetime(1810, 4, 24, 16, 15, 10)
         units = 'days since -4713-01-01 12:00'
-        dt2 = num2date(date2num(dt1, units), units)
+        dt2 = num2date(date2num(dt1, units), units, calendar='proleptic_gregorian')
+        dt2 = num2date(date2num(dt1, units, calendar='standard'), units)
         assert(dt1 == dt2)
 # issue #189 - leap years calculated incorrectly for negative years in proleptic_gregorian calendar
         dt1 = datetime(2020, 4, 24, 16, 15, 10)
@@ -785,6 +786,23 @@ class cftimeTestCase(unittest.TestCase):
             dt = cftime.datetime(2020, 1, 1, calendar=cal)
             dt += timedelta(hours=1)
             assert(str(dt) == '2020-01-01 01:00:00')
+# issue #193 - years with more than four digits in reference date
+        assert(cftime.date2num(cftime.datetime(18000, 12, 1, 0, 0), 'days since 18000-1-1', '360_day') == 330.0)
+        # julian day not including year zero
+        d = cftime.datetime(2020, 12, 1, 12, calendar='julian')
+        units = 'days since -4713-1-1 12:00'
+        jd = cftime.date2num(d,units,calendar='julian')
+        assert(jd == 2459198.0)
+        # if calendar=None, use input date to determine calendar
+        jd = cftime.date2num(d,units,calendar=None)
+        assert(jd == 2459198.0)
+        # if no calendar specified, use calendar associated with datetime
+        # instance.
+        jd = cftime.date2num(d,units)
+        assert(jd == 2459198.0)
+        # use 'standard' calendar
+        jd = cftime.date2num(d,units,calendar='standard')
+        assert(jd == 2459185.0)
 
 
 class TestDate2index(unittest.TestCase):

@@ -58,7 +58,7 @@ __version__ = '1.3.0'
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
 #       For example, the TZ spec "+01:0" will still work even though the minutes value is only one character long.
-ISO8601_REGEX = re.compile(r"(?P<year>[+-]?[0-9]{1,4})(-(?P<month>[0-9]{1,2})(-(?P<day>[0-9]{1,2})"
+ISO8601_REGEX = re.compile(r"(?P<year>[+-]?[0-9]+)(-(?P<month>[0-9]{1,2})(-(?P<day>[0-9]{1,2})"
                            r"(((?P<separator1>.)(?P<hour>[0-9]{1,2}):(?P<minute>[0-9]{1,2})(:(?P<second>[0-9]{1,2})(\.(?P<fraction>[0-9]+))?)?)?"
                            r"((?P<separator2>.?)(?P<timezone>Z|(([-+])([0-9]{2})((:([0-9]{2}))|([0-9]{2}))?)))?)?)?)?"
                            )
@@ -157,7 +157,7 @@ def _can_use_python_datetime(date,calendar):
            (calendar in ['gregorian','standard'] and date > gregorian and date.year <= MAXYEAR))
 
 @cython.embedsignature(True)
-def date2num(dates,units,calendar='standard'):
+def date2num(dates,units,calendar=None):
     """
     Return numeric time values given datetime objects. The units
     of the numeric time values are described by the **units** argument
@@ -167,27 +167,71 @@ def date2num(dates,units,calendar='standard'):
     returned numeric values.
 
     **dates**: A datetime object or a sequence of datetime objects.
-    The datetime objects should not include a time-zone offset.
+    The datetime objects should not include a time-zone offset. They
+    can be either native python datetime instances (which use
+    the proleptic gregorian calendar) or cftime.datetime instances.
 
     **units**: a string of the form **<time units> since <reference time>**
     describing the time units. **<time units>** can be days, hours, minutes,
     seconds, milliseconds or microseconds. **<reference time>** is the time
     origin. **months_since** is allowed *only* for the **360_day** calendar.
 
-    **calendar**: describes the calendar used in the time calculations.
+    **calendar**: describes the calendar to be used in the time calculations.
     All the values currently defined in the
     [CF metadata convention](http://cfconventions.org)
     Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
-    Default is **'standard'**, which is a mixed Julian/Gregorian calendar.
+    Default is `None` which means the calendar associated with the rist
+    input datetime instance will be used.
 
     returns a numeric time value, or an array of numeric time values
     with approximately 1 microsecond accuracy.
     """
+
+    # input a scale or array-like?
+    isscalar = False
+    try:
+        dates[0]
+    except:
+        isscalar = True
+
+    # masked array input?
+    ismasked = False
+    if np.ma.isMA(dates) and np.ma.is_masked(dates):
+        mask = dates.mask
+        ismasked = True
+
+    # are all input dates 'real' python datetime objects?
+    dates = np.asanyarray(dates) # convert to numpy array
+    shape = dates.shape # save shape of input
+    all_python_datetimes = True
+    for date in dates.flat:
+        if not isinstance(date,datetime_python):
+           all_python_datetimes = False
+           break
+
+    # if calendar is None or '', use calendar of first input cftime.datetime instances.
+    # if inputs are 'real' python datetime instances, use propleptic gregorian.
+    if not calendar:
+        if all_python_datetimes:
+            calendar = 'proleptic_gregorian'
+        else:
+            if isscalar:
+                d0 = dates.item()
+            else:
+                d0 = dates.flat[0]
+            if isinstance(d0,datetime_python):
+                calendar = 'proleptic_gregorian' 
+            else:
+                try:
+                    calendar = d0.calendar
+                except AttributeError:
+                    raise ValueError('no calendar specified',type(d0))
+
     calendar = calendar.lower()
     basedate = _dateparse(units,calendar=calendar)
     (unit, isostring) = _datesplit(units)
-    # real-world calendars limited to positive reference years.
+    # real-world calendars cannot have zero as a reference year.
     if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
         if basedate.year == 0:
             msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
@@ -199,23 +243,6 @@ def date2num(dates,units,calendar='standard'):
     factor = UNIT_CONVERSION_FACTORS[unit]
     can_use_python_basedatetime = _can_use_python_datetime(basedate,calendar)
 
-    isscalar = False
-    try:
-        dates[0]
-    except:
-        isscalar = True
-    ismasked = False
-    if np.ma.isMA(dates) and np.ma.is_masked(dates):
-        mask = dates.mask
-        ismasked = True
-    dates = np.asanyarray(dates)
-    shape = dates.shape
-    # are all dates python datetime instances?
-    all_python_datetimes = True
-    for date in dates.flat:
-        if not isinstance(date,datetime_python):
-           all_python_datetimes = False
-           break
     if can_use_python_basedatetime and all_python_datetimes:
         use_python_datetime = True
         if not isinstance(basedate, datetime_python):
@@ -1555,7 +1582,7 @@ cdef tuple add_timedelta(datetime dt, delta, bint (*is_leap)(int), bint julian_g
             if month > 12:
                 month = 1
                 year += 1
-                if year == 0:
+                if year == 0 and not has_year_zero:
                     year = 1
                 month_length = month_lengths(is_leap, year)
             day = 1
