@@ -913,6 +913,7 @@ The default format of the string produced by strftime is controlled by self.form
     cdef readonly str calendar
     cdef readonly int _dayofwk, _dayofyr
     cdef readonly bint has_year_zero
+    cdef readonly object tzinfo
 
     # Python's datetime.datetime uses the proleptic Gregorian
     # calendar. This boolean is used to decide whether a
@@ -933,6 +934,7 @@ The default format of the string produced by strftime is controlled by self.form
         self.microsecond = microsecond
         self._dayofwk = dayofwk
         self._dayofyr = dayofyr
+        self.tzinfo = None
         if calendar:
             calendar = calendar.lower()
         if calendar == 'gregorian' or calendar == 'standard':
