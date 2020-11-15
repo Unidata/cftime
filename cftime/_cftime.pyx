@@ -930,6 +930,7 @@ The default format of the string produced by strftime is controlled by self.form
         self.microsecond = microsecond
         self._dayofwk = dayofwk
         self._dayofyr = dayofyr
+        self.tzinfo = None
         if calendar:
             calendar = calendar.lower()
         if calendar == 'gregorian' or calendar == 'standard':

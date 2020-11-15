@@ -10,6 +10,8 @@ version 1.3.0 (release tag v1.3.0rel)
    digits can be handled. Allow 'calendar=None' inr cftime.date2num (calendar associated with first
    input datetime object is used - we may want to change the default from 'standard' to None
    in a future release).
+ * add `cftime.datetime.tzinfo=None` for compatibility with python datetime
+   (issue #208).
 
 version 1.2.1 (release tag v1.2.1rel)
 =====================================
