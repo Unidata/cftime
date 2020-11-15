@@ -910,6 +910,7 @@ The default format of the string produced by strftime is controlled by self.form
     cdef readonly str calendar
     cdef readonly int _dayofwk, _dayofyr
     cdef readonly bint has_year_zero
+    cdef object tzinfo
 
     # Python's datetime.datetime uses the proleptic Gregorian
     # calendar. This boolean is used to decide whether a
