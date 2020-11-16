@@ -12,7 +12,7 @@ Time-handling functionality from netcdf4-python
 ## News
 For details on the latest updates, see the [Changelog](https://github.com/Unidata/cftime/blob/master/Changelog).
 
-11/03/2020:  Version 1.3.0 released. **API change**: The `cftime.datetime` constructor now creates 
+11/16/2020:  Version 1.3.0 released. **API change**: The `cftime.datetime` constructor now creates 
  'calendar-aware' instances (default is `'standard'` calendar, if `calendar=''` or `None` the instance
  is not calendar aware and some methods, like `dayofwk`, `dayofyr`, `__add__` and `__sub__`, will not work)
  See discussion for issue [#198](https://github.com/Unidata/cftime/issues/198).
