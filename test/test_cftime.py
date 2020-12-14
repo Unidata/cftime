@@ -804,6 +804,17 @@ class cftimeTestCase(unittest.TestCase):
         jd = cftime.date2num(d,units,calendar='standard')
         assert(jd == 2459185.0)
 
+        # issue #211
+        # (masked array handling in date2num - AttributeError:
+        # 'cftime._cftime.DatetimeGregorian' object has no attribute 'view')
+        m = np.ma.asarray(
+            [cftime.DatetimeGregorian(2014, 8, 1, 12, 0, 0, 0)]
+            )
+        assert(
+             cftime.date2num(m, units="seconds since 2000-1-1")==[4.602096e+08]
+              )
+
+
 
 class TestDate2index(unittest.TestCase):
 
@@ -1302,19 +1313,19 @@ class DateTime(unittest.TestCase):
         for op, expected in [(operator.gt, '__lt__'), (operator.ge, '__le__'),
                              (operator.eq, '__eq__'), (operator.ne, '__ne__'),
                              (operator.lt, '__gt__'), (operator.le, '__ge__')]:
-            with self.assertRaisesRegexp(NotImplementedError, expected):
+            with self.assertRaisesRegex(NotImplementedError, expected):
                 op(self.date1_365_day, Rich())
 
-            with self.assertRaisesRegexp(NotImplementedError, '__richcmp__'):
+            with self.assertRaisesRegex(NotImplementedError, '__richcmp__'):
                 op(self.date1_365_day, CythonRich())
 
         # Test RHS operand comparison operator processing.
         for op in [operator.gt, operator.ge, operator.eq, operator.ne,
                    operator.lt, operator.le]:
-            with self.assertRaisesRegexp(TypeError, 'cannot compare'):
+            with self.assertRaisesRegex(TypeError, 'cannot compare'):
                 op(Pass(), self.date1_365_day)
 
-            with self.assertRaisesRegexp(TypeError, 'cannot compare'):
+            with self.assertRaisesRegex(TypeError, 'cannot compare'):
                 op(Pass___cmp__(), self.date1_365_day)
 
 
