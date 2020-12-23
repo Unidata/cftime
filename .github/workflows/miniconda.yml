@@ -27,7 +27,7 @@ jobs:
         activate-conda: false
         conda-channels: conda-forge
 
-    - name: Python ${{ matrix.python-version }} ${{ matrix.os }}
+    - name: Setup Conda Env
       shell: bash -l {0}
       run: |
         conda create --name TEST python=${{ matrix.python-version }} --file requirements.txt --file requirements-dev.txt
@@ -36,7 +36,7 @@ jobs:
         conda info --all
         conda list
 
-    - name: Tests
+    - name: Run Tests
       shell: bash -l {0}
       run: |
         source activate TEST
@@ -46,9 +46,11 @@ jobs:
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ${{ github.workspace }}/coverage/lcov.info
 
     - name: Tarball
       shell: bash -l {0}
+      if: matrix.os == "ubuntu-latest" && matrix.python-version == "3.9"
       run: |
         source activate TEST
         python setup.py --version ; 
@@ -56,12 +58,12 @@ jobs:
         check-manifest --verbose ;
         twine check dist/* ;
  
-#   - name: Docs
-#     shell: bash -l {0}
-#     if: matrix.os == 'ubuntu-latest' && matrix.python-version == "3.8"
-#     run: |
-#        pushd docs && make html linkcheck O=-W && popd;
-#        rm -f docs/build/html/_static/jquery-*.js
-#        rm -f docs/build/html/_static/underscore-*.js
-#        rm -f docs/build/html/.buildinfo
-#        sh ./ci/deploy_docs.sh
+    - name: Docs
+      shell: bash -l {0}
+      if: matrix.os == "ubuntu-latest" && matrix.python-version == "3.9"
+      run: |
+         pushd docs && make html linkcheck O=-W && popd;
+         rm -f docs/build/html/_static/jquery-*.js
+         rm -f docs/build/html/_static/underscore-*.js
+         rm -f docs/build/html/.buildinfo
+         sh ./ci/deploy_docs.sh
