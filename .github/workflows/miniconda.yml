@@ -50,7 +50,7 @@ jobs:
 
     - name: Tarball
       shell: bash -l {0}
-      if: matrix.os == "ubuntu-latest" && matrix.python-version == "3.9"
+      if: matrix.os == "ubuntu-latest"
       run: |
         source activate TEST
         python setup.py --version ; 
@@ -58,12 +58,12 @@ jobs:
         check-manifest --verbose ;
         twine check dist/* ;
  
-    - name: Docs
-      shell: bash -l {0}
-      if: matrix.os == "ubuntu-latest" && matrix.python-version == "3.9"
-      run: |
-         pushd docs && make html linkcheck O=-W && popd;
-         rm -f docs/build/html/_static/jquery-*.js
-         rm -f docs/build/html/_static/underscore-*.js
-         rm -f docs/build/html/.buildinfo
-         sh ./ci/deploy_docs.sh
+#   - name: Docs
+#     shell: bash -l {0}
+#     if: matrix.os == "ubuntu-latest" && matrix.python-version == "3.9"
+#     run: |
+#       pushd docs && make html linkcheck O=-W && popd;
+#       rm -f docs/build/html/_static/jquery-*.js
+#       rm -f docs/build/html/_static/underscore-*.js
+#       rm -f docs/build/html/.buildinfo
+#       sh ./ci/deploy_docs.sh
