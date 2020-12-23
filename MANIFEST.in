@@ -3,6 +3,7 @@ include README.md
 include COPYING
 include pyproject.toml
 include Changelog
+exclude *.legacy
 recursive-include cftime *.py
 recursive-include cftime *.pyx
 recursive-exclude cftime *.c
