@@ -1,4 +1,4 @@
-name: windows
+name: cftime test
 
 on:
   pull_request:
@@ -7,10 +7,12 @@ on:
 
 jobs:
   run:
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ["3.6", "3.7", "3.8", "3.9"]
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        platform: [x64, x32]
 
     steps:
     - uses: actions/checkout@v2
@@ -21,7 +23,7 @@ jobs:
         activate-conda: false
         conda-channels: conda-forge
 
-    - name: Python ${{ matrix.python-version }}
+    - name: Python ${{ matrix.python-version }} ${{ matrix.os }}
       shell: bash -l {0}
       run: |
         conda create --name TEST python=${{ matrix.python-version }} numpy cython pip pytest pytest-cov --strict-channel-priority
