@@ -50,7 +50,6 @@ jobs:
 
     - name: Tarball
       shell: bash -l {0}
-      if: matrix.os == "ubuntu-latest"
       run: |
         source activate TEST
         python setup.py --version ; 
