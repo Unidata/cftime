@@ -49,8 +49,7 @@ jobs:
 #       path-to-lcov: ${{ github.workspace }}/coverage/lcov.info
 
     - name: Tarball
-      if: matrix.os == "ubuntu-latest" && matrix.python-version == "3.9"
-      shell: bash -l {0}
+      if: matrix.os == "ubuntu-latest"
       run: |
         source activate TEST
         python setup.py --version ; 
@@ -58,12 +57,12 @@ jobs:
         check-manifest --verbose ;
         twine check dist/* ;
  
-    - name: Docs
-      if: matrix.os == "ubuntu-latest" && matrix.python-version == "3.9"
-      shell: bash -l {0}
-      run: |
-        pushd docs && make html linkcheck O=-W && popd;
-        rm -f docs/build/html/_static/jquery-*.js
-        rm -f docs/build/html/_static/underscore-*.js
-        rm -f docs/build/html/.buildinfo
-        sh ./ci/deploy_docs.sh
+#   - name: Docs
+#     if: matrix.os == "ubuntu-latest" && matrix.python-version == "3.9"
+#     shell: bash -l {0}
+#     run: |
+#       pushd docs && make html linkcheck O=-W && popd;
+#       rm -f docs/build/html/_static/jquery-*.js
+#       rm -f docs/build/html/_static/underscore-*.js
+#       rm -f docs/build/html/.buildinfo
+#       sh ./ci/deploy_docs.sh
