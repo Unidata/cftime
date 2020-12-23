@@ -18,6 +18,7 @@ jobs:
             platform: x32
 
     steps:
+
     - uses: actions/checkout@v2
 
     - name: Setup Conda
@@ -40,7 +41,11 @@ jobs:
       run: |
         source activate TEST
         py.test -vv test
-        coveralls
+
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Tarball
       shell: bash -l {0}
@@ -50,28 +55,13 @@ jobs:
         pip wheel . -w dist --no-deps ;
         check-manifest --verbose ;
         twine check dist/* ;
-
-# job2:
-#   run:
-#     runs-on: ubuntu-latest
-
-#     steps:
-
-#     - uses: actions/checkout@v2
-
-#     - name: BuildDocs
-#       shell: bash -l {0}
-#       run: |
-#          pushd docs && make html linkcheck O=-W && popd;
-
-#     - name: CleanUpDocs
-#       shell: bash -l {0}
-#       run: |
-#        # Remove unused, unminified javascript from sphinx
+ 
+#   - name: Docs
+#     shell: bash -l {0}
+#     if: matrix.os == 'ubuntu-latest' && matrix.python-version == "3.8"
+#     run: |
+#        pushd docs && make html linkcheck O=-W && popd;
 #        rm -f docs/build/html/_static/jquery-*.js
 #        rm -f docs/build/html/_static/underscore-*.js
 #        rm -f docs/build/html/.buildinfo
-
-#     - name: DeployDocs
-#       shell: bash -l {0}
-#       run: ./ci/deploy_docs.sh
+#        sh ./ci/deploy_docs.sh
