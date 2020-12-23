@@ -10,9 +10,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [ "3.7", "3.8", "3.9"]
-        os: [windows-latest, ubuntu-latest, macos-latest]
-        platform: [x64, x32]
+#       python-version: [ "3.7", "3.8", "3.9"]
+#       os: [windows-latest, ubuntu-latest, macos-latest]
+#       platform: [x64, x32]
+        python-version: [ "3.9"]
+        os: [ubuntu-latest]
+        platform: [x64]
         exclude:
           - os: macos-latest  
             platform: x32
@@ -36,16 +39,17 @@ jobs:
         conda info --all
         conda list
 
-#   - name: Run Tests
-#     shell: bash -l {0}
-#     run: |
-#       source activate TEST
-#       py.test -vv test
+    - name: Run Tests
+      shell: bash -l {0}
+      run: |
+        source activate TEST
+        py.test -vv test
 
 #   - name: Coveralls
 #     uses: coverallsapp/github-action@master
 #     with:
 #       github-token: ${{ secrets.GITHUB_TOKEN }}
+# Lcov file not found?
 #       path-to-lcov: ${{ github.workspace }}/coverage/lcov.info
 
     - name: Tarball
@@ -62,6 +66,7 @@ jobs:
       if: startsWith(matrix.os,'ubuntu')
       shell: bash -l {0}
       run: |
+        source activate TEST
         pushd docs && make html linkcheck O=-W && popd;
         rm -f docs/build/html/_static/jquery-*.js
         rm -f docs/build/html/_static/underscore-*.js
