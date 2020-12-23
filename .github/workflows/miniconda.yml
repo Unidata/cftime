@@ -6,73 +6,72 @@ on:
     branches: [master]
 
 jobs:
-  job1:
-    run:
-      runs-on: ${{ matrix.os }}
-      strategy:
-        matrix:
-          python-version: [ "3.7", "3.8", "3.9"]
-          os: [windows-latest, ubuntu-latest, macos-latest]
-          platform: [x64, x32]
-          exclude:
-            - os: macos-latest  
-              platform: x32
+  run:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [ "3.7", "3.8", "3.9"]
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        platform: [x64, x32]
+        exclude:
+          - os: macos-latest  
+            platform: x32
 
-      steps:
-      - uses: actions/checkout@v2
+    steps:
+    - uses: actions/checkout@v2
 
-      - name: Setup Conda
-        uses: s-weigand/setup-conda@v1
-        with:
-          activate-conda: false
-          conda-channels: conda-forge
+    - name: Setup Conda
+      uses: s-weigand/setup-conda@v1
+      with:
+        activate-conda: false
+        conda-channels: conda-forge
 
-      - name: Python ${{ matrix.python-version }} ${{ matrix.os }}
-        shell: bash -l {0}
-        run: |
-          conda create --name TEST python=${{ matrix.python-version }} --file requirements.txt --file requirements-dev.txt
-          source activate TEST
-          CYTHON_COVERAGE=1 pip install -e . --no-deps --force-reinstall
-          conda info --all
-          conda list
+    - name: Python ${{ matrix.python-version }} ${{ matrix.os }}
+      shell: bash -l {0}
+      run: |
+        conda create --name TEST python=${{ matrix.python-version }} --file requirements.txt --file requirements-dev.txt
+        source activate TEST
+        CYTHON_COVERAGE=1 pip install -e . --no-deps --force-reinstall
+        conda info --all
+        conda list
 
-      - name: Tests
-        shell: bash -l {0}
-        run: |
-          source activate TEST
-          py.test -vv test
-          coveralls
+    - name: Tests
+      shell: bash -l {0}
+      run: |
+        source activate TEST
+        py.test -vv test
+        coveralls
 
-      - name: Tarball
-        shell: bash -l {0}
-        run: |
-          source activate TEST
-          python setup.py --version ; 
-          pip wheel . -w dist --no-deps ;
-          check-manifest --verbose ;
-          twine check dist/* ;
+    - name: Tarball
+      shell: bash -l {0}
+      run: |
+        source activate TEST
+        python setup.py --version ; 
+        pip wheel . -w dist --no-deps ;
+        check-manifest --verbose ;
+        twine check dist/* ;
 
-  job2:
-    run:
-      runs-on: ubuntu-latest
+# job2:
+#   run:
+#     runs-on: ubuntu-latest
 
-      steps:
+#     steps:
 
-      - uses: actions/checkout@v2
+#     - uses: actions/checkout@v2
 
-      - name: BuildDocs
-        shell: bash -l {0}
-        run: |
-           pushd docs && make html linkcheck O=-W && popd;
+#     - name: BuildDocs
+#       shell: bash -l {0}
+#       run: |
+#          pushd docs && make html linkcheck O=-W && popd;
 
-      - name: CleanUpDocs
-        shell: bash -l {0}
-        run: |
-         # Remove unused, unminified javascript from sphinx
-         rm -f docs/build/html/_static/jquery-*.js
-         rm -f docs/build/html/_static/underscore-*.js
-         rm -f docs/build/html/.buildinfo
+#     - name: CleanUpDocs
+#       shell: bash -l {0}
+#       run: |
+#        # Remove unused, unminified javascript from sphinx
+#        rm -f docs/build/html/_static/jquery-*.js
+#        rm -f docs/build/html/_static/underscore-*.js
+#        rm -f docs/build/html/.buildinfo
 
-      - name: DeployDocs
-        shell: bash -l {0}
-        run: ./ci/deploy_docs.sh
+#     - name: DeployDocs
+#       shell: bash -l {0}
+#       run: ./ci/deploy_docs.sh
