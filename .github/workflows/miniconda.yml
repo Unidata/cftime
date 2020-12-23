@@ -1,0 +1,79 @@
+name: cftime test
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  run:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [ "3.7", "3.8", "3.9"]
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        platform: [x64, x32]
+#  debug on a single os/platform/python version
+#       python-version: [ "3.9"]
+#       os: [ubuntu-latest]
+#       platform: [x64]
+        exclude:
+          - os: macos-latest  
+            platform: x32
+
+    env:
+      TRAVIS_BUILD_DIR: ${{ github.workspace }}
+      TRAVIS_REPO_SLUG: ${{ github.repository }}
+
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - name: Setup Conda
+      uses: s-weigand/setup-conda@v1
+      with:
+        activate-conda: false
+        conda-channels: conda-forge
+
+    - name: Setup Conda Env
+      shell: bash -l {0}
+      run: |
+        conda create --name TEST python=${{ matrix.python-version }} --file requirements.txt --file requirements-dev.txt
+        source activate TEST
+        CYTHON_COVERAGE=1 pip install -v -e  . --no-deps --force-reinstall
+        conda info --all
+        conda list
+
+    - name: Run Tests
+      shell: bash -l {0}
+      run: |
+        source activate TEST
+        py.test -vv test
+        find ./ -name "*cov*" -print # check for coverage output
+
+#   - name: Coveralls
+#     uses: coverallsapp/github-action@master
+#     with:
+#       github-token: ${{ secrets.GITHUB_TOKEN }}
+#       path-to-lcov: ${{ github.workspace }}/coverage/lcov.info
+
+    - name: Tarball
+      if: startsWith(matrix.os,'ubuntu')
+      shell: bash -l {0}
+      run: |
+        source activate TEST
+        python setup.py --version ; 
+        pip wheel . -w dist --no-deps ;
+        check-manifest --verbose ;
+        twine check dist/* ;
+ 
+    - name: Docs
+      if: startsWith(matrix.os,'ubuntu')
+      shell: bash -l {0}
+      run: |
+        source activate TEST
+        pushd docs && make html linkcheck O=-W && popd;
+        #rm -f docs/build/html/_static/jquery-*.js
+        #rm -f docs/build/html/_static/underscore-*.js
+        #rm -f docs/build/html/.buildinfo
+        #sh ./ci/deploy_docs.sh
