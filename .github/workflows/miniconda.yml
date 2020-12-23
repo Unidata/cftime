@@ -10,13 +10,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-#       python-version: [ "3.7", "3.8", "3.9"]
-#       os: [windows-latest, ubuntu-latest, macos-latest]
-#       platform: [x64, x32]
+        python-version: [ "3.7", "3.8", "3.9"]
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        platform: [x64, x32]
 #  debug on a single os/platform/python version
-        python-version: [ "3.9"]
-        os: [ubuntu-latest]
-        platform: [x64]
+#       python-version: [ "3.9"]
+#       os: [ubuntu-latest]
+#       platform: [x64]
         exclude:
           - os: macos-latest  
             platform: x32
@@ -40,8 +40,7 @@ jobs:
       run: |
         conda create --name TEST python=${{ matrix.python-version }} --file requirements.txt --file requirements-dev.txt
         source activate TEST
-#       CYTHON_COVERAGE=1 pip install -v -e  . --no-deps --force-reinstall
-        CYTHON_COVERAGE=1 pip install -e  . 
+        CYTHON_COVERAGE=1 pip install -v -e  . --no-deps --force-reinstall
         conda info --all
         conda list
 
