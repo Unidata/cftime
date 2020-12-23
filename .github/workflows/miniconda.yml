@@ -49,7 +49,7 @@ jobs:
 #       path-to-lcov: ${{ github.workspace }}/coverage/lcov.info
 
     - name: Tarball
-      if: startsWith(matrix.os,'ubuntu') && startWith(matrix.python-version,'3.9')
+      if: startsWith(matrix.os,'ubuntu')
       shell: bash -l {0}
       run: |
         source activate TEST
@@ -59,7 +59,7 @@ jobs:
         twine check dist/* ;
  
     - name: Docs
-      if: startsWith(matrix.os,'ubuntu') && startWith(matrix.python-version,'3.9')
+      if: startsWith(matrix.os,'ubuntu')
       shell: bash -l {0}
       run: |
         pushd docs && make html linkcheck O=-W && popd;
