@@ -49,7 +49,7 @@ jobs:
 #       path-to-lcov: ${{ github.workspace }}/coverage/lcov.info
 
     - name: Tarball
-      if: matrix.os == "ubuntu-latest"
+      if: startsWith(matrix.os,'ubuntu')
       run: |
         source activate TEST
         python setup.py --version ; 
