@@ -54,14 +54,10 @@ jobs:
     - name: Coveralls
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      if: startsWith(matrix.os,'ubuntu')
       run: |
         source activate TEST
         coveralls
-
-    #- name: Coveralls
-    #  uses: AndreMiras/coveralls-python-action@develop
-    #  with:
-    #    parallel: false
 
     - name: Tarball
       if: startsWith(matrix.os,'ubuntu')
