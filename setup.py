@@ -95,7 +95,7 @@ else:
     if cythonize:
         ext_modules = cythonize(extension,
                                 compiler_directives=COMPILER_DIRECTIVES,
-                                language_level=2)
+                                language_level=3)
 
 setup(
     name=NAME,

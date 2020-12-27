@@ -3,6 +3,7 @@
 #
 
 [run]
+relative_files = True
 branch = True
 plugins = Cython.Coverage
 include =
