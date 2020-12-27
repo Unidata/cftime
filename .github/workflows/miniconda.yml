@@ -51,11 +51,11 @@ jobs:
         py.test -vv test
         find ./ -name "*cov*" -print # check for coverage output
 
-#   - name: Coveralls
-#     uses: coverallsapp/github-action@master
-#     with:
-#       github-token: ${{ secrets.GITHUB_TOKEN }}
-#       path-to-lcov: ${{ github.workspace }}/coverage/lcov.info
+    - name: Coveralls
+      uses: AndreMiras/coveralls-python-action@develop
+      with:
+        parallel: true
+        flag-name: Unit Test
 
     - name: Tarball
       if: startsWith(matrix.os,'ubuntu')
@@ -77,3 +77,12 @@ jobs:
         #rm -f docs/build/html/_static/underscore-*.js
         #rm -f docs/build/html/.buildinfo
         #sh ./ci/deploy_docs.sh
+         
+  coveralls_finish:
+    needs: run
+    runs-on: ubuntu-latest
+    steps:
+    - name: Coveralls Finished
+      uses: AndreMiras/coveralls-python-action@develop
+      with:
+        parallel-finished: true
