@@ -52,10 +52,16 @@ jobs:
         find ./ -name "*cov*" -print # check for coverage output
 
     - name: Coveralls
-      uses: AndreMiras/coveralls-python-action@develop
-      with:
-        parallel: true
-        flag-name: Unit Test
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        source activate TEST
+        coveralls
+
+    #- name: Coveralls
+    #  uses: AndreMiras/coveralls-python-action@develop
+    #  with:
+    #    parallel: false
 
     - name: Tarball
       if: startsWith(matrix.os,'ubuntu')
@@ -77,12 +83,3 @@ jobs:
         #rm -f docs/build/html/_static/underscore-*.js
         #rm -f docs/build/html/.buildinfo
         #sh ./ci/deploy_docs.sh
-         
-  coveralls_finish:
-    needs: run
-    runs-on: ubuntu-latest
-    steps:
-    - name: Coveralls Finished
-      uses: AndreMiras/coveralls-python-action@develop
-      with:
-        parallel-finished: true
