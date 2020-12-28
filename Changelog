@@ -7,7 +7,8 @@ version 1.3.1 (not yet released)
    step to github actions workflow to upload coverage data to coveralls.io (PR
    #217).
  * move package under 'src' directory so cftime can be imported
-   from install dir (PR #218).
+   from install dir (PR #218 - see
+   https://blog.ionelmc.ro/2014/05/25/python-packaging/#the-structure).
 
 version 1.3.0 (release tag v1.3.0rel)
 =====================================
