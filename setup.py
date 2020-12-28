@@ -14,12 +14,13 @@ except ImportError:
 
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
+SRCDIR = os.path.join(BASEDIR,'src')
 CMDS_NOCYTHONIZE = ['clean','clean_cython','sdist']
 COMPILER_DIRECTIVES = {}
 DEFINE_MACROS = None
 FLAG_COVERAGE = '--cython-coverage'  # custom flag enabling Cython line tracing
 NAME = 'cftime'
-CFTIME_DIR = os.path.join(BASEDIR, NAME)
+CFTIME_DIR = os.path.join(SRCDIR, NAME)
 CYTHON_FNAME = os.path.join(CFTIME_DIR, '_{}.pyx'.format(NAME))
 
 
@@ -106,6 +107,7 @@ setup(
     long_description_content_type='text/markdown',
     cmdclass={'clean_cython': CleanCython},
     packages=[NAME],
+    package_dir={'':'src'},
     version=extract_version(),
     ext_modules=ext_modules,
     install_requires=load('requirements.txt'),
