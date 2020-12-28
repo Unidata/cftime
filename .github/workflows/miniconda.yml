@@ -49,7 +49,6 @@ jobs:
       run: |
         source activate TEST
         py.test -vv test
-        find ./ -name "*cov*" -print # check for coverage output
 
     - name: Coveralls
       env:
