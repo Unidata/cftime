@@ -55,10 +55,11 @@ jobs:
     - name: Coveralls
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      if: startsWith(matrix.os,'ubuntu')
+      #if: startsWith(matrix.os,'ubuntu')
+      if: ${{ matrix.os =='ubuntu-latest' && matrix.python-version == '3.8' && matrix.platform == 'x64' }}
       run: |
         source activate TEST
-        coveralls --service-name=github-actions
+        coveralls --service=github-actions
 
     - name: Tarball
       if: startsWith(matrix.os,'ubuntu')
