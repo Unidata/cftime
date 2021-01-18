@@ -45,19 +45,21 @@ jobs:
         conda list
 
     - name: Run Tests
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       shell: bash -l {0}
       run: |
         source activate TEST
         py.test -vv test
-        find ./ -name "*cov*" -print # check for coverage output
 
-    - name: Coveralls
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      if: startsWith(matrix.os,'ubuntu')
-      run: |
-        source activate TEST
-        coveralls
+#   - name: Coveralls
+#     env:
+#       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#     if: ${{ matrix.os =='ubuntu-latest' && matrix.python-version == '3.9' && matrix.platform == 'x64' }}
+#     run: |
+#       source activate TEST
+#       coveralls --service=github-actions
 
     - name: Tarball
       if: startsWith(matrix.os,'ubuntu')
