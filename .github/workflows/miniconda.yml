@@ -10,13 +10,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [ "3.7", "3.8", "3.9"]
-        os: [windows-latest, ubuntu-latest, macos-latest]
-        platform: [x64, x32]
+#       python-version: [ "3.7", "3.8", "3.9"]
+#       os: [windows-latest, ubuntu-latest, macos-latest]
+#       platform: [x64, x32]
 #  debug on a single os/platform/python version
-#       python-version: [ "3.9"]
-#       os: [ubuntu-latest]
-#       platform: [x64]
+        python-version: [ "3.9"]
+        os: [ubuntu-latest]
+        platform: [x64]
         exclude:
           - os: macos-latest  
             platform: x32
@@ -56,9 +56,11 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #if: startsWith(matrix.os,'ubuntu')
-      if: ${{ matrix.os =='ubuntu-latest' && matrix.python-version == '3.8' && matrix.platform == 'x64' }}
+      if: ${{ matrix.os =='ubuntu-latest' && matrix.python-version == '3.9' && matrix.platform == 'x64' }}
       run: |
         source activate TEST
+        find ./ -name "*cov*" -print
+        ls -l .coverage
         coveralls --service=github-actions
 
     - name: Tarball
