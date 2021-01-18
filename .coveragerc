@@ -6,7 +6,6 @@
 relative_files = True
 branch = True
 plugins = Cython.Coverage
-ignore_errors = True
 include =
     src/cftime/*
 omit = 
