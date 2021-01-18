@@ -51,19 +51,14 @@ jobs:
       run: |
         source activate TEST
         py.test -vv test
-        find ./ -name "*cov*" -print # check for coverage output
-        coveralls # upload coverage data
 
-#   - name: Coveralls
-#     env:
-#       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#     if: startsWith(matrix.os,'ubuntu')
-#     run: |
-#       source activate TEST
-#       coveralls
-
-#    - name: Coveralls
-#      uses: AndreMiras/coveralls-python-action@develop
+    - name: Coveralls
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      if: startsWith(matrix.os,'ubuntu')
+      run: |
+        source activate TEST
+        coveralls --service-name=github-actions
 
     - name: Tarball
       if: startsWith(matrix.os,'ubuntu')
