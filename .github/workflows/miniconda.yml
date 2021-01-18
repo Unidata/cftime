@@ -10,13 +10,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-#       python-version: [ "3.7", "3.8", "3.9"]
-#       os: [windows-latest, ubuntu-latest, macos-latest]
-#       platform: [x64, x32]
+        python-version: [ "3.7", "3.8", "3.9"]
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        platform: [x64, x32]
 #  debug on a single os/platform/python version
-        python-version: [ "3.9"]
-        os: [ubuntu-latest]
-        platform: [x64]
+#       python-version: [ "3.9"]
+#       os: [ubuntu-latest]
+#       platform: [x64]
         exclude:
           - os: macos-latest  
             platform: x32
@@ -52,14 +52,14 @@ jobs:
         source activate TEST
         py.test -vv test
 
-    - name: Coveralls
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      if: ${{ matrix.os =='ubuntu-latest' && matrix.python-version == '3.9' && matrix.platform == 'x64' }}
-      run: |
-        source activate TEST
-        coveralls --service=github-actions
+#   - name: Coveralls
+#     env:
+#       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#     if: ${{ matrix.os =='ubuntu-latest' && matrix.python-version == '3.9' && matrix.platform == 'x64' }}
+#     run: |
+#       source activate TEST
+#       coveralls --service=github-actions
 
     - name: Tarball
       if: startsWith(matrix.os,'ubuntu')
