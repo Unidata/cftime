@@ -1888,5 +1888,46 @@ def test_num2date_integer_upcast_required():
     np.testing.assert_equal(result, expected)
 
 
+@pytest.mark.parametrize(
+    "encoding_units", 
+    ["microseconds", "milliseconds", "seconds", "minutes", "hours", "days"]
+)
+@pytest.mark.parametrize(
+    "freq",
+    [
+        timedelta(microseconds=1),
+        timedelta(microseconds=1000), 
+        timedelta(seconds=1), 
+        timedelta(minutes=1), 
+        timedelta(hours=1), 
+        timedelta(days=1)
+    ], 
+    ids=lambda x: f"{x!r}"
+)
+def test_date2num_num2date_roundtrip(encoding_units, freq, calendar):
+    date_type = _EXPECTED_DATE_TYPES[calendar]
+    lengthy_timedelta = timedelta(days=291000 * 360)
+    times = np.array(
+        [
+            date_type(1, 1, 1), 
+            date_type(1, 1, 1) + lengthy_timedelta, 
+            date_type(1, 1, 1) + lengthy_timedelta + freq
+        ]
+    )
+    units = f"{encoding_units} since 0001-01-01"
+    encoded = date2num(times, units=units, calendar=calendar)
+    decoded = num2date(encoded, units=units, calendar=calendar)
+    encoding_units_as_timedelta = timedelta(microseconds=UNIT_CONVERSION_FACTORS[encoding_units])
+
+    if freq >= encoding_units_as_timedelta:
+        assert encoded.dtype == np.int64
+        np.testing.assert_equal(decoded, times)
+    else:
+        assert encoded.dtype == np.float64
+        tolerance = timedelta(microseconds=1000)
+        meets_tolerance = np.abs(decoded - times) <= tolerance
+        assert np.all(meets_tolerance)
+
+
 if __name__ == '__main__':
     unittest.main()

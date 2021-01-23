@@ -237,7 +237,7 @@ def date2num(dates,units,calendar=None):
         raise ValueError("Unsupported time units provided, {!r}.".format(unit))
     if unit in ["months", "month"] and calendar != "360_day":
         raise ValueError("Units of months only valid for 360_day calendar.")
-    factor = UNIT_CONVERSION_FACTORS[unit]
+    unit_timedelta = timedelta(microseconds=UNIT_CONVERSION_FACTORS[unit])
     can_use_python_basedatetime = _can_use_python_datetime(basedate,calendar)
 
     if can_use_python_basedatetime and all_python_datetimes:
@@ -263,13 +263,10 @@ def date2num(dates,units,calendar=None):
             times.append(None)
         else:
             td = date - basedate
-            if factor == 1.0:
-                # units are microseconds, use integer division
-                times.append(td // timedelta(microseconds=1) )
+            if td % unit_timedelta == timedelta(0):
+                times.append(td // unit_timedelta)
             else:
-                #times.append( (td / timedelta(microseconds=1)) / factor )
-                # this appears to be faster.
-                times.append( (td.total_seconds()*1.e6) / factor )
+                times.append(td / unit_timedelta)
         n += 1
     if ismasked: # convert to masked array if input was masked array
         times = np.array(times)
