@@ -264,7 +264,9 @@ def date2num(dates,units,calendar=None):
         else:
             td = date - basedate
             if td % unit_timedelta == timedelta(0):
-                times.append(td // unit_timedelta)
+                # Explicitly cast result to np.int64 for Windows compatibility
+                quotient = np.int64(td // unit_timedelta)
+                times.append(quotient)
             else:
                 times.append(td / unit_timedelta)
         n += 1

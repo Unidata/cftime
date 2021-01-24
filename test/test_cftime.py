@@ -1924,7 +1924,7 @@ def test_date2num_num2date_roundtrip(encoding_units, freq, calendar):
         np.testing.assert_equal(decoded, times)
     else:
         assert encoded.dtype == np.float64
-        tolerance = timedelta(microseconds=1000)
+        tolerance = timedelta(microseconds=2000)
         meets_tolerance = np.abs(decoded - times) <= tolerance
         assert np.all(meets_tolerance)
 
