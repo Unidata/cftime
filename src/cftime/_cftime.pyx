@@ -1771,7 +1771,7 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False,has_year_zero=F
     gap in Julian day numbers between Oct 4 and Oct 15 1582 (the transition
     from Julian to Gregorian calendars).  Default False, ignored
     unless calendar = 'standard'."""
-    cdef int year,month,day,dow,doy,yp1,tjday
+    cdef int year,month,day,dow,doy,yp1,tjday,nextra
     cdef int[12] dayspermonth
     cdef int[13] cumdayspermonth
 
@@ -1780,11 +1780,36 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False,has_year_zero=F
 
     # handle all calendars except standard, julian, proleptic_gregorian.
     if calendar == '360_day':
-        return _IntJulianDayToDate_360day(jday)
+        year   = jday//360
+        nextra = jday - year*360
+        doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
+        month  = nextra//30 + 1
+        day    = doy - (month-1)*30
+        # compute day of week.
+        dow = _get_dow(jday)
+        return year,month,day,dow,doy
     elif calendar == '365_day':
-        return _IntJulianDayToDate_365day(jday)
+        year   = jday//365
+        nextra = jday - year*365
+        doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
+        month  = 1
+        while doy > _cumdayspermonth_365day[month]:
+            month += 1
+        day = doy - _cumdayspermonth_365day[month-1]
+        # compute day of week.
+        dow = _get_dow(jday)
+        return year,month,day,dow,doy
     elif calendar == '366_day':
-        return _IntJulianDayToDate_366day(jday)
+        year   = jday//366
+        nextra = jday - year*366
+        doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
+        month  = 1
+        while doy > _cumdayspermonth_366day[month]:
+            month += 1
+        day = doy - _cumdayspermonth_366day[month-1]
+        # compute day of week.
+        dow = _get_dow(jday)
+        return year,month,day,dow,doy
 
     # handle standard, julian, proleptic_gregorian calendars.
     if jday < 0:
@@ -1859,58 +1884,6 @@ cdef _check_calendar(calendar):
     if calendar == 'all_leap':
         calout = '366_day'
     return calout
-
-cdef _IntJulianDayToDate_365day(int jday):
-    """Compute the year,month,day given the integer Julian day
-    for 365_day calendar."""
-    cdef int year,month,day,nextra,dow
-
-    year = jday//365
-    nextra = jday - year*365
-    doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
-    month = 1
-    while doy > _cumdayspermonth_365day[month]:
-        month += 1
-    day = doy - _cumdayspermonth_365day[month-1]
-
-    # compute day of week.
-    dow = _get_dow(jday)
-
-    return year,month,day,dow,doy
-
-cdef _IntJulianDayToDate_366day(int jday):
-    """Compute the year,month,day given the integer Julian day
-    for 366_day calendar."""
-    cdef int year,month,day,nextra,dow
-
-    year = jday//366
-    nextra = jday - year*366
-    doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
-    month = 1
-    while doy > _cumdayspermonth_366day[month]:
-        month += 1
-    day = doy - _cumdayspermonth_366day[month-1]
-
-    # compute day of week.
-    dow = _get_dow(jday)
-
-    return year,month,day,dow,doy
-
-cdef _IntJulianDayToDate_360day(int jday):
-    """Compute the year,month,day given the integer Julian day
-    for 360_day calendar."""
-    cdef int year,month,day,nextra,dow
-
-    year = jday//360
-    nextra = jday - year*360
-    doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
-    month = nextra//30 + 1
-    day   = doy - (month-1)*30
-
-    # compute day of week.
-    dow = _get_dow(jday)
-
-    return year,month,day,dow,doy
 
 # stuff below no longer used, kept here for backwards compatibility.
 
