@@ -1450,7 +1450,7 @@ cdef void assert_valid_date(datetime dt, bint (*is_leap)(int),
         if dt.year == 0:
             raise ValueError("invalid year provided in {0!r}".format(dt))
     if is_360_day:
-        month_length = 30
+        month_length = 12*[30]
     else:
         month_length = month_lengths(is_leap, dt.year)
 
