@@ -14,10 +14,6 @@ from datetime import datetime as datetime_python
 from datetime import timedelta, MINYEAR, MAXYEAR
 import time                     # strftime
 import warnings
-try:
-    from itertools import izip as zip
-except ImportError:  # python 3.x
-    pass
 
 
 microsec_units = ['microseconds','microsecond', 'microsec', 'microsecs']
@@ -1137,30 +1133,8 @@ The default format of the string produced by strftime is controlled by self.form
                 raise TypeError("cannot compare {0!r} and {1!r} (different calendars)".format(self, other))
             return PyObject_RichCompare(dt.to_tuple(), to_tuple(other), op)
         else:
-            # With Python3 we can simply return NotImplemented. If the other
-            # object does not support rich comparison for cftime then a
-            # TypeError will be automatically raised. However, Python2 is not
-            # consistent with this Python3 behaviour. In Python2, we only
-            # delegate the comparison operation to the other object iff it has
-            # suitable rich comparison support available. This is deduced by
-            # introspection of the other object. Otherwise, we explicitly raise
-            # a TypeError to avoid Python2 defaulting to using either __cmp__
-            # comparision on the other object, or worst still, object ID
-            # comparison. Either way, at this point the comparision is deemed
-            # not valid from our perspective.
-            if sys.version_info.major == 2:
-                rop = _rop_lookup[op]
-                if (hasattr(other, '__richcmp__') or hasattr(other, rop)):
-                    # The other object potentially has the smarts to handle
-                    # the comparision, so allow the Python machinery to hand
-                    # the operation off to the other object.
-                    return NotImplemented
-                # Otherwise, the comparison is not valid.
-                emsg = "cannot compare {0!r} and {1!r}"
-                raise TypeError(emsg.format(self, other))
-            else:
-                # Delegate responsibility of comparison to the other object.
-                return NotImplemented
+            # Delegate responsibility of comparison to the other object.
+            return NotImplemented
 
     cdef _getstate(self):
         return (self.year, self.month, self.day, self.hour,
