@@ -33,7 +33,6 @@ _calendars = ['standard', 'gregorian', 'proleptic_gregorian',
 # Following are number of aays Per month
 cdef int[12] _dayspermonth      = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 cdef int[12] _dayspermonth_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-cdef int[12] _dayspermonth_360  = [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
 # Same as above, but including accumulated days of previous months.
 cdef int[13] _cumdayspermonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
 cdef int[13] _cumdayspermonth_leap = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
@@ -1012,7 +1011,7 @@ The default format of the string produced by strftime is controlled by self.form
         elif self.calendar == 'all_leap':
             return _dayspermonth_leap[self.month-1]
         elif self.calendar == '360_day':
-            return _dayspermonth_360[self.month-1]
+            return 30
         else:
             return get_days_in_month(_is_leap(self.year,self.calendar,
                    has_year_zero=self.has_year_zero), self.month)
@@ -1451,7 +1450,7 @@ cdef void assert_valid_date(datetime dt, bint (*is_leap)(int),
         if dt.year == 0:
             raise ValueError("invalid year provided in {0!r}".format(dt))
     if is_360_day:
-        month_length = _dayspermonth_360
+        month_length = 30
     else:
         month_length = month_lengths(is_leap, dt.year)
 
