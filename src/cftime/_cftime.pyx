@@ -1751,7 +1751,7 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
     year += 4800 # add offset so -4800 is year 0.
     # 1st term is the number of days in the last year
     # 2nd term is the number of days in each preceding non-leap year
-    # last 3 terms are the number of preceding leap years since -4800
+    # last terms are the number of preceding leap years since -4800
     jday_jul = jday + 365*(year-1) + (year-1)//4
     # remove offset for 87 years before -4713 (including leap days)
     jday_jul -= 31777
@@ -1837,7 +1837,7 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False,has_year_zero=F
 
     # start with initial guess of year that is before jday=1 in both
     # Julian and Gregorian calendars.
-    year = jday//366 - 4800
+    year = jday//366 - 4714
 
     # account for 10 days in Julian/Gregorian transition.
     if not skip_transition and calendar == 'standard' and jday > 2299160:
