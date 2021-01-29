@@ -1662,6 +1662,20 @@ cdef _is_leap(int year, calendar, has_year_zero=False):
         leap = False
     return leap
 
+cdef _check_calendar(calendar):
+    """validate calendars, convert to subset of names to get rid of synonyms"""
+    if calendar not in _calendars:
+        raise ValueError('unsupported calendar')
+    calout = calendar
+    # remove 'gregorian','noleap','all_leap'
+    if calendar in ['gregorian','standard']:
+        calout = 'standard'
+    if calendar == 'noleap':
+        calout = '365_day'
+    if calendar == 'all_leap':
+        calout = '366_day'
+    return calout
+
 cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=False,has_year_zero=False):
     """Compute integer Julian Day from year,month,day and calendar.
 
@@ -1771,12 +1785,18 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False,has_year_zero=F
     gap in Julian day numbers between Oct 4 and Oct 15 1582 (the transition
     from Julian to Gregorian calendars).  Default False, ignored
     unless calendar = 'standard'."""
-    cdef int year,month,day,dow,doy,yp1,tjday,nextra
+    cdef int year,month,day,dow,doy,yp1,jday_count,nextra
     cdef int[12] dayspermonth
     cdef int[13] cumdayspermonth
 
     # validate inputs.
     calendar = _check_calendar(calendar)
+
+    # compute day of week.
+    dow = (jday + 1) % 7
+    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
+    dow -= 1
+    if dow == -1: dow = 6
 
     # handle all calendars except standard, julian, proleptic_gregorian.
     if calendar == '360_day':
@@ -1785,8 +1805,6 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False,has_year_zero=F
         doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
         month  = nextra//30 + 1
         day    = doy - (month-1)*30
-        # compute day of week.
-        dow = _get_dow(jday)
         return year,month,day,dow,doy
     elif calendar == '365_day':
         year   = jday//365
@@ -1796,8 +1814,6 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False,has_year_zero=F
         while doy > _cumdayspermonth_365day[month]:
             month += 1
         day = doy - _cumdayspermonth_365day[month-1]
-        # compute day of week.
-        dow = _get_dow(jday)
         return year,month,day,dow,doy
     elif calendar == '366_day':
         year   = jday//366
@@ -1807,83 +1823,64 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False,has_year_zero=F
         while doy > _cumdayspermonth_366day[month]:
             month += 1
         day = doy - _cumdayspermonth_366day[month-1]
-        # compute day of week.
-        dow = _get_dow(jday)
         return year,month,day,dow,doy
 
     # handle standard, julian, proleptic_gregorian calendars.
     if jday < 0:
         raise ValueError('julian day must be a positive integer')
-    # Make first estimate for year. subtract 4714 or 4713 because Julian Day number
-    # 0 occurs in year 4714 BC in the Gregorian calendar and 4713 BC in the
-    # Julian calendar.
-    if calendar == 'proleptic_gregorian':
-        year = jday//366 - 4714
-    elif calendar in ['standard','julian']:
-        year = jday//366 - 4713
 
-    # compute day of week.
-    dow = _get_dow(jday)
+    # start with initial guess of year that is before jday=1 in both
+    # Julian and Gregorian calendars.
+    year = jday//366 - 4800
 
-    if not skip_transition and calendar == 'standard' and jday > 2299160: jday += 10
+    # account for 10 days in Julian/Gregorian transition.
+    if not skip_transition and calendar == 'standard' and jday > 2299160:
+        jday += 10
 
-    # Advance years until we find the right one
     yp1 = year + 1
     if yp1 == 0 and not has_year_zero:
        yp1 = 1 # no year 0
-    tjday = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True,has_year_zero=has_year_zero)
-    while jday >= tjday:
+    # initialize jday_count to Jan 1 of next year
+    jday_count = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True,has_year_zero=has_year_zero)
+    # Advance years until we find the right one
+    # (stop iteration when jday_count jday >= specified jday)
+    while jday >= jday_count:
         year += 1
         if year == 0 and not has_year_zero:
             year = 1
         yp1 = year + 1
         if yp1 == 0 and not has_year_zero:
             yp1 = 1
-        tjday = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True,has_year_zero=has_year_zero)
+        jday_count = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True,has_year_zero=has_year_zero)
+    # now we know year.
+    # set days in specified month, cumulative days in computed year.
     if _is_leap(year, calendar,has_year_zero=has_year_zero):
         dayspermonth = _dayspermonth_leap
         cumdayspermonth = _cumdayspermonth_366day
     else:
         dayspermonth = _dayspermonth
         cumdayspermonth = _cumdayspermonth_365day
+    # initialized month to Jan, initialize jday_count to end of Jan of
+    # calculated year.
     month = 1
-    tjday =\
+    jday_count =\
     _IntJulianDayFromDate(year,month,dayspermonth[month-1],calendar,skip_transition=True,has_year_zero=has_year_zero)
-    while jday > tjday:
+    # now iterate by month until jday_count >= specified jday
+    while jday > jday_count:
         month += 1
-        tjday =\
+        jday_count =\
         _IntJulianDayFromDate(year,month,dayspermonth[month-1],calendar,skip_transition=True,has_year_zero=has_year_zero)
-    tjday = _IntJulianDayFromDate(year,month,1,calendar,skip_transition=True,has_year_zero=has_year_zero)
-    day = jday - tjday + 1
+    # back up jday_count to 1st day of computed month
+    jday_count = _IntJulianDayFromDate(year,month,1,calendar,skip_transition=True,has_year_zero=has_year_zero)
+    # now jday_count represents day 1 of computed month in computed year
+    # so computed day is just difference between jday_count and specified jday.
+    day = jday - jday_count + 1
+    # compute day in specified year.
     if month == 1:
         doy = day
     else:
         doy = cumdayspermonth[month-1]+day
     return year,month,day,dow,doy
-
-cdef _get_dow(int jday):
-    """compute day of week.
-    0 = Sunday, 6 = Sat, valid after noon UTC"""
-    cdef int dow
-    dow = (jday + 1) % 7
-    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
-    dow -= 1
-    if dow == -1: dow = 6
-    return dow
-
-cdef _check_calendar(calendar):
-    """validate calendars, convert to subset of names to get rid of synonyms"""
-    if calendar not in _calendars:
-        raise ValueError('unsupported calendar')
-    calout = calendar
-    # remove 'gregorian','noleap','all_leap'
-    if calendar in ['gregorian','standard']:
-        calout = 'standard'
-    if calendar == 'noleap':
-        calout = '365_day'
-    if calendar == 'all_leap':
-        calout = '366_day'
-    return calout
 
 # stuff below no longer used, kept here for backwards compatibility.
 
