@@ -1676,6 +1676,13 @@ cdef _check_calendar(calendar):
         calout = '366_day'
     return calout
 
+# The following functions (_IntJulianDayFromDate and _IntJulianDayToDate) are based on
+# algorithms described in the book
+# "Calendrical Calculations" by Dershowitz and Rheingold, 3rd edition, Cambridge University Press, 2007
+# and the C implementation provided at https://reingold.co/calendar.C
+# with modifications to handle non-real-world calendars and negative years.
+
+
 cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=False,has_year_zero=False):
     """Compute integer Julian Day from year,month,day and calendar.
 
