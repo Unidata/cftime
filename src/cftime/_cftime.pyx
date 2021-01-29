@@ -39,8 +39,8 @@ cdef int[12] _dayspermonth      = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 3
 cdef int[12] _dayspermonth_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 cdef int[12] _dayspermonth_360  = [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
 # Same as above, but including accumulated days of previous months.
-cdef int[13] _cumdayspermonth_365day = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
-cdef int[13] _cumdayspermonth_366day = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
+cdef int[13] _cumdayspermonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
+cdef int[13] _cumdayspermonth_leap = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
 
 # Slightly more performant cython lookups than a 2D table
 # The first 12 entries correspond to month lengths for non-leap years.
@@ -1721,9 +1721,9 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
     elif calendar == '365_day':
         if month == 2 and day == 29:
             raise ValueError('no leap days in 365_day calendar')
-        return year*365 + _cumdayspermonth_365day[month-1] + day - 1
+        return year*365 + _cumdayspermonth[month-1] + day - 1
     elif calendar == '366_day':
-        return year*366 + _cumdayspermonth_366day[month-1] + day - 1
+        return year*366 + _cumdayspermonth_leap[month-1] + day - 1
 
     # handle standard, julian, proleptic_gregorian calendars.
     if year == 0 and not has_year_zero:
@@ -1737,9 +1737,9 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
         raise ValueError('%s is not a leap year' % year)
 
     if leap:
-        jday = day + _cumdayspermonth_366day[month-1]
+        jday = day + _cumdayspermonth_leap[month-1]
     else:
-        jday = day + _cumdayspermonth_365day[month-1]
+        jday = day + _cumdayspermonth[month-1]
     # relative to year -4713
     if year < 0 and not has_year_zero: year += 1
     year += 4800 # add offset so -4800 is year 0.
@@ -1811,18 +1811,18 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False,has_year_zero=F
         nextra = jday - year*365
         doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
         month  = 1
-        while doy > _cumdayspermonth_365day[month]:
+        while doy > _cumdayspermonth[month]:
             month += 1
-        day = doy - _cumdayspermonth_365day[month-1]
+        day = doy - _cumdayspermonth[month-1]
         return year,month,day,dow,doy
     elif calendar == '366_day':
         year   = jday//366
         nextra = jday - year*366
         doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
         month  = 1
-        while doy > _cumdayspermonth_366day[month]:
+        while doy > _cumdayspermonth_leap[month]:
             month += 1
-        day = doy - _cumdayspermonth_366day[month-1]
+        day = doy - _cumdayspermonth_leap[month-1]
         return year,month,day,dow,doy
 
     # handle standard, julian, proleptic_gregorian calendars.
@@ -1856,10 +1856,10 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False,has_year_zero=F
     # set days in specified month, cumulative days in computed year.
     if _is_leap(year, calendar,has_year_zero=has_year_zero):
         dayspermonth = _dayspermonth_leap
-        cumdayspermonth = _cumdayspermonth_366day
+        cumdayspermonth = _cumdayspermonth_leap
     else:
         dayspermonth = _dayspermonth
-        cumdayspermonth = _cumdayspermonth_365day
+        cumdayspermonth = _cumdayspermonth
     # initialized month to Jan, initialize jday_count to end of Jan of
     # calculated year.
     month = 1
