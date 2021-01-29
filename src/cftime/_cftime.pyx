@@ -30,10 +30,10 @@ _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 # for definitions.
 _calendars = ['standard', 'gregorian', 'proleptic_gregorian',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
-# Following are number of aays Per month
+# Following are number of days per month
 cdef int[12] _dayspermonth      = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 cdef int[12] _dayspermonth_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-# Same as above, but including accumulated days of previous months.
+# same as above, but including accumulated days of previous months.
 cdef int[13] _cumdayspermonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
 cdef int[13] _cumdayspermonth_leap = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
 
@@ -1641,7 +1641,7 @@ cdef _check_calendar(calendar):
         raise ValueError('unsupported calendar')
     calout = calendar
     # remove 'gregorian','noleap','all_leap'
-    if calendar in ['gregorian','standard']:
+    if calendar in 'gregorian':
         calout = 'standard'
     if calendar == 'noleap':
         calout = '365_day'
