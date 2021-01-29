@@ -1747,7 +1747,6 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
         jday = day + _cumdayspermonth_leap[month-1]
     else:
         jday = day + _cumdayspermonth[month-1]
-    # relative to year -4713
     if year < 0 and not has_year_zero: year += 1
     year += 4800 # add offset so -4800 is year 0.
     # 1st term is the number of days in the last year
