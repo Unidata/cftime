@@ -1001,10 +1001,7 @@ The default format of the string produced by strftime is controlled by self.form
                     cumdayspermonth = _cumdayspermonth_leap
                 else:
                     cumdayspermonth = _cumdayspermonth
-                if self.month == 1:
-                    dayofyr = self.day
-                else:
-                    dayofyr = cumdayspermonth[self.month-1]+self.day
+                dayofyr = cumdayspermonth[self.month-1]+self.day
             # cache results for dayofyr
             self._dayofyr = dayofyr
             return dayofyr
@@ -1875,10 +1872,7 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False,has_year_zero=F
     # so computed day is just difference between jday_count and specified jday.
     day = jday - jday_count + 1
     # compute day in specified year.
-    if month == 1:
-        doy = day
-    else:
-        doy = cumdayspermonth[month-1]+day
+    doy = cumdayspermonth[month-1]+day
     return year,month,day,dow,doy
 
 def _round_half_up(x):
