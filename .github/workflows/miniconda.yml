@@ -31,8 +31,8 @@ jobs:
 
     - name: Setup Conda
       uses: s-weigand/setup-conda@v1
-#     with:
-#       activate-conda: false
+      with:
+        activate-conda: false
 #       conda-channels: conda-forge
 
     - name: Setup Conda Env
