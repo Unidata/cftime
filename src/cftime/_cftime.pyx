@@ -37,13 +37,6 @@ cdef int[12] _dayspermonth_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 3
 cdef int[13] _cumdayspermonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
 cdef int[13] _cumdayspermonth_leap = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
 
-# Slightly more performant cython lookups than a 2D table
-# The first 12 entries correspond to month lengths for non-leap years.
-# The remaining 12 entries give month lengths for leap years
-cdef int32_t* days_per_month_array = [
-    31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31,
-    31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-
 # Reverse operator lookup for datetime.__richcmp__
 _rop_lookup = {Py_LT: '__gt__', Py_LE: '__ge__', Py_EQ: '__eq__',
                Py_GT: '__lt__', Py_GE: '__le__', Py_NE: '__ne__'}
@@ -62,29 +55,6 @@ ISO8601_REGEX = re.compile(r"(?P<year>[+-]?[0-9]+)(-(?P<month>[0-9]{1,2})(-(?P<d
 TIMEZONE_REGEX = re.compile(
     "(?P<prefix>[+-])(?P<hours>[0-9]{2})(?:(?::(?P<minutes1>[0-9]{2}))|(?P<minutes2>[0-9]{2}))?")
 
-
-# Taken from pandas ccalendar.pyx
-@cython.wraparound(False)
-@cython.boundscheck(False)
-cpdef int32_t get_days_in_month(bint isleap, int month) nogil:
-    """
-    Return the number of days in the given month of the given year.
-    Parameters
-    ----------
-    leap : int [0,1]
-    month : int
-
-    Returns
-    -------
-    days_in_month : int
-    Notes
-    -----
-    Assumes that the arguments are valid.  Passing a month not between 1 and 12
-    risks a segfault.
-    """
-    return days_per_month_array[12 * isleap + month - 1]
-
-
 class real_datetime(datetime_python):
     """add dayofwk, dayofyr, daysinmonth attributes to python datetime instance"""
     @property
@@ -96,7 +66,10 @@ class real_datetime(datetime_python):
         return self.timetuple().tm_yday
     @property
     def daysinmonth(self):
-        return get_days_in_month(_is_leap(self.year,'proleptic_gregorian'), self.month)
+        if _is_leap(self.year,'proleptic_gregorian'):
+            return _dayspermonth_leap[self.month-1]
+        else:
+            return _dayspermonth[self.month-1]
     nanosecond = 0 # workaround for pandas bug (cftime issue #77)
 
 def _datesplit(timestr):
@@ -1017,8 +990,11 @@ The default format of the string produced by strftime is controlled by self.form
         elif self.calendar == '360_day':
             return 30
         else:
-            return get_days_in_month(_is_leap(self.year,self.calendar,
-                   has_year_zero=self.has_year_zero), self.month)
+            if _is_leap(self.year,self.calendar,
+                    has_year_zero=self.has_year_zero):
+                return _dayspermonth_leap[self.month-1]
+            else:
+                return _dayspermonth[self.month-1]
 
     def strftime(self, format=None):
         """
