@@ -12,7 +12,8 @@ Time-handling functionality from netcdf4-python
 For details on the latest updates, see the [Changelog](https://github.com/Unidata/cftime/blob/master/Changelog).
 
 2/1/2021:  Version 1.4.0 released.  License changed to MIT (GPL'ed code replaced).
-Roundtrip accuracy improved for units other than microseconds.
+Roundtrip accuracy improved for units other than microseconds. Added 
+cftime.datetime.toordinal method, returns integer julian day number.
 
 1/17/2021: Version 1.3.1 released.
 

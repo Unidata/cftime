@@ -1176,7 +1176,6 @@ The default format of the string produced by strftime is controlled by self.form
         elif isinstance(self, timedelta) and isinstance(other, datetime):
             dt = other
             calendar = other.calendar
-
             delta = self
         else:
             return NotImplemented
@@ -1271,7 +1270,6 @@ datetime object."""
                 return self - other._to_real_datetime()
             else:
                 return NotImplemented
-    
 
 # these calendar-specific sub-classes are no longer used, but stubs
 # remain for backward compatibility.
