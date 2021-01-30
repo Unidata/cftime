@@ -967,14 +967,12 @@ The default format of the string produced by strftime is controlled by self.form
     def dayofyr(self):
         if self._dayofyr < 0 and self.calendar:
             if self.calendar == '360_day':
-                cumdayspermonth = (self.month-1)*30
-                dayofyr = cumdayspermonth+self.day
+                dayofyr = (self.month-1)*30+self.day
             else:
                 if _is_leap(self.year,self.calendar,has_year_zero=self.has_year_zero):
-                    cumdayspermonth = _cumdayspermonth_leap
+                    dayofyr = _cumdayspermonth_leap[self.month-1]+self.day
                 else:
-                    cumdayspermonth = _cumdayspermonth
-                dayofyr = cumdayspermonth[self.month-1]+self.day
+                    dayofyr = _cumdayspermonth[self.month-1]+self.day
             # cache results for dayofyr
             self._dayofyr = dayofyr
             return dayofyr
