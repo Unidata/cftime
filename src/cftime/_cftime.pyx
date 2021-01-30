@@ -979,13 +979,13 @@ The default format of the string produced by strftime is controlled by self.form
     @property
     def dayofwk(self):
         if self._dayofwk < 0 and self.calendar:
-            jd = _IntJulianDayFromDate(self.year,self.month,self.day,self.calendar,
-                                       skip_transition=False,has_year_zero=self.has_year_zero)
-            year,month,day,dayofwk,dayofyr = _IntJulianDayToDate(jd,self.calendar,
-                                       skip_transition=False,has_year_zero=self.has_year_zero)
-            # cache results for dayofwk, dayofyr
+            jd = self.toordinal()
+            dayofwk = (jd + 1) % 7
+            # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
+            dayofwk -= 1
+            if dayofwk == -1: dayofwk = 6
+            # cache results for dayofwk
             self._dayofwk = dayofwk
-            self._dayofyr = dayofyr
             return dayofwk
         else:
             return self._dayofwk
@@ -993,12 +993,19 @@ The default format of the string produced by strftime is controlled by self.form
     @property
     def dayofyr(self):
         if self._dayofyr < 0 and self.calendar:
-            jd = _IntJulianDayFromDate(self.year,self.month,self.day,self.calendar,
-                                       skip_transition=False,has_year_zero=self.has_year_zero)
-            year,month,day,dayofwk,dayofyr = _IntJulianDayToDate(jd,self.calendar,
-                                       skip_transition=False,has_year_zero=self.has_year_zero)
-            # cache results for dayofwk, dayofyr
-            self._dayofwk = dayofwk
+            if self.calendar == '360_day':
+                cumdayspermonth = (self.month-1)*30
+                dayofyr = cumdayspermonth+self.day
+            else:
+                if _is_leap(self.year,self.calendar,has_year_zero=self.has_year_zero):
+                    cumdayspermonth = _cumdayspermonth_leap
+                else:
+                    cumdayspermonth = _cumdayspermonth
+                if self.month == 1:
+                    dayofyr = self.day
+                else:
+                    dayofyr = cumdayspermonth[self.month-1]+self.day
+            # cache results for dayofyr
             self._dayofyr = dayofyr
             return dayofyr
         else:
@@ -1147,6 +1154,19 @@ The default format of the string produced by strftime is controlled by self.form
     cdef _add_timedelta(self, other):
         return NotImplemented
 
+    def toordinal(self):
+        """Return julian day ordinal.
+
+        January 1 of the year -4713 is day 0 for the julian,gregorian and standard
+        calendars.
+
+        November 11 of the year -4714 is day 0 for the proleptic gregorian calendar.
+
+        January 1 of the year zero is day 0 for the 360_day, 365_day, 366_day and
+        no_leap calendars."""
+        return _IntJulianDayFromDate(self.year, self.month, self.day, self.calendar,
+               skip_transition=False,has_year_zero=self.has_year_zero)
+
     def __add__(self, other):
         cdef datetime dt
         if isinstance(self, datetime) and isinstance(other, timedelta):
@@ -1156,6 +1176,7 @@ The default format of the string produced by strftime is controlled by self.form
         elif isinstance(self, timedelta) and isinstance(other, datetime):
             dt = other
             calendar = other.calendar
+
             delta = self
         else:
             return NotImplemented
@@ -1192,10 +1213,8 @@ The default format of the string produced by strftime is controlled by self.form
                     raise ValueError("cannot compute the time difference between dates with different calendars")
                 if dt.calendar == "":
                     raise ValueError("cannot compute the time difference between dates that are not calendar-aware")
-                ordinal_self = _IntJulianDayFromDate(dt.year, dt.month, dt.day, dt.calendar,
-                                       skip_transition=False,has_year_zero=self.has_year_zero)
-                ordinal_other = _IntJulianDayFromDate(other.year, other.month, other.day, other.calendar,
-                                       skip_transition=False,has_year_zero=self.has_year_zero)
+                ordinal_self = self.toordinal() # julian day
+                ordinal_other = other.toordinal()
                 days = ordinal_self - ordinal_other
                 seconds_self = dt.second + 60 * dt.minute + 3600 * dt.hour
                 seconds_other = other.second + 60 * other.minute + 3600 * other.hour
@@ -1252,6 +1271,7 @@ datetime object."""
                 return self - other._to_real_datetime()
             else:
                 return NotImplemented
+    
 
 # these calendar-specific sub-classes are no longer used, but stubs
 # remain for backward compatibility.
@@ -1748,6 +1768,8 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
             else:
                 return jday_greg
 
+# stuff below no longer used, kept here for backwards compatibility.
+
 cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False,has_year_zero=False):
     """Compute the year,month,day,dow,doy given the integer Julian day.
     and calendar. (dow = day of week with 0=Mon,6=Sun and doy is day of year).
@@ -1860,8 +1882,6 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False,has_year_zero=F
     else:
         doy = cumdayspermonth[month-1]+day
     return year,month,day,dow,doy
-
-# stuff below no longer used, kept here for backwards compatibility.
 
 def _round_half_up(x):
     # 'round half up' so 0.5 rounded to 1 (instead of 0 as in numpy.round)
