@@ -14,10 +14,6 @@ from datetime import datetime as datetime_python
 from datetime import timedelta, MINYEAR, MAXYEAR
 import time                     # strftime
 import warnings
-try:
-    from itertools import izip as zip
-except ImportError:  # python 3.x
-    pass
 
 
 microsec_units = ['microseconds','microsecond', 'microsec', 'microsecs']
@@ -34,13 +30,12 @@ _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 # for definitions.
 _calendars = ['standard', 'gregorian', 'proleptic_gregorian',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
-# Following are number of Days Per Month
-cdef int[12] _dpm      = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-cdef int[12] _dpm_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-cdef int[12] _dpm_360  = [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
-# Same as above, but SUM of previous months (no leap years).
-cdef int[13] _spm_365day = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
-cdef int[13] _spm_366day = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
+# Following are number of days per month
+cdef int[12] _dayspermonth      = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+cdef int[12] _dayspermonth_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+# same as above, but including accumulated days of previous months.
+cdef int[13] _cumdayspermonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
+cdef int[13] _cumdayspermonth_leap = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
 
 # Slightly more performant cython lookups than a 2D table
 # The first 12 entries correspond to month lengths for non-leap years.
@@ -53,7 +48,7 @@ cdef int32_t* days_per_month_array = [
 _rop_lookup = {Py_LT: '__gt__', Py_LE: '__ge__', Py_EQ: '__eq__',
                Py_GT: '__lt__', Py_GE: '__le__', Py_NE: '__ne__'}
 
-__version__ = '1.3.1'
+__version__ = '1.4.0'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
@@ -1012,11 +1007,11 @@ The default format of the string produced by strftime is controlled by self.form
     @property
     def daysinmonth(self):
         if self.calendar == 'noleap':
-            return _dpm[self.month-1]
+            return _dayspermonth[self.month-1]
         elif self.calendar == 'all_leap':
-            return _dpm_leap[self.month-1]
+            return _dayspermonth_leap[self.month-1]
         elif self.calendar == '360_day':
-            return _dpm_360[self.month-1]
+            return 30
         else:
             return get_days_in_month(_is_leap(self.year,self.calendar,
                    has_year_zero=self.has_year_zero), self.month)
@@ -1137,30 +1132,8 @@ The default format of the string produced by strftime is controlled by self.form
                 raise TypeError("cannot compare {0!r} and {1!r} (different calendars)".format(self, other))
             return PyObject_RichCompare(dt.to_tuple(), to_tuple(other), op)
         else:
-            # With Python3 we can simply return NotImplemented. If the other
-            # object does not support rich comparison for cftime then a
-            # TypeError will be automatically raised. However, Python2 is not
-            # consistent with this Python3 behaviour. In Python2, we only
-            # delegate the comparison operation to the other object iff it has
-            # suitable rich comparison support available. This is deduced by
-            # introspection of the other object. Otherwise, we explicitly raise
-            # a TypeError to avoid Python2 defaulting to using either __cmp__
-            # comparision on the other object, or worst still, object ID
-            # comparison. Either way, at this point the comparision is deemed
-            # not valid from our perspective.
-            if sys.version_info.major == 2:
-                rop = _rop_lookup[op]
-                if (hasattr(other, '__richcmp__') or hasattr(other, rop)):
-                    # The other object potentially has the smarts to handle
-                    # the comparision, so allow the Python machinery to hand
-                    # the operation off to the other object.
-                    return NotImplemented
-                # Otherwise, the comparison is not valid.
-                emsg = "cannot compare {0!r} and {1!r}"
-                raise TypeError(emsg.format(self, other))
-            else:
-                # Delegate responsibility of comparison to the other object.
-                return NotImplemented
+            # Delegate responsibility of comparison to the other object.
+            return NotImplemented
 
     cdef _getstate(self):
         return (self.year, self.month, self.day, self.hour,
@@ -1463,9 +1436,9 @@ cdef bint no_leap(int year):
 
 cdef int * month_lengths(bint (*is_leap)(int), int year):
     if is_leap(year):
-        return _dpm_leap
+        return _dayspermonth_leap
     else:
-        return _dpm
+        return _dayspermonth
 
 cdef void assert_valid_date(datetime dt, bint (*is_leap)(int),
                             bint julian_gregorian_mixed,
@@ -1477,7 +1450,7 @@ cdef void assert_valid_date(datetime dt, bint (*is_leap)(int),
         if dt.year == 0:
             raise ValueError("invalid year provided in {0!r}".format(dt))
     if is_360_day:
-        month_length = _dpm_360
+        month_length = 12*[30]
     else:
         month_length = month_lengths(is_leap, dt.year)
 
@@ -1632,9 +1605,6 @@ cdef tuple add_timedelta_360_day(datetime dt, delta):
 
     return (year, month, day, hour, minute, second, microsecond, -1, -1)
 
-# Calendar calculations base on calcals.c by David W. Pierce
-# http://meteora.ucsd.edu/~pierce/calcalcs
-
 cdef _is_leap(int year, calendar, has_year_zero=False):
     cdef int tyear
     cdef bint leap
@@ -1664,6 +1634,27 @@ cdef _is_leap(int year, calendar, has_year_zero=False):
     else:
         leap = False
     return leap
+
+cdef _check_calendar(calendar):
+    """validate calendars, convert to subset of names to get rid of synonyms"""
+    if calendar not in _calendars:
+        raise ValueError('unsupported calendar')
+    calout = calendar
+    # remove 'gregorian','noleap','all_leap'
+    if calendar in 'gregorian':
+        calout = 'standard'
+    if calendar == 'noleap':
+        calout = '365_day'
+    if calendar == 'all_leap':
+        calout = '366_day'
+    return calout
+
+# The following functions (_IntJulianDayFromDate and _IntJulianDayToDate) are based on
+# algorithms described in the book
+# "Calendrical Calculations" by Dershowitz and Rheingold, 3rd edition, Cambridge University Press, 2007
+# and the C implementation provided at https://reingold.co/calendar.C
+# with modifications to handle non-real-world calendars and negative years.
+
 
 cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=False,has_year_zero=False):
     """Compute integer Julian Day from year,month,day and calendar.
@@ -1697,7 +1688,6 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
     unless calendar = 'standard'."""
     cdef int jday, jday_jul, jday_greg
     cdef bint leap
-    cdef int[12] dpm2use
 
     # validate inputs.
     calendar = _check_calendar(calendar)
@@ -1706,49 +1696,47 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
         (year,month,day,calendar)
         raise ValueError(msg)
 
-    # handle all calendars except standard, julian, proleptic_gregorian.
     if calendar == '360_day':
-        return _IntJulianDayFromDate_360day(year,month,day)
+        return year*360 + (month-1)*30 + day - 1
     elif calendar == '365_day':
-        return _IntJulianDayFromDate_365day(year,month,day)
+        if month == 2 and day == 29:
+            raise ValueError('no leap days in 365_day calendar')
+        return year*365 + _cumdayspermonth[month-1] + day - 1
     elif calendar == '366_day':
-        return _IntJulianDayFromDate_366day(year,month,day)
+        return year*366 + _cumdayspermonth_leap[month-1] + day - 1
 
     # handle standard, julian, proleptic_gregorian calendars.
     if year == 0 and not has_year_zero:
         raise ValueError('year zero does not exist in the %s calendar' %\
                 calendar)
-    if (calendar == 'proleptic_gregorian'         and year < -4714) or\
+    if (calendar == 'proleptic_gregorian'  and year < -4714) or\
        (calendar in ['julian','standard']  and year < -4713):
         raise ValueError('year out of range for %s calendar' % calendar)
     leap = _is_leap(year,calendar,has_year_zero=has_year_zero)
     if not leap and month == 2 and day == 29:
         raise ValueError('%s is not a leap year' % year)
 
-    # add year offset
-    if year < 0 and not has_year_zero:
-        year += 4801
-    else:
-        year += 4800
-
     if leap:
-        dpm2use = _dpm_leap
+        jday = day + _cumdayspermonth_leap[month-1]
     else:
-        dpm2use = _dpm
-
-    jday = day
-    for m in range(month-1,0,-1):
-        jday += dpm2use[m-1]
-
-    jday_greg = jday + 365*(year-1) + (year-1)//4 - (year-1)//100 + (year-1)//400
-    jday_greg -= 31739 # fix year offset
+        jday = day + _cumdayspermonth[month-1]
+    if year < 0 and not has_year_zero: year += 1
+    year += 4800 # add offset so -4800 is year 0.
+    # 1st term is the number of days in the last year
+    # 2nd term is the number of days in each preceding non-leap year
+    # last terms are the number of preceding leap years since -4800
     jday_jul = jday + 365*(year-1) + (year-1)//4
-    jday_jul -= 31777 # fix year offset
+    # remove offset for 87 years before -4713 (including leap days)
+    jday_jul -= 31777
+    jday_greg = jday + 365*(year-1) + (year-1)//4 - (year-1)//100 + (year-1)//400
+    # remove offset, and account for the fact that -4713/1/1 is jday=38 in
+    # gregorian calendar.
+    jday_greg -= 31739
     if calendar == 'julian':
         return jday_jul
     elif calendar == 'proleptic_gregorian':
         return jday_greg
-    elif calendar == 'standard':
+    elif calendar in ['standard','gregorian']:
         # check for invalid days in mixed calendar (there are 10 missing)
         if jday_jul >= 2299161 and jday_jul < 2299171:
             raise ValueError('invalid date in mixed calendar')
@@ -1759,8 +1747,6 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
                 return jday_greg+10
             else:
                 return jday_greg
-
-    return jday
 
 cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False,has_year_zero=False):
     """Compute the year,month,day,dow,doy given the integer Julian day.
@@ -1778,162 +1764,101 @@ cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False,has_year_zero=F
     gap in Julian day numbers between Oct 4 and Oct 15 1582 (the transition
     from Julian to Gregorian calendars).  Default False, ignored
     unless calendar = 'standard'."""
-    cdef int year,month,day,dow,doy,yp1,tjday
-    cdef int[12] dpm2use
-    cdef int[13] spm2use
+    cdef int year,month,day,dow,doy,yp1,jday_count,nextra
+    cdef int[12] dayspermonth
+    cdef int[13] cumdayspermonth
 
     # validate inputs.
     calendar = _check_calendar(calendar)
 
+    # compute day of week.
+    dow = (jday + 1) % 7
+    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
+    dow -= 1
+    if dow == -1: dow = 6
+
     # handle all calendars except standard, julian, proleptic_gregorian.
     if calendar == '360_day':
-        return _IntJulianDayToDate_360day(jday)
+        year   = jday//360
+        nextra = jday - year*360
+        doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
+        month  = nextra//30 + 1
+        day    = doy - (month-1)*30
+        return year,month,day,dow,doy
     elif calendar == '365_day':
-        return _IntJulianDayToDate_365day(jday)
+        year   = jday//365
+        nextra = jday - year*365
+        doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
+        month  = 1
+        while doy > _cumdayspermonth[month]:
+            month += 1
+        day = doy - _cumdayspermonth[month-1]
+        return year,month,day,dow,doy
     elif calendar == '366_day':
-        return _IntJulianDayToDate_366day(jday)
+        year   = jday//366
+        nextra = jday - year*366
+        doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
+        month  = 1
+        while doy > _cumdayspermonth_leap[month]:
+            month += 1
+        day = doy - _cumdayspermonth_leap[month-1]
+        return year,month,day,dow,doy
 
     # handle standard, julian, proleptic_gregorian calendars.
     if jday < 0:
         raise ValueError('julian day must be a positive integer')
-    # Make first estimate for year. subtract 4714 or 4713 because Julian Day number
-    # 0 occurs in year 4714 BC in the Gregorian calendar and 4713 BC in the
-    # Julian calendar.
-    if calendar == 'proleptic_gregorian':
-        year = jday//366 - 4714
-    elif calendar in ['standard','julian']:
-        year = jday//366 - 4713
 
-    # compute day of week.
-    dow = _get_dow(jday)
+    # start with initial guess of year that is before jday=1 in both
+    # Julian and Gregorian calendars.
+    year = jday//366 - 4714
 
-    if not skip_transition and calendar == 'standard' and jday > 2299160: jday += 10
+    # account for 10 days in Julian/Gregorian transition.
+    if not skip_transition and calendar == 'standard' and jday > 2299160:
+        jday += 10
 
-    # Advance years until we find the right one
     yp1 = year + 1
     if yp1 == 0 and not has_year_zero:
        yp1 = 1 # no year 0
-    tjday = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True,has_year_zero=has_year_zero)
-    while jday >= tjday:
+    # initialize jday_count to Jan 1 of next year
+    jday_count = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True,has_year_zero=has_year_zero)
+    # Advance years until we find the right one
+    # (stop iteration when jday_count jday >= specified jday)
+    while jday >= jday_count:
         year += 1
         if year == 0 and not has_year_zero:
             year = 1
         yp1 = year + 1
         if yp1 == 0 and not has_year_zero:
             yp1 = 1
-        tjday = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True,has_year_zero=has_year_zero)
+        jday_count = _IntJulianDayFromDate(yp1,1,1,calendar,skip_transition=True,has_year_zero=has_year_zero)
+    # now we know year.
+    # set days in specified month, cumulative days in computed year.
     if _is_leap(year, calendar,has_year_zero=has_year_zero):
-        dpm2use = _dpm_leap
-        spm2use = _spm_366day
+        dayspermonth = _dayspermonth_leap
+        cumdayspermonth = _cumdayspermonth_leap
     else:
-        dpm2use = _dpm
-        spm2use = _spm_365day
+        dayspermonth = _dayspermonth
+        cumdayspermonth = _cumdayspermonth
+    # initialized month to Jan, initialize jday_count to end of Jan of
+    # calculated year.
     month = 1
-    tjday =\
-    _IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True,has_year_zero=has_year_zero)
-    while jday > tjday:
+    jday_count =\
+    _IntJulianDayFromDate(year,month,dayspermonth[month-1],calendar,skip_transition=True,has_year_zero=has_year_zero)
+    # now iterate by month until jday_count >= specified jday
+    while jday > jday_count:
         month += 1
-        tjday =\
-        _IntJulianDayFromDate(year,month,dpm2use[month-1],calendar,skip_transition=True,has_year_zero=has_year_zero)
-    tjday = _IntJulianDayFromDate(year,month,1,calendar,skip_transition=True,has_year_zero=has_year_zero)
-    day = jday - tjday + 1
+        jday_count =\
+        _IntJulianDayFromDate(year,month,dayspermonth[month-1],calendar,skip_transition=True,has_year_zero=has_year_zero)
+    # back up jday_count to 1st day of computed month
+    jday_count = _IntJulianDayFromDate(year,month,1,calendar,skip_transition=True,has_year_zero=has_year_zero)
+    # now jday_count represents day 1 of computed month in computed year
+    # so computed day is just difference between jday_count and specified jday.
+    day = jday - jday_count + 1
+    # compute day in specified year.
     if month == 1:
         doy = day
     else:
-        doy = spm2use[month-1]+day
-    return year,month,day,dow,doy
-
-cdef _get_dow(int jday):
-    """compute day of week.
-    0 = Sunday, 6 = Sat, valid after noon UTC"""
-    cdef int dow
-    dow = (jday + 1) % 7
-    # convert to ISO 8601 (0 = Monday, 6 = Sunday), like python datetime
-    dow -= 1
-    if dow == -1: dow = 6
-    return dow
-
-cdef _check_calendar(calendar):
-    """validate calendars, convert to subset of names to get rid of synonyms"""
-    if calendar not in _calendars:
-        raise ValueError('unsupported calendar')
-    calout = calendar
-    # remove 'gregorian','noleap','all_leap'
-    if calendar in ['gregorian','standard']:
-        calout = 'standard'
-    if calendar == 'noleap':
-        calout = '365_day'
-    if calendar == 'all_leap':
-        calout = '366_day'
-    return calout
-
-cdef _IntJulianDayFromDate_360day(int year,int month,int day):
-    """Compute integer Julian Day from year,month,day in
-    360_day calendar"""
-    return year*360 + (month-1)*30 + day - 1
-
-cdef _IntJulianDayFromDate_365day(int year,int month,int day):
-    """Compute integer Julian Day from year,month,day in
-    365_day calendar"""
-    if month == 2 and day == 29:
-        raise ValueError('no leap days in 365_day calendar')
-    return year*365 + _spm_365day[month-1] + day - 1
-
-cdef _IntJulianDayFromDate_366day(int year,int month,int day):
-    """Compute integer Julian Day from year,month,day in
-    366_day calendar"""
-    return year*366 + _spm_366day[month-1] + day - 1
-
-cdef _IntJulianDayToDate_365day(int jday):
-    """Compute the year,month,day given the integer Julian day
-    for 365_day calendar."""
-    cdef int year,month,day,nextra,dow
-
-    year = jday//365
-    nextra = jday - year*365
-    doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
-    month = 1
-    while doy > _spm_365day[month]:
-        month += 1
-    day = doy - _spm_365day[month-1]
-
-    # compute day of week.
-    dow = _get_dow(jday)
-
-    return year,month,day,dow,doy
-
-cdef _IntJulianDayToDate_366day(int jday):
-    """Compute the year,month,day given the integer Julian day
-    for 366_day calendar."""
-    cdef int year,month,day,nextra,dow
-
-    year = jday//366
-    nextra = jday - year*366
-    doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
-    month = 1
-    while doy > _spm_366day[month]:
-        month += 1
-    day = doy - _spm_366day[month-1]
-
-    # compute day of week.
-    dow = _get_dow(jday)
-
-    return year,month,day,dow,doy
-
-cdef _IntJulianDayToDate_360day(int jday):
-    """Compute the year,month,day given the integer Julian day
-    for 360_day calendar."""
-    cdef int year,month,day,nextra,dow
-
-    year = jday//360
-    nextra = jday - year*360
-    doy    = nextra + 1 # Julday numbering starts at 0, doy starts at 1
-    month = nextra//30 + 1
-    day   = doy - (month-1)*30
-
-    # compute day of week.
-    dow = _get_dow(jday)
-
+        doy = cumdayspermonth[month-1]+day
     return year,month,day,dow,doy
 
 # stuff below no longer used, kept here for backwards compatibility.

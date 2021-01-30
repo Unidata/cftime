@@ -112,6 +112,7 @@ setup(
     ext_modules=ext_modules,
     install_requires=load('requirements.txt'),
     tests_require=load('requirements-dev.txt'),
+    license='License :: OSI Approved :: MIT License',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Operating System :: MacOS :: MacOS X',
@@ -124,5 +125,5 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Topic :: Scientific/Engineering',
-        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)']
+        'License :: OSI Approved :: MIT License'],
     )
