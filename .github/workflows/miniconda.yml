@@ -68,6 +68,7 @@ jobs:
       shell: bash -l {0}
       run: |
         source activate TEST
+        conda install -c conda-forge check-manifest
         python setup.py --version ; 
         pip wheel . -w dist --no-deps ;
         check-manifest --verbose ;
