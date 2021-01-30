@@ -1,5 +1,5 @@
-version 1.4.0 (not yet released)
-================================
+version 1.4.0 (release tag v1.4.0.rel)
+======================================
  * `cftime.date2num` will now always return an array of integers, if the units
    and times allow.  Previously this would only be true if the units were
    'microseconds' (PR #225).  In other circumstances, as before, `cftime.date2num`
