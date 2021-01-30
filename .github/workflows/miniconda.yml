@@ -40,7 +40,8 @@ jobs:
       run: |
         conda create --name TEST python=${{ matrix.python-version }} --file requirements.txt --file requirements-dev.txt
         source activate TEST
-        conda install numpy==1.19.4 # pin numpy version
+        # install specfic version of numpy
+        conda install --name TEST -c conda-forge numpy==1.19.4
         # enabling coverage slows down the tests dramaticaly
         #CYTHON_COVERAGE=1 pip install -v -e  . --no-deps --force-reinstall
         pip install -v -e  . --no-deps --force-reinstall
