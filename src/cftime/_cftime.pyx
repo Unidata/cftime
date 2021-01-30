@@ -983,11 +983,7 @@ The default format of the string produced by strftime is controlled by self.form
 
     @property
     def daysinmonth(self):
-        if self.calendar == 'noleap':
-            return _dayspermonth[self.month-1]
-        elif self.calendar == 'all_leap':
-            return _dayspermonth_leap[self.month-1]
-        elif self.calendar == '360_day':
+        if self.calendar == '360_day':
             return 30
         else:
             if _is_leap(self.year,self.calendar,
