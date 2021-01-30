@@ -31,9 +31,9 @@ jobs:
 
     - name: Setup Conda
       uses: s-weigand/setup-conda@v1
-      with:
-        activate-conda: false
-        conda-channels: conda-forge
+#     with:
+#       activate-conda: false
+#       conda-channels: conda-forge
 
     - name: Setup Conda Env
       shell: bash -l {0}
