@@ -295,58 +295,26 @@ UNIT_CONVERSION_FACTORS = {
     "months": 30 * 86400 * 1000000
 }
 
-
-DATE_TYPES = {
-    "proleptic_gregorian": DatetimeProlepticGregorian,
-    "standard": DatetimeGregorian,
-    "noleap": DatetimeNoLeap,
-    "365_day": DatetimeNoLeap,
-    "all_leap": DatetimeAllLeap,
-    "366_day": DatetimeAllLeap,
-    "julian": DatetimeJulian,
-    "360_day": Datetime360Day,
-    "gregorian": DatetimeGregorian
-}
-
-
-#def to_calendar_specific_datetime(dt, calendar, use_python_datetime):
-#    if use_python_datetime:
-#        return real_datetime(
-#               dt.year,
-#               dt.month,
-#               dt.day,
-#               dt.hour,
-#               dt.minute,
-#               dt.second,
-#               dt.microsecond)
-#    else:
-#        return datetime(
-#               dt.year,
-#               dt.month,
-#               dt.day,
-#               dt.hour,
-#               dt.minute,
-#               dt.second,
-#               dt.microsecond,
-#               calendar=calendar)
-# return calendar-specific subclasses for backward compatbility,
-# even though after 1.3.0 this is no longer necessary.
 def to_calendar_specific_datetime(dt, calendar, use_python_datetime):
     if use_python_datetime:
-        date_type = real_datetime
+        return real_datetime(
+               dt.year,
+               dt.month,
+               dt.day,
+               dt.hour,
+               dt.minute,
+               dt.second,
+               dt.microsecond)
     else:
-        date_type = DATE_TYPES[calendar]
-
-    return date_type(
-        dt.year,
-        dt.month,
-        dt.day,
-        dt.hour,
-        dt.minute,
-        dt.second,
-        dt.microsecond
-    )
-
+        return datetime(
+               dt.year,
+               dt.month,
+               dt.day,
+               dt.hour,
+               dt.minute,
+               dt.second,
+               dt.microsecond,
+               calendar=calendar)
 
 _MAX_INT64 = np.iinfo("int64").max
 _MIN_INT64 = np.iinfo("int64").min
@@ -1112,7 +1080,7 @@ The default format of the string produced by strftime is controlled by self.form
     cdef _getstate(self):
         return (self.year, self.month, self.day, self.hour,
                 self.minute, self.second, self.microsecond,
-                self._dayofwk, self._dayofyr)
+                self._dayofwk, self._dayofyr, self.calendar)
 
     def __reduce__(self):
         """special method that allows instance to be pickled"""
@@ -1121,7 +1089,7 @@ The default format of the string produced by strftime is controlled by self.form
     cdef _add_timedelta(self, other):
         return NotImplemented
 
-    def toordinal(self):
+    def toordinal(self,fractional=False):
         """Return julian day ordinal.
 
         January 1 of the year -4713 is day 0 for the julian,gregorian and standard
@@ -1130,9 +1098,21 @@ The default format of the string produced by strftime is controlled by self.form
         November 11 of the year -4714 is day 0 for the proleptic gregorian calendar.
 
         January 1 of the year zero is day 0 for the 360_day, 365_day, 366_day and
-        no_leap calendars."""
-        return _IntJulianDayFromDate(self.year, self.month, self.day, self.calendar,
+        no_leap calendars.
+        
+        If fractional=True, fractional part of day is included (default
+        False)."""
+        ijd = _IntJulianDayFromDate(self.year, self.month, self.day, self.calendar,
                skip_transition=False,has_year_zero=self.has_year_zero)
+        if fractional:
+            fracday = self.hour / 24.0 + self.minute / 1440.0 + (self.second +
+                    self.microsecond/1.e6) / 86400.0
+            # at this point jd is an integer representing noon UTC on the given
+            # year,month,day.
+            # compute fractional day from hour,minute,second,microsecond
+            return ijd - 0.5 + fracday
+        else:
+            return ijd
 
     def __add__(self, other):
         cdef datetime dt
@@ -1149,23 +1129,17 @@ The default format of the string produced by strftime is controlled by self.form
         # return calendar-specific subclasses for backward compatbility,
         # even though after 1.3.0 this is no longer necessary.
         if calendar == '360_day':
-            #return dt.__class__(*add_timedelta_360_day(dt, delta),calendar=calendar)
-            return Datetime360Day(*add_timedelta_360_day(dt, delta))
+            return dt.__class__(*add_timedelta_360_day(dt, delta),calendar=calendar)
         elif calendar == 'noleap':
-            #return dt.__class__(*add_timedelta(dt, delta, no_leap, False, True),calendar=calendar)
-            return DatetimeNoLeap(*add_timedelta(dt, delta, no_leap, False, True))
+            return dt.__class__(*add_timedelta(dt, delta, no_leap, False, True),calendar=calendar)
         elif calendar == 'all_leap':
-            #return dt.__class__(*add_timedelta(dt, delta, all_leap, False, True),calendar=calendar)
-            return DatetimeAllLeap(*add_timedelta(dt, delta, all_leap, False, True))
+            return dt.__class__(*add_timedelta(dt, delta, all_leap, False, True),calendar=calendar)
         elif calendar == 'julian':
-            #return dt.__class__(*add_timedelta(dt, delta, is_leap_julian, False, False),calendar=calendar)
-            return DatetimeJulian(*add_timedelta(dt, delta, is_leap_julian, False, False))
+            return dt.__class__(*add_timedelta(dt, delta, is_leap_julian, False, False),calendar=calendar)
         elif calendar == 'gregorian':
-            #return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, True, False),calendar=calendar)
-            return DatetimeGregorian(*add_timedelta(dt, delta, is_leap_gregorian, True, False))
+            return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, True, False),calendar=calendar)
         elif calendar == 'proleptic_gregorian':
-            #return dt.__class__(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, False),calendar=calendar)
-            return DatetimeProlepticGregorian(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, False))
+            return dt.__class__(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, False),calendar=calendar)
         else:
             return NotImplemented
 
@@ -1202,24 +1176,18 @@ datetime object."""
                 # return calendar-specific subclasses for backward compatbility,
                 # even though after 1.3.0 this is no longer necessary.
                 if self.calendar == '360_day':
-                    #return self.__class__(*add_timedelta_360_day(self, -other),calendar=self.calendar)
-                    return Datetime360Day(*add_timedelta_360_day(self, -other))
+                    return self.__class__(*add_timedelta_360_day(self, -other),calendar=self.calendar)
                 elif self.calendar == 'noleap':
-                    #return self.__class__(*add_timedelta(self, -other, no_leap, False, True),calendar=self.calendar)
-                    return DatetimeNoLeap(*add_timedelta(self, -other, no_leap, False, True))
+                    return self.__class__(*add_timedelta(self, -other, no_leap, False, True),calendar=self.calendar)
                 elif self.calendar == 'all_leap':
-                    #return self.__class__(*add_timedelta(self, -other, all_leap, False, True),calendar=self.calendar)
-                    return DatetimeAllLeap(*add_timedelta(self, -other, all_leap, False, True))
+                    return self.__class__(*add_timedelta(self, -other, all_leap, False, True),calendar=self.calendar)
                 elif self.calendar == 'julian':
-                    #return self.__class__(*add_timedelta(self, -other, is_leap_julian, False, False),calendar=self.calendar)
-                    return DatetimeJulian(*add_timedelta(self, -other, is_leap_julian, False, False))
+                    return self.__class__(*add_timedelta(self, -other, is_leap_julian, False, False),calendar=self.calendar)
                 elif self.calendar == 'gregorian':
-                    #return self.__class__(*add_timedelta(self, -other, is_leap_gregorian, True, False),calendar=self.calendar)
-                    return DatetimeGregorian(*add_timedelta(self, -other, is_leap_gregorian, True, False))
+                    return self.__class__(*add_timedelta(self, -other, is_leap_gregorian, True, False),calendar=self.calendar)
                 elif self.calendar == 'proleptic_gregorian':
-                    #return self.__class__(*add_timedelta(self, -other,
-                    #    is_leap_proleptic_gregorian, False, False),calendar=self.calendar)
-                    return DatetimeProlepticGregorian(*add_timedelta(self, -other, is_leap_proleptic_gregorian, False, False))
+                    return self.__class__(*add_timedelta(self, -other,
+                        is_leap_proleptic_gregorian, False, False),calendar=self.calendar)
                 else:
                     return NotImplemented
             else:
@@ -1237,113 +1205,6 @@ datetime object."""
                 return self - other._to_real_datetime()
             else:
                 return NotImplemented
-
-# these calendar-specific sub-classes are no longer used, but stubs
-# remain for backward compatibility.
-
-@cython.embedsignature(True)
-cdef class DatetimeNoLeap(datetime):
-    """
-Phony datetime object which mimics the python datetime object,
-but uses the "noleap" ("365_day") calendar.
-    """
-    def __init__(self, *args, **kwargs):
-        kwargs['calendar']='noleap'
-        super().__init__(*args, **kwargs)
-    def __repr__(self):
-        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
-                                     self.__class__.__name__,
-                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
-
-@cython.embedsignature(True)
-cdef class DatetimeAllLeap(datetime):
-    """
-Phony datetime object which mimics the python datetime object,
-but uses the "all_leap" ("366_day") calendar.
-    """
-    def __init__(self, *args, **kwargs):
-        kwargs['calendar']='all_leap'
-        super().__init__(*args, **kwargs)
-    def __repr__(self):
-        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
-                                     self.__class__.__name__,
-                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
-
-@cython.embedsignature(True)
-cdef class Datetime360Day(datetime):
-    """
-Phony datetime object which mimics the python datetime object,
-but uses the "360_day" calendar.
-    """
-    def __init__(self, *args, **kwargs):
-        kwargs['calendar']='360_day'
-        super().__init__(*args, **kwargs)
-    def __repr__(self):
-        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
-                                     self.__class__.__name__,
-                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
-
-@cython.embedsignature(True)
-cdef class DatetimeJulian(datetime):
-    """
-Phony datetime object which mimics the python datetime object,
-but uses the "julian" calendar.
-    """
-    def __init__(self, *args, **kwargs):
-        kwargs['calendar']='julian'
-        super().__init__(*args, **kwargs)
-    def __repr__(self):
-        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
-                                     self.__class__.__name__,
-                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
-
-@cython.embedsignature(True)
-cdef class DatetimeGregorian(datetime):
-    """
-Phony datetime object which mimics the python datetime object,
-but uses the mixed Julian-Gregorian ("standard", "gregorian") calendar.
-
-The last date of the Julian calendar is 1582-10-4, which is followed
-by 1582-10-15, using the Gregorian calendar.
-
-Instances using the date after 1582-10-15 can be compared to
-datetime.datetime instances and used to compute time differences
-(datetime.timedelta) by subtracting a DatetimeGregorian instance from
-a datetime.datetime instance or vice versa.
-    """
-    def __init__(self, *args, **kwargs):
-        kwargs['calendar']='gregorian'
-        super().__init__(*args, **kwargs)
-    def __repr__(self):
-        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
-                                     self.__class__.__name__,
-                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
-
-@cython.embedsignature(True)
-cdef class DatetimeProlepticGregorian(datetime):
-    """
-Phony datetime object which mimics the python datetime object,
-but allows for dates that don't exist in the proleptic gregorian calendar.
-
-Supports timedelta operations by overloading + and -.
-
-Has strftime, timetuple, replace, __repr__, and __str__ methods. The
-format of the string produced by __str__ is controlled by self.format
-(default %Y-%m-%d %H:%M:%S). Supports comparisons with other
-datetime instances using the same calendar; comparison with
-native python datetime instances is possible for cftime.datetime
-instances using 'gregorian' and 'proleptic_gregorian' calendars.
-
-Instance variables are year,month,day,hour,minute,second,microsecond,dayofwk,dayofyr,
-format, and calendar.
-    """
-    def __init__(self, *args, **kwargs):
-        kwargs['calendar']='proleptic_gregorian'
-        super().__init__( *args, **kwargs)
-    def __repr__(self):
-        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
-                                     self.__class__.__name__,
-                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
 
 _illegal_s = re.compile(r"((^|[^%])(%%)*%s)")
 
@@ -1734,6 +1595,114 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
                 return jday_greg
 
 # stuff below no longer used, kept here for backwards compatibility.
+
+# these calendar-specific sub-classes are no longer used, but stubs
+# remain for backward compatibility.
+
+@cython.embedsignature(True)
+cdef class DatetimeNoLeap(datetime):
+    """
+Phony datetime object which mimics the python datetime object,
+but uses the "noleap" ("365_day") calendar.
+    """
+    def __init__(self, *args, **kwargs):
+        kwargs['calendar']='noleap'
+        super().__init__(*args, **kwargs)
+    def __repr__(self):
+        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
+                                     self.__class__.__name__,
+                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+
+@cython.embedsignature(True)
+cdef class DatetimeAllLeap(datetime):
+    """
+Phony datetime object which mimics the python datetime object,
+but uses the "all_leap" ("366_day") calendar.
+    """
+    def __init__(self, *args, **kwargs):
+        kwargs['calendar']='all_leap'
+        super().__init__(*args, **kwargs)
+    def __repr__(self):
+        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
+                                     self.__class__.__name__,
+                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+
+@cython.embedsignature(True)
+cdef class Datetime360Day(datetime):
+    """
+Phony datetime object which mimics the python datetime object,
+but uses the "360_day" calendar.
+    """
+    def __init__(self, *args, **kwargs):
+        kwargs['calendar']='360_day'
+        super().__init__(*args, **kwargs)
+    def __repr__(self):
+        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
+                                     self.__class__.__name__,
+                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+
+@cython.embedsignature(True)
+cdef class DatetimeJulian(datetime):
+    """
+Phony datetime object which mimics the python datetime object,
+but uses the "julian" calendar.
+    """
+    def __init__(self, *args, **kwargs):
+        kwargs['calendar']='julian'
+        super().__init__(*args, **kwargs)
+    def __repr__(self):
+        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
+                                     self.__class__.__name__,
+                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+
+@cython.embedsignature(True)
+cdef class DatetimeGregorian(datetime):
+    """
+Phony datetime object which mimics the python datetime object,
+but uses the mixed Julian-Gregorian ("standard", "gregorian") calendar.
+
+The last date of the Julian calendar is 1582-10-4, which is followed
+by 1582-10-15, using the Gregorian calendar.
+
+Instances using the date after 1582-10-15 can be compared to
+datetime.datetime instances and used to compute time differences
+(datetime.timedelta) by subtracting a DatetimeGregorian instance from
+a datetime.datetime instance or vice versa.
+    """
+    def __init__(self, *args, **kwargs):
+        kwargs['calendar']='gregorian'
+        super().__init__(*args, **kwargs)
+    def __repr__(self):
+        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
+                                     self.__class__.__name__,
+                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+
+@cython.embedsignature(True)
+cdef class DatetimeProlepticGregorian(datetime):
+    """
+Phony datetime object which mimics the python datetime object,
+but allows for dates that don't exist in the proleptic gregorian calendar.
+
+Supports timedelta operations by overloading + and -.
+
+Has strftime, timetuple, replace, __repr__, and __str__ methods. The
+format of the string produced by __str__ is controlled by self.format
+(default %Y-%m-%d %H:%M:%S). Supports comparisons with other
+datetime instances using the same calendar; comparison with
+native python datetime instances is possible for cftime.datetime
+instances using 'gregorian' and 'proleptic_gregorian' calendars.
+
+Instance variables are year,month,day,hour,minute,second,microsecond,dayofwk,dayofyr,
+format, and calendar.
+    """
+    def __init__(self, *args, **kwargs):
+        kwargs['calendar']='proleptic_gregorian'
+        super().__init__( *args, **kwargs)
+    def __repr__(self):
+        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
+                                     self.__class__.__name__,
+                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+
 
 cdef _IntJulianDayToDate(int jday,calendar,skip_transition=False,has_year_zero=False):
     """Compute the year,month,day,dow,doy given the integer Julian day.

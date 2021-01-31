@@ -14,10 +14,8 @@ from numpy.testing import assert_almost_equal, assert_equal
 import cftime
 from cftime import datetime as datetimex
 from cftime import real_datetime
-from cftime import (DateFromJulianDay, Datetime360Day, DatetimeAllLeap,
-                    DatetimeGregorian, DatetimeJulian, DatetimeNoLeap,
-                    DatetimeProlepticGregorian, JulianDayFromDate, _parse_date,
-                    date2index, date2num, num2date, utime, UNIT_CONVERSION_FACTORS)
+from cftime import JulianDayFromDate, DateFromJulianDay, _parse_date,\
+                   date2index, date2num, num2date, utime, UNIT_CONVERSION_FACTORS
 
 try:
     from datetime import timezone
@@ -290,10 +288,12 @@ class cftimeTestCase(unittest.TestCase):
         date = self.cdftime_jul.num2date(t)
         self.assertTrue(str(d) == str(date))
         # test julian day from date, date from julian day
-        d = datetime(1858, 11, 17)
-        mjd = JulianDayFromDate(d)
-        assert_almost_equal(mjd, 2400000.5)
-        date = DateFromJulianDay(mjd)
+        d = cftime.datetime(1858, 11, 17, calendar='standard')
+        mjd1 = d.toordinal(fractional=True)
+        mjd2 = JulianDayFromDate(d)
+        assert_almost_equal(mjd1, 2400000.5)
+        assert_almost_equal(mjd1,mjd2)
+        date = DateFromJulianDay(mjd1)
         self.assertTrue(str(date) == str(d))
         # test iso 8601 units string
         d = datetime(1970, 1, 1, 1)
@@ -499,16 +499,16 @@ class cftimeTestCase(unittest.TestCase):
         units = "days since 0000-01-01 00:00:00"
         # this should fail (year zero not allowed with real-world calendars)
         try:
-            date2num(datetime(1, 1, 1), units, calendar='standard')
+            date2num(cftime.datetime(1, 1, 1), units, calendar='standard')
         except ValueError:
             pass
         # this should not fail (year zero allowed in 'fake' calendars)
         t = date2num(datetime(1, 1, 1), units, calendar='360_day')
         self.assertAlmostEqual(t,360)
         d = num2date(t, units, calendar='360_day')
-        self.assertEqual(d, Datetime360Day(1,1,1))
+        self.assertEqual(d, cftime.datetime(1,1,1,calendar='360_day'))
         d = num2date(0, units, calendar='360_day')
-        self.assertEqual(d, Datetime360Day(0,1,1))
+        self.assertEqual(d, cftime.datetime(0,1,1,calendar='360_day'))
 
         # issue 685: wrong time zone conversion
         # 'The following times all refer to the same moment: "18:30Z", "22:30+04", "1130-0700", and "15:00-03:30'
@@ -561,7 +561,7 @@ class cftimeTestCase(unittest.TestCase):
         assert (date2.hour == date1.hour)
         assert (date2.minute == date1.minute)
         assert (date2.second == date1.second)
-        assert_almost_equal(JulianDayFromDate(date1), 1721057.5)
+        assert_almost_equal(date1.toordinal(fractional=True), 1721057.5)
         # issue 596 - negative years fail in utime.num2date
         u = utime("seconds since 1-1-1", "proleptic_gregorian")
         d = u.num2date(u.date2num(datetimex(-1, 1, 1)))
@@ -628,29 +628,29 @@ class cftimeTestCase(unittest.TestCase):
         assert (d.minute == 0)
         assert (d.second == 0)
         # test dayofwk, dayofyr attribute setting (cftime issue #13)
-        d1 = DatetimeGregorian(2020,2,29)
+        d1 = cftime.datetime(2020,2,29,calendar='gregorian')
         d2 = real_datetime(2020,2,29)
         assert (d1.dayofwk == d2.dayofwk == 5)
         assert (d1.dayofyr == d2.dayofyr == 60)
-        d1 = DatetimeGregorian(2020,2,29,23,59,59)
+        d1 = cftime.datetime(2020,2,29,23,59,59,calendar='gregorian')
         d2 = real_datetime(2020,2,29,23,59,59)
         assert (d1.dayofwk == d2.dayofwk == 5)
         assert (d1.dayofyr == d2.dayofyr == 60)
-        d1 = DatetimeGregorian(2020,2,28,23,59,59)
+        d1 = cftime.datetime(2020,2,28,23,59,59,calendar='gregorian')
         d2 = real_datetime(2020,2,28,23,59,59)
         assert (d1.dayofwk == d2.dayofwk == 4)
         assert (d1.dayofyr == d2.dayofyr == 59)
-        d1 = DatetimeGregorian(1700,1,1)
+        d1 = cftime.datetime(1700,1,1,calendar='gregorian')
         d2 = real_datetime(1700,1,1)
         assert (d1.dayofwk == d2.dayofwk == 4)
         assert (d1.dayofyr == d2.dayofyr == 1)
         # last day of Julian Calendar (Thursday)
-        d1 = DatetimeJulian(1582, 10, 4, 12)
-        d2 = DatetimeGregorian(1582, 10, 4, 12)
+        d1 = cftime.datetime(1582, 10, 4, 12,calendar='julian')
+        d2 = cftime.datetime(1582, 10, 4, 12,calendar='standard')
         assert (d1.dayofwk == d2.dayofwk == 3)
         assert (d1.dayofyr == d2.dayofyr == 277)
         # Monday in proleptic gregorian calendar
-        d1 = DatetimeProlepticGregorian(1582, 10, 4, 12)
+        d1 = cftime.datetime(1582, 10, 4, 12,calendar='proleptic_gregorian')
         d2 = real_datetime(1582,10,4,12)
         assert (d1.dayofwk == d2.dayofwk == 0)
         assert (d1.dayofyr == d2.dayofyr == 277)
@@ -679,7 +679,7 @@ class cftimeTestCase(unittest.TestCase):
 
         # issue #68: allow months since for 360_day calendar
         d = num2date(1, 'months since 0000-01-01 00:00:00', calendar='360_day')
-        self.assertEqual(d, Datetime360Day(0,2,1))
+        self.assertEqual(d, cftime.datetime(0,2,1,calendar='360_day'))
         t = date2num(d, 'months since 0000-01-01 00:00:00', calendar='360_day')
         self.assertEqual(t, 1)
         # check that exception is raised if 'months since' used with
@@ -691,9 +691,10 @@ class cftimeTestCase(unittest.TestCase):
         # issue #78 - extra digits due to roundoff
         assert(cftime.date2num(cftime.datetime(1, 12, 1, 0, 0, 0, 0, -1, 1), units='days since 01-01-01',calendar='noleap')  == 334.0)
         assert(cftime.date2num(cftime.num2date(1.0,units='days since 01-01-01',calendar='noleap'),units='days since 01-01-01',calendar='noleap') == 1.0)
-        assert(cftime.date2num(cftime.DatetimeNoLeap(1980, 1, 1, 0, 0, 0, 0, 6, 1),'days since 1970-01-01','noleap') == 3650.0)
+        assert(cftime.date2num(cftime.datetime(1980, 1, 1, 0, 0, 0, 0, 6,
+            1,calendar='noleap'),'days since 1970-01-01','noleap') == 3650.0)
         # issue #126
-        d = cftime.DatetimeProlepticGregorian(1, 1, 1)
+        d = cftime.datetime(1, 1, 1,calendar='proleptic_gregorian')
         assert(cftime.date2num(d, 'days since 0001-01-01',\
             'proleptic_gregorian') == 0.0)
         # issue #140 (fractional seconds in reference date)
@@ -737,11 +738,12 @@ class cftimeTestCase(unittest.TestCase):
         test = dates == np.ma.masked_array([datetime(1848, 1, 17, 6, 0, 0, 40), None],mask=[0,1])
         assert(test.all())
         dates = num2date(times, units=units, calendar='standard')
-        assert(str(dates)=="[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 0, 40) --]")
+        assert(str(dates)==\
+        "[cftime.datetime(1848, 1, 17, 6, 0, 0, 40, calendar='gregorian') --]")
 #  check that time range of 200,000 + years can be represented accurately
         calendar='standard'
         _MAX_INT64 = np.iinfo("int64").max
-        refdate = DatetimeGregorian(292277,10,24,0,0,1)
+        refdate = cftime.datetime(292277,10,24,0,0,1,calendar='gregorian')
         for unit in ['microseconds','milliseconds','seconds']:
             units = '%s since 01-01-01' % unit
             time = 292471*365*86400*(1000000//int(UNIT_CONVERSION_FACTORS[unit])) + 1000000//int(UNIT_CONVERSION_FACTORS[unit])
@@ -755,7 +757,7 @@ class cftimeTestCase(unittest.TestCase):
                 assert(date2 == refdate)
 # microsecond roundtrip accuracy preserved over time ranges of 286 years
 # (float64 can only represent integers exactly up to 2**53-1)
-        refdate=DatetimeGregorian(286,6,3,23,47,34,740992)
+        refdate=cftime.datetime(286,6,3,23,47,34,740992,calendar='gregorian')
         for unit in ['microseconds','milliseconds','seconds','hours','days']:
             units = '%s since 01-01-01' % unit
             time = (2**53 - 1)*(1/UNIT_CONVERSION_FACTORS[unit]) + 1/UNIT_CONVERSION_FACTORS[unit]
@@ -808,7 +810,7 @@ class cftimeTestCase(unittest.TestCase):
         # (masked array handling in date2num - AttributeError:
         # 'cftime._cftime.DatetimeGregorian' object has no attribute 'view')
         m = np.ma.asarray(
-            [cftime.DatetimeGregorian(2014, 8, 1, 12, 0, 0, 0)]
+            [cftime.datetime(2014, 8, 1, 12, 0, 0, 0,calendar='gregorian')]
             )
         assert(
              cftime.date2num(m, units="seconds since 2000-1-1")==[4.602096e+08]
@@ -1020,9 +1022,9 @@ class issue584TestCase(unittest.TestCase):
     def test_roundtrip(self):
         "Test roundtrip conversion (num2date <-> date2num) using 360_day and 365_day calendars."
 
-        for datetime_class in [Datetime360Day, DatetimeNoLeap]:
+        for cal in ['360_day','365_day']:
             # Pick a date and time outside of the range of the Julian calendar.
-            date = datetime_class(-5000, 1, 1, 12)
+            date = cftime.datetime(-5000, 1, 1, 12,calendar=cal)
 
             converter = self.converters[date.calendar]
             self.assertEqual(date, converter.num2date(converter.date2num(date)))
@@ -1053,23 +1055,27 @@ class issue584TestCase(unittest.TestCase):
 
 class DateTime(unittest.TestCase):
     def setUp(self):
-        self.date1_365_day = DatetimeNoLeap(-5000, 1, 2, 12)
-        self.date2_365_day = DatetimeNoLeap(-5000, 1, 3, 12)
-        self.date3_gregorian = DatetimeGregorian(1969,  7, 20, 12)
+        self.date1_365_day = cftime.datetime(-5000, 1, 2, 12,calendar='noleap')
+        self.date2_365_day = cftime.datetime(-5000, 1, 3, 12,calendar='noleap')
+        self.date3_gregorian = cftime.datetime(1969,  7, 20,
+        12,calendar='gregorian')
 
         # last day of the Julian calendar in the mixed Julian/Gregorian calendar
-        self.date4_gregorian = DatetimeGregorian(1582, 10, 4)
+        self.date4_gregorian = cftime.datetime(1582, 10,
+        4,calendar='gregorian')
         # first day of the Gregorian calendar in the mixed Julian/Gregorian calendar
-        self.date5_gregorian = DatetimeGregorian(1582, 10, 15)
+        self.date5_gregorian = cftime.datetime(1582, 10,
+        15,calendar='gregorian')
 
-        self.date6_proleptic_gregorian = DatetimeProlepticGregorian(1582, 10, 15)
+        self.date6_proleptic_gregorian = cftime.datetime(1582, 10,
+                15,calendar='proleptic_gregorian')
 
-        self.date7_360_day = Datetime360Day(2000, 1, 1)
+        self.date7_360_day = cftime.datetime(2000, 1, 1, calendar='360_day')
 
-        self.date8_julian = DatetimeJulian(1582, 10, 4)
+        self.date8_julian = cftime.datetime(1582, 10, 4,calendar='julian')
 
         # a datetime.datetime instance (proleptic Gregorian calendar)
-        self.datetime_date1 = datetime(1969,  7, 21, 12)
+        self.datetime_date1 = cftime.datetime(1969,  7, 21, 12)
 
         self.delta = timedelta(hours=25)
 
@@ -1085,27 +1091,27 @@ class DateTime(unittest.TestCase):
 
         # test the Julian/Gregorian transition
         self.assertEqual(self.date4_gregorian + self.delta,
-                         DatetimeGregorian(1582, 10, 15, 1))
+                         cftime.datetime(1582, 10, 15, 1,calendar='gregorian'))
 
         # The Julian calendar has no invalid dates
         self.assertEqual(self.date8_julian + self.delta,
-                         DatetimeJulian(1582, 10, 5, 1))
+                         cftime.datetime(1582, 10, 5, 1,calendar='julian'))
 
         # Test going over the year boundary.
-        self.assertEqual(DatetimeGregorian(2000, 11, 1) + timedelta(days=30 + 31),
-                         DatetimeGregorian(2001, 1, 1))
+        self.assertEqual(cftime.datetime(2000, 11, 1,calendar='gregorian') + timedelta(days=30 + 31),
+                         cftime.datetime(2001, 1, 1,calendar='gregorian'))
 
         # Year 2000 is a leap year.
-        self.assertEqual(DatetimeGregorian(2000, 1, 1) + timedelta(days=31 + 29),
-                         DatetimeGregorian(2000, 3, 1))
+        self.assertEqual(cftime.datetime(2000, 1, 1,calendar='gregorian') + timedelta(days=31 + 29),
+                         cftime.datetime(2000, 3, 1,calendar='gregorian'))
 
         # Test the 366_day calendar.
-        self.assertEqual(DatetimeAllLeap(1, 1, 1) + timedelta(days=366 * 10 + 31),
-                         DatetimeAllLeap(11, 2, 1))
+        self.assertEqual(cftime.datetime(1, 1, 1,calendar='366_day') + timedelta(days=366 * 10 + 31),
+                         cftime.datetime(11, 2, 1,calendar='366_day'))
 
         # The Gregorian calendar has no year zero.
-        self.assertEqual(DatetimeGregorian(-1, 12, 31) + self.delta,
-                         DatetimeGregorian(1, 1, 1, 1))
+        self.assertEqual(cftime.datetime(-1, 12, 31,calendar='gregorian') + self.delta,
+                         cftime.datetime(1, 1, 1, 1,calendar='standard'))
 
         def invalid_add_1():
             self.date1_365_day + 1
@@ -1144,28 +1150,30 @@ class DateTime(unittest.TestCase):
 
         # Test the Julian/Gregorian transition.
         self.assertEqual(self.date5_gregorian - self.delta,
-                         DatetimeGregorian(1582, 10, 3, 23))
+                         cftime.datetime(1582, 10, 3, 23,calendar='gregorian'))
 
         # The proleptic Gregorian calendar does not have invalid dates.
         self.assertEqual(self.date6_proleptic_gregorian - self.delta,
-                         DatetimeProlepticGregorian(1582, 10, 13, 23))
+                         cftime.datetime(1582, 10, 13, 23,
+                         calendar='proleptic_gregorian'))
 
         # The Gregorian calendar has no year zero.
-        self.assertEqual(DatetimeGregorian(1, 1, 1) - self.delta,
-                         DatetimeGregorian(-1, 12, 30, 23))
+        self.assertEqual(cftime.datetime(1, 1, 1,calendar='gregorian') - self.delta,
+                         cftime.datetime(-1, 12, 30, 23,calendar='gregorian'))
 
         # The 360_day calendar has year zero.
 
         self.assertEqual(self.date7_360_day - timedelta(days=2000 * 360),
-                         Datetime360Day(0, 1, 1))
+                         cftime.datetime(0, 1, 1,calendar='360_day'))
 
         # Test going over the year boundary.
-        self.assertEqual(DatetimeGregorian(2000, 3, 1) - timedelta(days=29 + 31 + 31),
-                         DatetimeGregorian(1999, 12, 1))
+        self.assertEqual(cftime.datetime(2000, 3, 1,calendar='gregorian') -\
+                         timedelta(days=29 + 31 + 31),\
+                         cftime.datetime(1999, 12, 1,calendar='gregorian'))
 
         # Year 2000 is a leap year.
-        self.assertEqual(DatetimeGregorian(2000, 3, 1) - self.delta,
-                         DatetimeGregorian(2000, 2, 28, 23))
+        self.assertEqual(cftime.datetime(2000, 3, 1,calendar='gregorian') - self.delta,
+                         cftime.datetime(2000, 2, 28, 23,calendar='gregorian'))
 
         def invalid_sub_1():
             self.date1_365_day - 1
@@ -1205,7 +1213,8 @@ class DateTime(unittest.TestCase):
         "Test reversibility of pickling."
         import pickle
 
-        date = Datetime360Day(year=1, month=2, day=3, hour=4, minute=5, second=6, microsecond=7)
+        date = cftime.datetime(year=1, month=2, day=3, hour=4, minute=5, second=6,
+                microsecond=7,calendar='360_day')
         self.assertEqual(date, pickle.loads(pickle.dumps(date)))
 
     def test_misc(self):
@@ -1218,16 +1227,16 @@ class DateTime(unittest.TestCase):
                          "1969-07-20 12:00:00")
 
         def invalid_year():
-            DatetimeGregorian(0, 1, 1) + self.delta
+            cftime.datetime(0, 1, 1,calendar='gregorian') + self.delta
 
         def invalid_month():
-            DatetimeGregorian(1, 13, 1) + self.delta
+            cftime.datetime(1, 13, 1,calendar='gregorian') + self.delta
 
         def invalid_day():
-            DatetimeGregorian(1, 1, 32) + self.delta
+            cftime.datetime(1, 1, 32,calendar='gregorian') + self.delta
 
         def invalid_gregorian_date():
-            DatetimeGregorian(1582, 10, 5) + self.delta
+            cftime.datetime(1582, 10, 5,calendar='gregorian') + self.delta
 
         for func in [invalid_year, invalid_month, invalid_day, invalid_gregorian_date]:
             self.assertRaises(ValueError, func)
@@ -1385,12 +1394,8 @@ class issue57TestCase(unittest.TestCase):
                 ValueError, cftime._cftime.date2num, datetime(1900, 1, 1, 0), datestr, 'standard')
 
 
-_DATE_TYPES = [DatetimeNoLeap, DatetimeAllLeap, DatetimeJulian, Datetime360Day,
-               DatetimeGregorian, DatetimeProlepticGregorian]
-
-
-@pytest.fixture(params=_DATE_TYPES)
-def date_type(request):
+@pytest.fixture(params=calendars)
+def calendar(request):
     return request.param
 
 
@@ -1400,69 +1405,70 @@ def month(request):
 
 
 @pytest.fixture
-def days_per_month_non_leap_year(date_type, month):
-    if date_type is Datetime360Day:
+def days_per_month_non_leap_year(calendar, month):
+    if calendar == '360_day':
         return [-1, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30][month]
-    if date_type is DatetimeAllLeap:
+    if calendar in ['all_leap','366_day']:
         return [-1, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month]
     else:
         return [-1, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month]
 
 
 @pytest.fixture
-def days_per_month_leap_year(date_type, month):
-    if date_type is Datetime360Day:
+def days_per_month_leap_year(calendar, month):
+    if calendar == '360_day':
         return [-1, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30][month]
-    if date_type in [DatetimeGregorian, DatetimeProlepticGregorian,
-                     DatetimeJulian, DatetimeAllLeap]:
+    if calendar in ['julian','gregorian','proleptic_gregorian','standar','all_leap','366_day']:
         return [-1, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month]
     else:
         return [-1, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month]
 
 
-def test_zero_year(date_type):
+def test_zero_year(calendar):
     # Year 0 is valid in the 360,365 and 366 day calendars
-    if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day]:
-        date_type(0, 1, 1)
+    if calendar in ['no_leap','all_leap','360_day']:
+        cftime.datetime(0, 1, 1, calendar=calendar)
     else:
         with pytest.raises(ValueError):
-            date_type(0, 1, 1)
+            cftime.datetime(0, 1, 1,calendar=calendar)
 
 
-def test_invalid_month(date_type):
+def test_invalid_month(calendar):
     with pytest.raises(ValueError):
-        date_type(1, 0, 1)
+        cftime.datetime(1, 0, 1, calendar=calendar)
 
     with pytest.raises(ValueError):
-        date_type(1, 13, 1)
+        cftime.datetime(1, 13, 1, calendar=calendar)
 
 
 def test_invalid_day_non_leap_year(
-        date_type, month, days_per_month_non_leap_year):
+        calendar, month, days_per_month_non_leap_year):
     with pytest.raises(ValueError):
-        date_type(1, month, days_per_month_non_leap_year + 1)
+        cftime.datetime(1, month, days_per_month_non_leap_year+1,
+                calendar=calendar)
 
 
-def test_invalid_day_leap_year(date_type, month, days_per_month_leap_year):
+def test_invalid_day_leap_year(calendar, month, days_per_month_leap_year):
     with pytest.raises(ValueError):
-        date_type(2000, month, days_per_month_leap_year + 1)
+        cftime.datetime(2000, month,
+                days_per_month_leap_year+1,calendar=calendar)
 
 
-def test_invalid_day_lower_bound(date_type, month):
+def test_invalid_day_lower_bound(calendar, month):
     with pytest.raises(ValueError):
-        date_type(1, month, 0)
+        cftime.datetime(1, month, 0, calendar=calendar)
 
 
 def test_valid_day_non_leap_year(
-        date_type, month, days_per_month_non_leap_year):
-    date_type(1, month, 1)
-    date_type(1, month, days_per_month_non_leap_year)
+        calendar, month, days_per_month_non_leap_year):
+    cftime.datetime(1, month, 1, calendar=calendar)
+    cftime.datetime(1, month, days_per_month_non_leap_year, calendar=calendar)
 
 
 def test_valid_day_leap_year(
-        date_type, month, days_per_month_leap_year):
-    date_type(2000, month, 1)
-    date_type(2000, month, days_per_month_leap_year)
+        calendar, month, days_per_month_leap_year):
+    cftime.datetime(2000, month, 1, calendar=calendar)
+    cftime.datetime(2000, month, days_per_month_leap_year,calendar=calendar)
 
 
 _INVALID_SUB_DAY_TESTS = {
@@ -1479,9 +1485,9 @@ _INVALID_SUB_DAY_TESTS = {
 
 @pytest.mark.parametrize('date_args', list(_INVALID_SUB_DAY_TESTS.values()),
                          ids=list(_INVALID_SUB_DAY_TESTS.keys()))
-def test_invalid_sub_day_reso_dates(date_type, date_args):
+def test_invalid_sub_day_reso_dates(calendar, date_args):
     with pytest.raises(ValueError):
-        date_type(*date_args)
+        cftime.datetime(*date_args,calendar=calendar)
 
 
 _VALID_SUB_DAY_TESTS = {
@@ -1498,26 +1504,26 @@ _VALID_SUB_DAY_TESTS = {
 
 @pytest.mark.parametrize('date_args', list(_VALID_SUB_DAY_TESTS.values()),
                          ids=list(_VALID_SUB_DAY_TESTS.keys()))
-def test_valid_sub_day_reso_dates(date_type, date_args):
-    date_type(*date_args)
+def test_valid_sub_day_reso_dates(calendar, date_args):
+    cftime.datetime(*date_args,calendar=calendar)
 
 
 @pytest.mark.parametrize(
     'date_args',
     [(1582, 10, 5), (1582, 10, 14)], ids=['lower-bound', 'upper-bound'])
-def test_invalid_julian_gregorian_mixed_dates(date_type, date_args):
-    if date_type is DatetimeGregorian:
+def test_invalid_julian_gregorian_mixed_dates(calendar, date_args):
+    if calendar in ['gregorian','standard']:
         with pytest.raises(ValueError):
-            date_type(*date_args)
+            cftime.datetime(*date_args,calendar=calendar)
     else:
-        date_type(*date_args)
+        cftime.datetime(*date_args,calendar=calendar)
 
 
 @pytest.mark.parametrize(
     'date_args',
     [(1582, 10, 4), (1582, 10, 15)], ids=['lower-bound', 'upper-bound'])
-def test_valid_julian_gregorian_mixed_dates(date_type, date_args):
-    date_type(*date_args)
+def test_valid_julian_gregorian_mixed_dates(calendar, date_args):
+    cftime.datetime(*date_args,calendar=calendar)
 
 
 @pytest.mark.parametrize(
@@ -1526,54 +1532,28 @@ def test_valid_julian_gregorian_mixed_dates(date_type, date_args):
      (1000, 2, 3, 4, 5, 6),
      (2000, 1, 1, 12, 34, 56, 123456)],
     ids=['1', '10', '100', '1000', '2000'])
-def test_str_matches_datetime_str(date_type, date_args):
-    assert str(date_type(*date_args)) == str(datetime(*date_args))
+def test_str_matches_datetime_str(calendar, date_args):
+    assert str(cftime.datetime(*date_args),calendar=calendar) == str(datetime(*date_args))
 
 
-_EXPECTED_DATE_TYPES = {'noleap': DatetimeNoLeap,
-                        '365_day': DatetimeNoLeap,
-                        '360_day': Datetime360Day,
-                        'julian': DatetimeJulian,
-                        'all_leap': DatetimeAllLeap,
-                        '366_day': DatetimeAllLeap,
-                        'gregorian': DatetimeGregorian,
-                        'proleptic_gregorian': DatetimeProlepticGregorian,
-                        'standard': DatetimeGregorian}
-
-
-@pytest.mark.parametrize(
-    ['calendar', 'expected_date_type'],
-    list(_EXPECTED_DATE_TYPES.items())
-)
-def test_num2date_only_use_cftime_datetimes_negative_years(
-        calendar, expected_date_type):
+@pytest.mark.parametrize(calendars)
+def test_num2date_only_use_cftime_datetimes_negative_years(calendar):
     result = num2date(-1000., units='days since 0001-01-01', calendar=calendar,
                       only_use_cftime_datetimes=True)
-    assert isinstance(result, datetimex)
     assert (result.calendar == adjust_calendar(calendar))
 
 
-@pytest.mark.parametrize(
-    ['calendar', 'expected_date_type'],
-    list(_EXPECTED_DATE_TYPES.items())
-)
-def test_num2date_only_use_cftime_datetimes_pre_gregorian(
-        calendar, expected_date_type):
+@pytest.mark.parametrize(calendars)
+def test_num2date_only_use_cftime_datetimes_pre_gregorian(calendar):
     result = num2date(1., units='days since 0001-01-01', calendar=calendar,
                       only_use_cftime_datetimes=True)
-    assert isinstance(result, datetimex)
     assert (result.calendar == adjust_calendar(calendar))
 
 
-@pytest.mark.parametrize(
-    ['calendar', 'expected_date_type'],
-    list(_EXPECTED_DATE_TYPES.items())
-)
-def test_num2date_only_use_cftime_datetimes_post_gregorian(
-        calendar, expected_date_type):
+@pytest.mark.parametrize(calendars)
+def test_num2date_only_use_cftime_datetimes_post_gregorian(calendar):
     result = num2date(0., units='days since 1582-10-15', calendar=calendar,
                       only_use_cftime_datetimes=True)
-    assert isinstance(result, datetimex)
     assert (result.calendar == adjust_calendar(calendar))
 
 
@@ -1584,46 +1564,46 @@ def test_repr():
     assert repr(datetimex(2000, 1, 1, calendar=None)) == expected
 
 
-def test_dayofyr_after_replace(date_type):
-    date = date_type(1, 1, 1)
+def test_dayofyr_after_replace(calendar):
+    date = cftime.datetime(1, 1, 1,calendar=calendar)
     assert date.dayofyr == 1
     assert date.replace(day=2).dayofyr == 2
 
 
-def test_dayofwk_after_replace(date_type):
-    date = date_type(1, 1, 1)
+def test_dayofwk_after_replace(calendar):
+    date = cftime.datetime(1, 1, 1,calendar=calendar)
     original_dayofwk = date.dayofwk
     expected = (original_dayofwk + 1) % 7
     result = date.replace(day=2).dayofwk
     assert result == expected
 
 
-def test_daysinmonth_non_leap(date_type, month, days_per_month_non_leap_year):
-    date = date_type(1, month, 1)
+def test_daysinmonth_non_leap(calendar, month, days_per_month_non_leap_year):
+    date = cftime.datetime(1, month, 1,calendar=calendar)
     assert date.daysinmonth == days_per_month_non_leap_year
 
 
-def test_daysinmonth_leap(date_type, month, days_per_month_leap_year):
-    date = date_type(2000, month, 1)
+def test_daysinmonth_leap(calendar, month, days_per_month_leap_year):
+    date = cftime.datetime(2000, month, 1, calendar=calendar)
     assert date.daysinmonth == days_per_month_leap_year
 
 
 @pytest.mark.parametrize('argument', ['dayofyr', 'dayofwk'])
-def test_replace_dayofyr_or_dayofwk_error(date_type, argument):
+def test_replace_dayofyr_or_dayofwk_error(calendar, argument):
     with pytest.raises(ValueError):
-        date_type(1, 1, 1).replace(**{argument: 3})
+        cftime.datetime(1, 1, 1,calendar=calendar).replace(**{argument: 3})
 
 
-def test_dayofyr_after_timedelta_addition(date_type):
-    initial_date = date_type(1, 1, 2)
+def test_dayofyr_after_timedelta_addition(calendar):
+    initial_date = cftime.datetime(1, 1, 2,calendar=calendar)
     date_after_timedelta_addition = initial_date + timedelta(days=1)
     assert initial_date.dayofyr == 2
     assert date_after_timedelta_addition.dayofyr == 3
 
 
-def test_exact_datetime_difference(date_type):
-    b = date_type(2000, 1, 2, 0, 0, 0, 5)
-    a = date_type(2000, 1, 2)
+def test_exact_datetime_difference(calendar):
+    b = cftime.datetime(2000, 1, 2, 0, 0, 0, 5,calendar=calendar)
+    a = cftime.datetime(2000, 1, 2,calendar=calendar)
     result = b - a
     expected = timedelta(microseconds=5)
     assert result == expected
@@ -1662,18 +1642,16 @@ def dtype(request):
     return request.param
 
 
-@pytest.fixture(params=list(_EXPECTED_DATE_TYPES.keys()))
-def calendar(request):
-    return request.param
-
-
 @pytest.mark.parametrize("unit", _MICROSECOND_UNITS)
 def test_num2date_microsecond_units(calendar, unit, shape, dtype):
-    date_type = _EXPECTED_DATE_TYPES[calendar]
-    expected = np.array([date_type(2000, 1, 1, 0, 0, 0, 1),
-                         date_type(2000, 1, 1, 0, 0, 0, 2),
-                         date_type(2000, 1, 1, 0, 0, 0, 3),
-                         date_type(2000, 1, 1, 0, 0, 0, 4)]).reshape(shape)
+    expected = np.array([cftime.datetime(2000, 1, 1, 0, 0, 0, 1,
+                             calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 0, 0, 0, 2,
+                             calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 0, 0, 0, 3,
+                             calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 0, 0, 0, 4,
+                             calendar=calendar)]).reshape(shape)
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
     units = "{} since 2000-01-01".format(unit)
     result = num2date(numeric_times, units=units, calendar=calendar)
@@ -1682,11 +1660,14 @@ def test_num2date_microsecond_units(calendar, unit, shape, dtype):
 
 @pytest.mark.parametrize("unit", _MILLISECOND_UNITS)
 def test_num2date_millisecond_units(calendar, unit, shape, dtype):
-    date_type = _EXPECTED_DATE_TYPES[calendar]
-    expected = np.array([date_type(2000, 1, 1, 0, 0, 0, 1000),
-                         date_type(2000, 1, 1, 0, 0, 0, 2000),
-                         date_type(2000, 1, 1, 0, 0, 0, 3000),
-                         date_type(2000, 1, 1, 0, 0, 0, 4000)]).reshape(shape)
+    expected = np.array([cftime.datetime(2000, 1, 1, 0, 0, 0,
+                             1000,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 0, 0, 0,
+                             2000,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 0, 0, 0,
+                             3000,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 0, 0, 0,
+                             4000,calendar=calendar)]).reshape(shape)
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
     units = "{} since 2000-01-01".format(unit)
     result = num2date(numeric_times, units=units, calendar=calendar)
@@ -1695,11 +1676,14 @@ def test_num2date_millisecond_units(calendar, unit, shape, dtype):
 
 @pytest.mark.parametrize("unit", _SECOND_UNITS)
 def test_num2date_second_units(calendar, unit, shape, dtype):
-    date_type = _EXPECTED_DATE_TYPES[calendar]
-    expected = np.array([date_type(2000, 1, 1, 0, 0, 1, 0),
-                         date_type(2000, 1, 1, 0, 0, 2, 0),
-                         date_type(2000, 1, 1, 0, 0, 3, 0),
-                         date_type(2000, 1, 1, 0, 0, 4, 0)]).reshape(shape)
+    expected = np.array([cftime.datetime(2000, 1, 1, 0, 0, 1,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 0, 0, 2,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 0, 0, 3,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 0, 0, 4,
+                             0,calendar=calendar)]).reshape(shape)
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
     units = "{} since 2000-01-01".format(unit)
     result = num2date(numeric_times, units=units, calendar=calendar)
@@ -1708,11 +1692,14 @@ def test_num2date_second_units(calendar, unit, shape, dtype):
 
 @pytest.mark.parametrize("unit", _MINUTE_UNITS)
 def test_num2date_minute_units(calendar, unit, shape, dtype):
-    date_type = _EXPECTED_DATE_TYPES[calendar]
-    expected = np.array([date_type(2000, 1, 1, 0, 1, 0, 0),
-                         date_type(2000, 1, 1, 0, 2, 0, 0),
-                         date_type(2000, 1, 1, 0, 3, 0, 0),
-                         date_type(2000, 1, 1, 0, 4, 0, 0)]).reshape(shape)
+    expected = np.array([cftime.datetime(2000, 1, 1, 0, 1, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 0, 2, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 0, 3, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 0, 4, 0,
+                             0,calendar=calendar)]).reshape(shape)
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
     units = "{} since 2000-01-01".format(unit)
     result = num2date(numeric_times, units=units, calendar=calendar)
@@ -1721,11 +1708,14 @@ def test_num2date_minute_units(calendar, unit, shape, dtype):
 
 @pytest.mark.parametrize("unit", _HOUR_UNITS)
 def test_num2date_hour_units(calendar, unit, shape, dtype):
-    date_type = _EXPECTED_DATE_TYPES[calendar]
-    expected = np.array([date_type(2000, 1, 1, 1, 0, 0, 0),
-                         date_type(2000, 1, 1, 2, 0, 0, 0),
-                         date_type(2000, 1, 1, 3, 0, 0, 0),
-                         date_type(2000, 1, 1, 4, 0, 0, 0)]).reshape(shape)
+    expected = np.array([cftime.datetime(2000, 1, 1, 1, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 2, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 3, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 4, 0, 0,
+                             0,calendar=calendar)]).reshape(shape)
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
     units = "{} since 2000-01-01".format(unit)
     result = num2date(numeric_times, units=units, calendar=calendar)
@@ -1734,11 +1724,14 @@ def test_num2date_hour_units(calendar, unit, shape, dtype):
 
 @pytest.mark.parametrize("unit", _DAY_UNITS)
 def test_num2date_day_units(calendar, unit, shape, dtype):
-    date_type = _EXPECTED_DATE_TYPES[calendar]
-    expected = np.array([date_type(2000, 1, 2, 0, 0, 0, 0),
-                         date_type(2000, 1, 3, 0, 0, 0, 0),
-                         date_type(2000, 1, 4, 0, 0, 0, 0),
-                         date_type(2000, 1, 5, 0, 0, 0, 0)]).reshape(shape)
+    expected = np.array([cftime.datetime(2000, 1, 2, 0, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 3, 0, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 4, 0, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 5, 0, 0, 0,
+                             0,calendar=calendar)]).reshape(shape)
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
     units = "{} since 2000-01-01".format(unit)
     result = num2date(numeric_times, units=units, calendar=calendar)
@@ -1747,11 +1740,14 @@ def test_num2date_day_units(calendar, unit, shape, dtype):
 
 @pytest.mark.parametrize("unit", _MONTH_UNITS)
 def test_num2date_month_units(calendar, unit, shape, dtype):
-    date_type = _EXPECTED_DATE_TYPES[calendar]
-    expected = np.array([date_type(2000, 2, 1, 0, 0, 0, 0),
-                         date_type(2000, 3, 1, 0, 0, 0, 0),
-                         date_type(2000, 4, 1, 0, 0, 0, 0),
-                         date_type(2000, 5, 1, 0, 0, 0, 0)]).reshape(shape)
+    expected = np.array([cftime.datetime(2000, 2, 1, 0, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 3, 1, 0, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 4, 1, 0, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 5, 1, 0, 0, 0,
+                             0,calendar=calendar)]).reshape(shape)
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
     units = "{} since 2000-01-01".format(unit)
 
@@ -1764,11 +1760,14 @@ def test_num2date_month_units(calendar, unit, shape, dtype):
 
 
 def test_num2date_only_use_python_datetimes(calendar, shape, dtype):
-    date_type = real_datetime
-    expected = np.array([date_type(2000, 1, 2, 0, 0, 0, 0),
-                         date_type(2000, 1, 3, 0, 0, 0, 0),
-                         date_type(2000, 1, 4, 0, 0, 0, 0),
-                         date_type(2000, 1, 5, 0, 0, 0, 0)]).reshape(shape)
+    expected = np.array([cftime.datetime(2000, 1, 2, 0, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 3, 0, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 4, 0, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 5, 0, 0, 0,
+                             0,calendar=calendar)]).reshape(shape)
     numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
     units = "days since 2000-01-01"
     if calendar not in _STANDARD_CALENDARS:
@@ -1783,22 +1782,22 @@ def test_num2date_only_use_python_datetimes(calendar, shape, dtype):
         np.testing.assert_equal(result, expected)
 
 
-def test_num2date_use_pydatetime_if_possible(calendar, shape, dtype):
-    if calendar not in _STANDARD_CALENDARS:
-        date_type = _EXPECTED_DATE_TYPES[calendar]
-    else:
-        date_type = real_datetime
-
-    expected = np.array([date_type(2000, 1, 2, 0, 0, 0, 0),
-                         date_type(2000, 1, 3, 0, 0, 0, 0),
-                         date_type(2000, 1, 4, 0, 0, 0, 0),
-                         date_type(2000, 1, 5, 0, 0, 0, 0)]).reshape(shape)
-    numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
-    units = "days since 2000-01-01"
-    result = num2date(numeric_times, units=units, calendar=calendar,
-                            only_use_python_datetimes=False,
-                            only_use_cftime_datetimes=False)
-    np.testing.assert_equal(result, expected)
+#def test_num2date_use_pydatetime_if_possible(calendar, shape, dtype):
+#    if calendar not in _STANDARD_CALENDARS:
+#        date_type = _EXPECTED_DATE_TYPES[calendar]
+#    else:
+#        date_type = real_datetime
+#
+#    expected = np.array([cftime.datetime(2000, 1, 2, 0, 0, 0, 0),
+#                         cftime.datetime(2000, 1, 3, 0, 0, 0, 0),
+#                         cftime.datetime(2000, 1, 4, 0, 0, 0, 0),
+#                         cftime.datetime(2000, 1, 5, 0, 0, 0, 0)]).reshape(shape)
+#    numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
+#    units = "days since 2000-01-01"
+#    result = num2date(numeric_times, units=units, calendar=calendar,
+#                            only_use_python_datetimes=False,
+#                            only_use_cftime_datetimes=False)
+#    np.testing.assert_equal(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -1843,11 +1842,14 @@ def test_num2date_valid_zero_reference_year(artificial_calendar):
 
 
 def test_num2date_masked_array(calendar):
-    date_type = _EXPECTED_DATE_TYPES[calendar]
-    expected = np.array([date_type(2000, 1, 1, 1, 0, 0, 0),
-                         date_type(2000, 1, 1, 2, 0, 0, 0),
-                         date_type(2000, 1, 1, 3, 0, 0, 0),
-                         date_type(2000, 1, 1, 4, 0, 0, 0)])
+    expected = np.array([cftime.datetime(2000, 1, 1, 1, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 2, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 3, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 4, 0, 0,
+                             0,calendar=calendar)])
     mask = [False, False, True, False]
     expected = np.ma.masked_array(expected, mask=mask)
     numeric_times = np.ma.masked_array([1, 2, 3, 4], mask=mask)
@@ -1864,11 +1866,14 @@ def test_num2date_out_of_range():
 
 
 def test_num2date_list_input(calendar):
-    date_type = _EXPECTED_DATE_TYPES[calendar]
-    expected = np.array([date_type(2000, 1, 1, 1, 0, 0, 0),
-                         date_type(2000, 1, 1, 2, 0, 0, 0),
-                         date_type(2000, 1, 1, 3, 0, 0, 0),
-                         date_type(2000, 1, 1, 4, 0, 0, 0)])
+    expected = np.array([cftime.datetime(2000, 1, 1, 1, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 2, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 3, 0, 0,
+                             0,calendar=calendar),
+                         cftime.datetime(2000, 1, 1, 4, 0, 0,
+                             0,calendar=calendar)])
     numeric_times = [1, 2, 3, 4]
     units = "hours since 2000-01-01"
     result = num2date(numeric_times, units=units, calendar=calendar)
@@ -1878,11 +1883,12 @@ def test_num2date_list_input(calendar):
 def test_num2date_integer_upcast_required():
     numeric_times = np.array([30, 60, 90, 120], dtype=np.int32)
     units = "minutes since 2000-01-01"
+    calendar="360_day"
     expected = np.array([
-        Datetime360Day(2000, 1, 1, 0, 30, 0),
-        Datetime360Day(2000, 1, 1, 1, 0, 0),
-        Datetime360Day(2000, 1, 1, 1, 30, 0),
-        Datetime360Day(2000, 1, 1, 2, 0, 0)
+        cftime.datetime(2000, 1, 1, 0, 30, 0,calendar=calendar),
+        cftime.datetime(2000, 1, 1, 1, 0, 0,calendar=calendar),
+        cftime.datetime(2000, 1, 1, 1, 30, 0,calendar=calendar),
+        cftime.datetime(2000, 1, 1, 2, 0, 0,calendar=calendar)
     ])
     result = num2date(numeric_times, units=units, calendar="360_day")
     np.testing.assert_equal(result, expected)
@@ -1905,13 +1911,12 @@ def test_num2date_integer_upcast_required():
     ids=lambda x: f"{x!r}"
 )
 def test_date2num_num2date_roundtrip(encoding_units, freq, calendar):
-    date_type = _EXPECTED_DATE_TYPES[calendar]
     lengthy_timedelta = timedelta(days=291000 * 360)
     times = np.array(
         [
-            date_type(1, 1, 1), 
-            date_type(1, 1, 1) + lengthy_timedelta, 
-            date_type(1, 1, 1) + lengthy_timedelta + freq
+            cftime.datetime(1, 1, 1,calendar=calendar), 
+            cftime.datetime(1, 1, 1,calendar=calendar) + lengthy_timedelta, 
+            cftime.datetime(1, 1, 1,calendar=calendar) + lengthy_timedelta + freq
         ]
     )
     units = f"{encoding_units} since 0001-01-01"
