@@ -7,7 +7,9 @@ version 1.4.0 (release tag v1.4.0.rel)
  * Rewrite of julian day/calendar functions (_IntJulianDayToCalendar and 
    _IntJulianDayFromCalendar) to remove GPL'ed code.  cftime license
    changed to MIT (to be consistent with netcdf4-python). 
- * Added datetime.toordinal() (returns julian day).
+ * Added datetime.toordinal() (returns julian day, kwarg 'fractional'
+   can be used to include fractional day).
+ * cftime.datetime no longer uses calendar-specific sub-classes.
 
 version 1.3.1 (release tag v1.3.1rel)
 =====================================
