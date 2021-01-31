@@ -290,10 +290,13 @@ class cftimeTestCase(unittest.TestCase):
         date = self.cdftime_jul.num2date(t)
         self.assertTrue(str(d) == str(date))
         # test julian day from date, date from julian day
-        d = datetime(1858, 11, 17)
-        mjd = JulianDayFromDate(d)
-        assert_almost_equal(mjd, 2400000.5)
-        date = DateFromJulianDay(mjd)
+        d = cftime.datetime(1858, 11, 17, calendar='standard')
+        # toordinal should produce same result as JulidaDayFromDate
+        mjd1 = d.toordinal(fractional=True)
+        mjd2 = JulianDayFromDate(d)
+        assert_almost_equal(mjd1, 2400000.5)
+        assert_almost_equal(mjd1,mjd2)
+        date = DateFromJulianDay(mjd1)
         self.assertTrue(str(date) == str(d))
         # test iso 8601 units string
         d = datetime(1970, 1, 1, 1)
@@ -737,7 +740,8 @@ class cftimeTestCase(unittest.TestCase):
         test = dates == np.ma.masked_array([datetime(1848, 1, 17, 6, 0, 0, 40), None],mask=[0,1])
         assert(test.all())
         dates = num2date(times, units=units, calendar='standard')
-        assert(str(dates)=="[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 0, 40) --]")
+        assert(str(dates)==\
+        "[cftime.datetime(1848, 1, 17, 6, 0, 0, 40, calendar='gregorian') --]")
 #  check that time range of 200,000 + years can be represented accurately
         calendar='standard'
         _MAX_INT64 = np.iinfo("int64").max
