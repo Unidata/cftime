@@ -11,8 +11,12 @@ but uses the "noleap" ("365_day") calendar.
         super().__init__(*args, **kwargs)
     def __repr__(self):
         return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
-                                     self.__class__.__name__,
-                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+        self.__class__.__name__,
+        self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+    cdef _getstate(self):
+        return (self.year, self.month, self.day, self.hour,
+                self.minute, self.second, self.microsecond,
+                self._dayofwk, self._dayofyr)
 
 @cython.embedsignature(True)
 cdef class DatetimeAllLeap(datetime):
@@ -25,8 +29,12 @@ but uses the "all_leap" ("366_day") calendar.
         super().__init__(*args, **kwargs)
     def __repr__(self):
         return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
-                                     self.__class__.__name__,
-                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+        self.__class__.__name__,
+        self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+    cdef _getstate(self):
+        return (self.year, self.month, self.day, self.hour,
+                self.minute, self.second, self.microsecond,
+                self._dayofwk, self._dayofyr)
 
 @cython.embedsignature(True)
 cdef class Datetime360Day(datetime):
@@ -39,8 +47,12 @@ but uses the "360_day" calendar.
         super().__init__(*args, **kwargs)
     def __repr__(self):
         return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
-                                     self.__class__.__name__,
-                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+        self.__class__.__name__,
+        self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+    cdef _getstate(self):
+        return (self.year, self.month, self.day, self.hour,
+                self.minute, self.second, self.microsecond,
+                self._dayofwk, self._dayofyr)
 
 @cython.embedsignature(True)
 cdef class DatetimeJulian(datetime):
@@ -53,8 +65,12 @@ but uses the "julian" calendar.
         super().__init__(*args, **kwargs)
     def __repr__(self):
         return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
-                                     self.__class__.__name__,
-                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+        self.__class__.__name__,
+        self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+    cdef _getstate(self):
+        return (self.year, self.month, self.day, self.hour,
+                self.minute, self.second, self.microsecond,
+                self._dayofwk, self._dayofyr)
 
 @cython.embedsignature(True)
 cdef class DatetimeGregorian(datetime):
@@ -77,6 +93,10 @@ a datetime.datetime instance or vice versa.
         return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
                                      self.__class__.__name__,
                                      self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+    cdef _getstate(self):
+        return (self.year, self.month, self.day, self.hour,
+                self.minute, self.second, self.microsecond,
+                self._dayofwk, self._dayofyr)
 
 @cython.embedsignature(True)
 cdef class DatetimeProlepticGregorian(datetime):
@@ -103,6 +123,10 @@ format, and calendar.
         return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
                                      self.__class__.__name__,
                                      self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+    cdef _getstate(self):
+        return (self.year, self.month, self.day, self.hour,
+                self.minute, self.second, self.microsecond,
+                self._dayofwk, self._dayofyr)
 
 
 # The following function (_IntJulianDayToDate) is based on
