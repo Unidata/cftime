@@ -33,7 +33,7 @@ jobs:
       uses: s-weigand/setup-conda@v1
       with:
         activate-conda: false
-#       conda-channels: conda-forge
+        conda-channels: conda-forge
 
     - name: Setup Conda Env
       shell: bash -l {0}
@@ -68,7 +68,6 @@ jobs:
       shell: bash -l {0}
       run: |
         source activate TEST
-        conda install -c conda-forge check-manifest
         python setup.py --version ; 
         pip wheel . -w dist --no-deps ;
         check-manifest --verbose ;

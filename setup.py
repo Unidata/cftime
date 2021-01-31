@@ -17,7 +17,7 @@ BASEDIR = os.path.abspath(os.path.dirname(__file__))
 SRCDIR = os.path.join(BASEDIR,'src')
 CMDS_NOCYTHONIZE = ['clean','clean_cython','sdist']
 COMPILER_DIRECTIVES = {}
-DEFINE_MACROS = None
+DEFINE_MACROS = [("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")] 
 FLAG_COVERAGE = '--cython-coverage'  # custom flag enabling Cython line tracing
 NAME = 'cftime'
 CFTIME_DIR = os.path.join(SRCDIR, NAME)
@@ -78,7 +78,7 @@ if ((FLAG_COVERAGE in sys.argv or os.environ.get('CYTHON_COVERAGE', None))
                            'warn.maybe_uninitialized': False,
                            'warn.unreachable': False,
                            'warn.unused': False}
-    DEFINE_MACROS = [('CYTHON_TRACE', '1'),
+    DEFINE_MACROS += [('CYTHON_TRACE', '1'),
                      ('CYTHON_TRACE_NOGIL', '1')]
     if FLAG_COVERAGE in sys.argv:
         sys.argv.remove(FLAG_COVERAGE)
