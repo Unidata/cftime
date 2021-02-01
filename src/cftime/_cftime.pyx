@@ -1089,6 +1089,16 @@ The default format of the string produced by strftime is controlled by self.form
     cdef _add_timedelta(self, other):
         return NotImplemented
 
+    @staticmethod
+    def fromordinal(jday,calendar='standard'):
+        if calendar in ['standard','julian','gregorian']:
+            units = 'days since -4713-1-1-12'
+        elif calendar == 'proleptic_gregorian':
+            units = 'days since -4714-11-24-12'
+        else:
+            units = 'days since 0-1-1-12'
+        return num2date(jday,units=units,calendar=calendar)
+
     def toordinal(self,fractional=False):
         """Return (integer) julian day ordinal.
 
