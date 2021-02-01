@@ -1090,14 +1090,14 @@ The default format of the string produced by strftime is controlled by self.form
         return NotImplemented
 
     def toordinal(self,fractional=False):
-        """Return julian day ordinal.
+        """Return (integer) julian day ordinal.
 
-        January 1 of the year -4713 is day 0 for the julian,gregorian and standard
+        Day 0 at noon January 1 of the year -4713 is for the julian,gregorian and standard
         calendars.
 
-        November 11 of the year -4714 is day 0 for the proleptic gregorian calendar.
+        Day 0 starts at noon on November 11 of the year -4714 for the proleptic gregorian calendar.
 
-        January 1 of the year zero is day 0 for the 360_day, 365_day, 366_day and
+        Day 0 starts at noon on January 1 of the year zero is for the 360_day, 365_day, 366_day and
         no_leap calendars.
         
         If fractional=True, fractional part of day is included (default
@@ -1106,7 +1106,7 @@ The default format of the string produced by strftime is controlled by self.form
                skip_transition=False,has_year_zero=self.has_year_zero)
         if fractional:
             fracday = self.hour / 24.0 + self.minute / 1440.0 + (self.second +
-                    self.microsecond/1.e6) / 86400.0
+                      self.microsecond/1.e6) / 86400.0
             # at this point jd is an integer representing noon UTC on the given
             # year,month,day.
             # compute fractional day from hour,minute,second,microsecond
