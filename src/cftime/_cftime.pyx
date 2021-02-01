@@ -1091,6 +1091,8 @@ The default format of the string produced by strftime is controlled by self.form
 
     @staticmethod
     def fromordinal(jday,calendar='standard'):
+        """Create a datetime instance from a julian day ordinal and calendar
+        (inverseeof toordinal)."""
         if calendar in ['standard','julian','gregorian']:
             units = 'days since -4713-1-1-12'
         elif calendar == 'proleptic_gregorian':
@@ -1116,8 +1118,10 @@ The default format of the string produced by strftime is controlled by self.form
         ijd = _IntJulianDayFromDate(self.year, self.month, self.day, self.calendar,
                skip_transition=False,has_year_zero=self.has_year_zero)
         if fractional:
-            fracday = self.hour / 24.0 + self.minute / 1440.0 + (self.second +
-                      self.microsecond/1.e6) / 86400.0
+            fracday = self.hour / np.array(24.,np.longdouble) + \
+                      self.minute / np.array(1440.0,np.longdouble) + \
+                      (self.second + self.microsecond/(np.array(1.e6,np.longdouble)))/\
+                      np.array(86400.0,np.longdouble)
             # at this point jd is an integer representing noon UTC on the given
             # year,month,day.
             # compute fractional day from hour,minute,second,microsecond
