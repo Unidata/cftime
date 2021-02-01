@@ -1092,13 +1092,14 @@ The default format of the string produced by strftime is controlled by self.form
     def toordinal(self,fractional=False):
         """Return (integer) julian day ordinal.
 
-        Day 0 at noon January 1 of the year -4713 is for the julian,gregorian and standard
-        calendars.
+        Day 0 starts at noon January 1 of the year -4713 for the
+        julian, gregorian and standard calendars.
 
-        Day 0 starts at noon on November 11 of the year -4714 for the proleptic gregorian calendar.
+        Day 0 starts at noon on November 11 of the year -4714 for the
+        proleptic gregorian calendar.
 
-        Day 0 starts at noon on January 1 of the year zero is for the 360_day, 365_day, 366_day and
-        no_leap calendars.
+        Day 0 starts at noon on January 1 of the year zero is for the
+        360_day, 365_day, 366_day, all_leap and noleap calendars.
         
         If fractional=True, fractional part of day is included (default
         False)."""

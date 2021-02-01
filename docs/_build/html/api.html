@@ -147,11 +147,12 @@ day number within the current year starting with 1 for January 1st.</p>
 <dt id="cftime.datetime.toordinal">
 <code class="sig-name descname">toordinal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">fractional</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.datetime.toordinal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return (integer) julian day ordinal.</p>
-<p>Day 0 at noon January 1 of the year -4713 is for the julian,gregorian and standard
-calendars.</p>
-<p>Day 0 starts at noon on November 11 of the year -4714 for the proleptic gregorian calendar.</p>
-<p>Day 0 starts at noon on January 1 of the year zero is for the 360_day, 365_day, 366_day and
-no_leap calendars.</p>
+<p>Day 0 starts at noon January 1 of the year -4713 for the
+julian, gregorian and standard calendars.</p>
+<p>Day 0 starts at noon on November 11 of the year -4714 for the
+proleptic gregorian calendar.</p>
+<p>Day 0 starts at noon on January 1 of the year zero is for the
+360_day, 365_day, 366_day, all_leap and noleap calendars.</p>
 <p>If fractional=True, fractional part of day is included (default
 False).</p>
 </dd></dl>
