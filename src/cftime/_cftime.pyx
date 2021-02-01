@@ -1107,7 +1107,7 @@ The default format of the string produced by strftime is controlled by self.form
         Day 0 starts at noon January 1 of the year -4713 for the
         julian, gregorian and standard calendars.
 
-        Day 0 starts at noon on November 11 of the year -4714 for the
+        Day 0 starts at noon on November 24 of the year -4714 for the
         proleptic gregorian calendar.
 
         Day 0 starts at noon on January 1 of the year zero is for the
