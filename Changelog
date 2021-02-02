@@ -1,5 +1,9 @@
-version 1.4.1 (not yet released)
-================================
+
+version 1.4.1 (release tag v1.4.1.rel)
+======================================
+ * Restore use of calendar-specific sub-classes in `cftime.num2date`,
+   `cftime.datetime.__add__`, and `cftime.datetime.__sub__`.  The use of them 
+   will be removed in a later release.
  * add 'fromordinal' static method to create a cftime.datetime instance
    from a julian day ordinal and calendar (inverse of 'toordinal').
 
