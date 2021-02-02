@@ -1,3 +1,9 @@
+version 1.4.1 (release tag v1.4.1.rel)
+======================================
+ * Restore use of calendar-specific sub-classes in `cftime.num2date`,
+   `cftime.datetime.__add__`, and `cftime.datetime.__sub__`.  The use of them 
+   will be removed in a later release.
+
 version 1.4.0 (release tag v1.4.0.rel)
 ======================================
  * `cftime.date2num` will now always return an array of integers, if the units
