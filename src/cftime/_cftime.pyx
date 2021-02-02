@@ -41,7 +41,7 @@ cdef int[13] _cumdayspermonth_leap = [0, 31, 60, 91, 121, 152, 182, 213, 244, 27
 _rop_lookup = {Py_LT: '__gt__', Py_LE: '__ge__', Py_EQ: '__eq__',
                Py_GT: '__lt__', Py_GE: '__le__', Py_NE: '__ne__'}
 
-__version__ = '1.4.0'
+__version__ = '1.4.1'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
@@ -1102,6 +1102,18 @@ The default format of the string produced by strftime is controlled by self.form
     cdef _add_timedelta(self, other):
         return NotImplemented
 
+    @staticmethod
+    def fromordinal(jday,calendar='standard'):
+        """Create a datetime instance from a julian day ordinal and calendar
+        (inverseeof toordinal)."""
+        if calendar in ['standard','julian','gregorian']:
+            units = 'days since -4713-1-1-12'
+        elif calendar == 'proleptic_gregorian':
+            units = 'days since -4714-11-24-12'
+        else:
+            units = 'days since 0-1-1-12'
+        return num2date(jday,units=units,calendar=calendar)
+
     def toordinal(self,fractional=False):
         """Return (integer) julian day ordinal.
 
@@ -1119,8 +1131,10 @@ The default format of the string produced by strftime is controlled by self.form
         ijd = _IntJulianDayFromDate(self.year, self.month, self.day, self.calendar,
                skip_transition=False,has_year_zero=self.has_year_zero)
         if fractional:
-            fracday = self.hour / 24.0 + self.minute / 1440.0 + (self.second +
-                      self.microsecond/1.e6) / 86400.0
+            fracday = self.hour / np.array(24.,np.longdouble) + \
+                      self.minute / np.array(1440.0,np.longdouble) + \
+                      (self.second + self.microsecond/(np.array(1.e6,np.longdouble)))/\
+                      np.array(86400.0,np.longdouble)
             # at this point jd is an integer representing noon UTC on the given
             # year,month,day.
             # compute fractional day from hour,minute,second,microsecond

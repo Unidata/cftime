@@ -291,13 +291,16 @@ class cftimeTestCase(unittest.TestCase):
         self.assertTrue(str(d) == str(date))
         # test julian day from date, date from julian day
         d = cftime.datetime(1858, 11, 17, calendar='standard')
-        # toordinal should produce same result as JulidaDayFromDate
+        # toordinal should produce same result as JulianDayFromDate
         mjd1 = d.toordinal(fractional=True)
         mjd2 = JulianDayFromDate(d)
         assert_almost_equal(mjd1, 2400000.5)
         assert_almost_equal(mjd1,mjd2)
-        date = DateFromJulianDay(mjd1)
-        self.assertTrue(str(date) == str(d))
+        # fromordinal should produce the same result as DateFromJulianDay
+        date1 = DateFromJulianDay(mjd1)
+        date2 = cftime.datetime.fromordinal(mjd1)
+        self.assertTrue(str(date1) == str(d))
+        self.assertTrue(str(date1) == str(date2))
         # test iso 8601 units string
         d = datetime(1970, 1, 1, 1)
         t = self.cdftime_iso.date2num(d)
