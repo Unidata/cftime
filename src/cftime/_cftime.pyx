@@ -146,7 +146,7 @@ def date2num(dates,units,calendar=None):
 
     **calendar**: describes the calendar to be used in the time calculations.
     All the values currently defined in the
-    [CF metadata convention](http://cfconventions.org)
+    `CF metadata convention <http://cfconventions.org>`__ are supported.
     Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
     Default is `None` which means the calendar associated with the rist
@@ -408,7 +408,7 @@ def num2date(
 
     **calendar**: describes the calendar used in the time calculations.
     All the values currently defined in the
-    [CF metadata convention](http://cfconventions.org)
+    `CF metadata convention <http://cfconventions.org>`__ are supported.
     Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
     Default is **'standard'**, which is a mixed Julian/Gregorian calendar.
@@ -499,7 +499,7 @@ def date2index(dates, nctime, calendar=None, select='exact'):
 
     **calendar**: describes the calendar used in the time calculations.
     All the values currently defined in the
-    [CF metadata convention](http://cfconventions.org)
+    `CF metadata convention <http://cfconventions.org>`__ are supported.
     Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
     Default is **'standard'**, which is a mixed Julian/Gregorian calendar.
@@ -834,7 +834,7 @@ for cftime.datetime instances using
 'gregorian' and 'proleptic_gregorian' calendars.
 
 All the calendars currently defined in the
-[CF metadata convention](http://cfconventions.org) are supported.
+`CF metadata convention <http://cfconventions.org>`__ are supported.
 Valid calendars are 'standard', 'gregorian', 'proleptic_gregorian'
 'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'.
 Default is 'standard', which is a mixed Julian/Gregorian calendar.

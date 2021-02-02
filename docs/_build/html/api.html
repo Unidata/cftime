@@ -12,6 +12,7 @@
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Installation" href="installing.html" />
@@ -43,7 +44,7 @@ The datetime objects should not include a time-zone offset.</p>
 <strong>units</strong> attribute.</p>
 <p><strong>calendar</strong>: describes the calendar used in the time calculations.
 All the values currently defined in the
-[CF metadata convention](<a class="reference external" href="http://cfconventions.org">http://cfconventions.org</a>)
+<a class="reference external" href="http://cfconventions.org">CF metadata convention</a> are supported.
 Valid calendars <strong>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
 ‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</strong>.
 Default is <strong>‘standard’</strong>, which is a mixed Julian/Gregorian calendar.
@@ -78,7 +79,7 @@ seconds, milliseconds or microseconds. <strong>&lt;reference time&gt;</strong> i
 origin. <strong>months_since</strong> is allowed <em>only</em> for the <strong>360_day</strong> calendar.</p>
 <p><strong>calendar</strong>: describes the calendar to be used in the time calculations.
 All the values currently defined in the
-[CF metadata convention](<a class="reference external" href="http://cfconventions.org">http://cfconventions.org</a>)
+<a class="reference external" href="http://cfconventions.org">CF metadata convention</a> are supported.
 Valid calendars <strong>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
 ‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</strong>.
 Default is <cite>None</cite> which means the calendar associated with the rist
@@ -99,7 +100,7 @@ comparisons with other instances using the same calendar.</p>
 for cftime.datetime instances using
 ‘gregorian’ and ‘proleptic_gregorian’ calendars.</p>
 <p>All the calendars currently defined in the
-[CF metadata convention](<a class="reference external" href="http://cfconventions.org">http://cfconventions.org</a>) are supported.
+<a class="reference external" href="http://cfconventions.org">CF metadata convention</a> are supported.
 Valid calendars are ‘standard’, ‘gregorian’, ‘proleptic_gregorian’
 ‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’.
 Default is ‘standard’, which is a mixed Julian/Gregorian calendar.
@@ -113,6 +114,13 @@ __repr__, __add__, __sub__, __str__ and comparison methods.</p>
 instances.</p>
 <p>The default format of the string produced by strftime is controlled by self.format
 (default %Y-%m-%d %H:%M:%S).</p>
+<dl class="py method">
+<dt id="cftime.datetime.fromordinal">
+<em class="property">static </em><code class="sig-name descname">fromordinal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">jday</span></em>, <em class="sig-param"><span class="n">calendar</span><span class="o">=</span><span class="default_value">'standard'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.datetime.fromordinal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a datetime instance from a julian day ordinal and calendar
+(inverse of toordinal).</p>
+</dd></dl>
+
 <dl class="py method">
 <dt id="cftime.datetime.isoformat">
 <code class="sig-name descname">isoformat</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">sep</span><span class="o">=</span><span class="default_value">'T'</span></em>, <em class="sig-param"><span class="n">timespec</span><span class="o">=</span><span class="default_value">'auto'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.datetime.isoformat" title="Permalink to this definition">¶</a></dt>
@@ -173,7 +181,7 @@ seconds, milliseconds or microseconds. <strong>&lt;reference time&gt;</strong> i
 origin. <strong>months_since</strong> is allowed <em>only</em> for the <strong>360_day</strong> calendar.</p>
 <p><strong>calendar</strong>: describes the calendar used in the time calculations.
 All the values currently defined in the
-[CF metadata convention](<a class="reference external" href="http://cfconventions.org">http://cfconventions.org</a>)
+<a class="reference external" href="http://cfconventions.org">CF metadata convention</a> are supported.
 Valid calendars <strong>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
 ‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</strong>.
 Default is <strong>‘standard’</strong>, which is a mixed Julian/Gregorian calendar.</p>
@@ -287,7 +295,7 @@ correspond to the closest times.</p>
       &copy;2018, Jeff Whitaker.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.4.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
