@@ -290,11 +290,11 @@ class cftimeTestCase(unittest.TestCase):
         date = self.cdftime_jul.num2date(t)
         self.assertTrue(str(d) == str(date))
         # test julian day from date, date from julian day
-        d = DatetimeProlepticGregorian(1858, 11, 17)
-        mjd1 = d.toordinal(fractional=True)
-        assert_almost_equal(mjd1, 2400000.5)
-        mjd2 = JulianDayFromDate(d)
+        d = cftime.datetime(1858, 11, 17, calendar='standard')
         # toordinal should produce same result as JulidaDayFromDate
+        mjd1 = d.toordinal(fractional=True)
+        mjd2 = JulianDayFromDate(d)
+        assert_almost_equal(mjd1, 2400000.5)
         assert_almost_equal(mjd1,mjd2)
         date = DateFromJulianDay(mjd1)
         self.assertTrue(str(date) == str(d))
