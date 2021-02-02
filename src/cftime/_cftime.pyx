@@ -1022,6 +1022,10 @@ The default format of the string produced by strftime is controlled by self.form
                              self.microsecond)
 
     def __repr__(self):
+        if self.__class__.__name__ != 'datetime': # a calendar-specific sub-class
+            return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
+            self.__class__.__name__,
+            self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
         if self.calendar == None:
             return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8}, calendar={9})".format('cftime',
             self.__class__.__name__,
@@ -1091,9 +1095,14 @@ The default format of the string produced by strftime is controlled by self.form
             return NotImplemented
 
     cdef _getstate(self):
-        return (self.year, self.month, self.day, self.hour,
-                self.minute, self.second, self.microsecond,
-                self._dayofwk, self._dayofyr, self.calendar)
+        if self.__class__.__name__ != 'datetime': # a calendar-specific sub-class
+           return (self.year, self.month, self.day, self.hour,
+                   self.minute, self.second, self.microsecond,
+                   self._dayofwk, self._dayofyr)
+        else:
+           return (self.year, self.month, self.day, self.hour,
+                   self.minute, self.second, self.microsecond,
+                   self._dayofwk, self._dayofyr, self.calendar)
 
     def __reduce__(self):
         """special method that allows instance to be pickled"""
@@ -1634,6 +1643,8 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
             else:
                 return jday_greg
 
+# legacy calendar specific sub-classes (will be removed in a future release).
+
 @cython.embedsignature(True)
 cdef class DatetimeNoLeap(datetime):
     """
@@ -1643,14 +1654,6 @@ but uses the "noleap" ("365_day") calendar.
     def __init__(self, *args, **kwargs):
         kwargs['calendar']='noleap'
         super().__init__(*args, **kwargs)
-    def __repr__(self):
-        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
-        self.__class__.__name__,
-        self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
-    cdef _getstate(self):
-        return (self.year, self.month, self.day, self.hour,
-                self.minute, self.second, self.microsecond,
-                self._dayofwk, self._dayofyr)
 
 @cython.embedsignature(True)
 cdef class DatetimeAllLeap(datetime):
@@ -1661,14 +1664,6 @@ but uses the "all_leap" ("366_day") calendar.
     def __init__(self, *args, **kwargs):
         kwargs['calendar']='all_leap'
         super().__init__(*args, **kwargs)
-    def __repr__(self):
-        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
-        self.__class__.__name__,
-        self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
-    cdef _getstate(self):
-        return (self.year, self.month, self.day, self.hour,
-                self.minute, self.second, self.microsecond,
-                self._dayofwk, self._dayofyr)
 
 @cython.embedsignature(True)
 cdef class Datetime360Day(datetime):
@@ -1679,14 +1674,6 @@ but uses the "360_day" calendar.
     def __init__(self, *args, **kwargs):
         kwargs['calendar']='360_day'
         super().__init__(*args, **kwargs)
-    def __repr__(self):
-        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
-        self.__class__.__name__,
-        self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
-    cdef _getstate(self):
-        return (self.year, self.month, self.day, self.hour,
-                self.minute, self.second, self.microsecond,
-                self._dayofwk, self._dayofyr)
 
 @cython.embedsignature(True)
 cdef class DatetimeJulian(datetime):
@@ -1697,71 +1684,26 @@ but uses the "julian" calendar.
     def __init__(self, *args, **kwargs):
         kwargs['calendar']='julian'
         super().__init__(*args, **kwargs)
-    def __repr__(self):
-        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
-        self.__class__.__name__,
-        self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
-    cdef _getstate(self):
-        return (self.year, self.month, self.day, self.hour,
-                self.minute, self.second, self.microsecond,
-                self._dayofwk, self._dayofyr)
-
 
 @cython.embedsignature(True)
 cdef class DatetimeGregorian(datetime):
     """
 Phony datetime object which mimics the python datetime object,
 but uses the mixed Julian-Gregorian ("standard", "gregorian") calendar.
-
-The last date of the Julian calendar is 1582-10-4, which is followed
-by 1582-10-15, using the Gregorian calendar.
-
-Instances using the date after 1582-10-15 can be compared to
-datetime.datetime instances and used to compute time differences
-(datetime.timedelta) by subtracting a DatetimeGregorian instance from
-a datetime.datetime instance or vice versa.
     """
     def __init__(self, *args, **kwargs):
         kwargs['calendar']='gregorian'
         super().__init__(*args, **kwargs)
-    def __repr__(self):
-        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
-                                     self.__class__.__name__,
-                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
-    cdef _getstate(self):
-        return (self.year, self.month, self.day, self.hour,
-                self.minute, self.second, self.microsecond,
-                self._dayofwk, self._dayofyr)
 
 @cython.embedsignature(True)
 cdef class DatetimeProlepticGregorian(datetime):
     """
 Phony datetime object which mimics the python datetime object,
 but allows for dates that don't exist in the proleptic gregorian calendar.
-
-Supports timedelta operations by overloading + and -.
-
-Has strftime, timetuple, replace, __repr__, and __str__ methods. The
-format of the string produced by __str__ is controlled by self.format
-(default %Y-%m-%d %H:%M:%S). Supports comparisons with other
-datetime instances using the same calendar; comparison with
-native python datetime instances is possible for cftime.datetime
-instances using 'gregorian' and 'proleptic_gregorian' calendars.
-
-Instance variables are year,month,day,hour,minute,second,microsecond,dayofwk,dayofyr,
-format, and calendar.
     """
     def __init__(self, *args, **kwargs):
         kwargs['calendar']='proleptic_gregorian'
         super().__init__( *args, **kwargs)
-    def __repr__(self):
-        return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
-                                     self.__class__.__name__,
-                                     self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
-    cdef _getstate(self):
-        return (self.year, self.month, self.day, self.hour,
-                self.minute, self.second, self.microsecond,
-                self._dayofwk, self._dayofyr)
 
 # include legacy stuff no longer used by cftime.datetime
 include "_cftime_legacy.pyx"
