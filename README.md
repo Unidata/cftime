@@ -11,6 +11,12 @@ Time-handling functionality from netcdf4-python
 ## News
 For details on the latest updates, see the [Changelog](https://github.com/Unidata/cftime/blob/master/Changelog).
 
+2/2/2021:  Version 1.4.1 released. Restore use of calendar-specific subclasses
+in `cftime.num2date`, `cftime.datetime.__add__`, and `cftime.datetime.__sub__`.
+The use of this will be removed in a later release.
+Add 'fromordinal' static method to create a cftime.datetime instance
+from a julian day ordinal and calendar (inverse of 'toordinal').
+
 2/1/2021:  Version 1.4.0 released.  License changed to MIT (GPL'ed code replaced).
 Roundtrip accuracy improved for units other than microseconds. Added 
 cftime.datetime.toordinal method, returns integer julian day number.
