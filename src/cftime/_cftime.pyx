@@ -1105,7 +1105,7 @@ The default format of the string produced by strftime is controlled by self.form
     @staticmethod
     def fromordinal(jday,calendar='standard'):
         """Create a datetime instance from a julian day ordinal and calendar
-        (inverseeof toordinal)."""
+        (inverse of toordinal)."""
         if calendar in ['standard','julian','gregorian']:
             units = 'days since -4713-1-1-12'
         elif calendar == 'proleptic_gregorian':
