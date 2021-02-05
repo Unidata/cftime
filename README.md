@@ -7,6 +7,7 @@ Time-handling functionality from netcdf4-python
 [![Tag Status](https://img.shields.io/github/tag/UniData/cftime.svg)](https://github.com/Unidata/cftime/tags)
 [![Release Status](https://img.shields.io/github/release/UniData/cftime.svg)](https://github.com/Unidata/cftime/releases)
 [![Commits Status](https://img.shields.io/github/commits-since/UniData/cftime/latest.svg)](https://github.com/UniData/cftime/commits/master)
+[![DOI](https://zenodo.org/badge/73107250.svg)](https://zenodo.org/badge/latestdoi/73107250)
 
 ## News
 For details on the latest updates, see the [Changelog](https://github.com/Unidata/cftime/blob/master/Changelog).
