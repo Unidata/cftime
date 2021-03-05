@@ -1,4 +1,5 @@
 from __future__ import print_function
+from calendar import c
 
 import copy
 import operator
@@ -1589,6 +1590,13 @@ def test_repr():
     expected = "cftime.datetime(2000, 1, 1, 0, 0, 0, 0, calendar='')"
     assert repr(datetimex(2000, 1, 1, calendar=None)) == expected
 
+def test_string_format():
+    dt = cftime.datetime(2000, 1, 1)
+    # check the default formatting is the same as strftime
+    assert dt.strftime() == '{0}'.format(dt)
+    # check a given format string acts like strftime
+    assert dt.strftime('%H%m%d') == '{0:%H%m%d}'.format(dt)
+    assert 'the year is 2000' == 'the year is {dt:%Y}'.format(dt=dt)
 
 def test_dayofyr_after_replace(date_type):
     date = date_type(1, 1, 1)

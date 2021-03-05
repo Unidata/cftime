@@ -981,6 +981,14 @@ The default format of the string produced by strftime is controlled by self.form
             format = self.format
         return _strftime(self, format)
 
+    def __format__(self, format):
+        # the string format "{t_obj}".format(t_obj=t_obj)
+        # without a gives an empty string format specifier
+        # so set this to None to get the default strftime behaviour
+        if format == '':
+            format = None
+        return self.strftime(format)
+
     def replace(self, **kwargs):
         """Return datetime with new specified fields."""
         args = {"year": self.year,
