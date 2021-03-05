@@ -983,7 +983,7 @@ The default format of the string produced by strftime is controlled by self.form
 
     def __format__(self, format):
         # the string format "{t_obj}".format(t_obj=t_obj)
-        # without a gives an empty string format specifier
+        # without an explicit format gives an empty string (format='')
         # so set this to None to get the default strftime behaviour
         if format == '':
             format = None

@@ -1,5 +1,4 @@
 from __future__ import print_function
-from calendar import c
 
 import copy
 import operator
