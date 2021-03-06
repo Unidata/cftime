@@ -1,6 +1,7 @@
 since version 1.4.1
 ===================
  * clean-up deprecated calendar specific subclasses.
+ * added string formatting support to `cftime.datetime` objects
 
 version 1.4.1 (release tag v1.4.1.rel)
 ======================================
