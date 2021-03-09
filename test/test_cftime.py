@@ -291,11 +291,17 @@ class cftimeTestCase(unittest.TestCase):
         self.assertTrue(str(d) == str(date))
         # test julian day from date, date from julian day
         d = cftime.datetime(1858, 11, 17, calendar='standard')
+        # astronomical year numbering (with year zero)
+        dz = cftime.datetime(1858, 11, 17, calendar='standard',yearzero=True)
         # toordinal should produce same result as JulianDayFromDate
         mjd1 = d.toordinal(fractional=True)
+        mjd1z = dz.toordinal(fractional=True)
         mjd2 = JulianDayFromDate(d)
+        mjd2z = JulianDayFromDate(dz)
         assert_almost_equal(mjd1, 2400000.5)
         assert_almost_equal(mjd1,mjd2)
+        assert_almost_equal(mjd1,mjd1z)
+        assert_almost_equal(mjd2,mjd2z)
         # fromordinal should produce the same result as DateFromJulianDay
         date1 = DateFromJulianDay(mjd1)
         date2 = cftime.datetime.fromordinal(mjd1)

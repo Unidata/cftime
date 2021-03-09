@@ -844,6 +844,12 @@ and 'noleap'/'365_day'.
 If the calendar kwarg is set to a blank string ('') or None (the default is 'standard') the 
 instance will not be calendar-aware and some methods will not work.
 
+If the yearzero kwarg is set to True, astronomical year numbering
+is used and the year zero exists (default False
+for all "real-world" calendars).  For the idealized calendars
+('noleap', '365_day', '360_day',366_day','all_leap') the year zero
+always exists and the yearzero kwarg is ignored.
+
 Has isoformat, strftime, timetuple, replace, dayofwk, dayofyr, daysinmonth,
 __repr__, __add__, __sub__, __str__ and comparison methods. 
 
@@ -868,7 +874,7 @@ The default format of the string produced by strftime is controlled by self.form
 
     def __init__(self, int year, int month, int day, int hour=0, int minute=0,
                        int second=0, int microsecond=0, int dayofwk=-1, 
-                       int dayofyr = -1, calendar='standard'):
+                       int dayofyr = -1, calendar='standard', yearzero=False):
 
         self.year = year
         self.month = month
@@ -890,8 +896,8 @@ The default format of the string produced by strftime is controlled by self.form
                 self.datetime_compatible = True
             else:
                 self.datetime_compatible = False
-            assert_valid_date(self, is_leap_gregorian, True)
-            self.has_year_zero = False
+            assert_valid_date(self, is_leap_gregorian, True, has_year_zero=yearzero)
+            self.has_year_zero = yearzero
         elif calendar == 'noleap' or calendar == '365_day':
             self.calendar = 'noleap'
             self.datetime_compatible = False
@@ -910,13 +916,13 @@ The default format of the string produced by strftime is controlled by self.form
         elif calendar == 'julian':
             self.calendar = calendar
             self.datetime_compatible = False
-            assert_valid_date(self, is_leap_julian, False)
-            self.has_year_zero = False
+            assert_valid_date(self, is_leap_julian, False, has_year_zero=yearzero)
+            self.has_year_zero = yearzero
         elif calendar == 'proleptic_gregorian':
             self.calendar = calendar
             self.datetime_compatible = True
-            assert_valid_date(self, is_leap_proleptic_gregorian, False)
-            self.has_year_zero = False
+            assert_valid_date(self, is_leap_proleptic_gregorian, False, has_year_zero=yearzero)
+            self.has_year_zero = yearzero
         elif calendar == '' or calendar is None:
             # instance not calendar-aware, some method will not work
             self.calendar = ''
@@ -1120,13 +1126,19 @@ The default format of the string produced by strftime is controlled by self.form
         return NotImplemented
 
     @staticmethod
-    def fromordinal(jday,calendar='standard'):
+    def fromordinal(jday,calendar='standard',has_year_zero=False):
         """Create a datetime instance from a julian day ordinal and calendar
         (inverse of toordinal)."""
         if calendar in ['standard','julian','gregorian']:
-            units = 'days since -4713-1-1-12'
+            if has_year_zero:
+               units = 'days since -4712-1-1-12'
+            else:
+               units = 'days since -4713-1-1-12'
         elif calendar == 'proleptic_gregorian':
-            units = 'days since -4714-11-24-12'
+            if has_year_zero:
+                units = 'days since -4713-11-24-12'
+            else:
+                units = 'days since -4714-11-24-12'
         else:
             units = 'days since 0-1-1-12'
         return num2date(jday,units=units,calendar=calendar)
