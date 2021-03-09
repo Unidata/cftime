@@ -156,7 +156,7 @@ def date2num(dates,units,calendar=None,has_year_zero=None):
     number is used (if False, then there is no year zero). 
     Ignored for idealized calendars like '360_day' where it is assumed
     year zero always exists.
-    Default is `None` which means the calendar associated with the rist
+    Default is `None` which means the value associated with the rist
     input datetime instance will be used.
 
     returns a numeric time value, or an array of numeric time values
@@ -512,7 +512,7 @@ def num2date(
 
 
 @cython.embedsignature(True)
-def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=False):
+def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None):
     """
     Return indices of a netCDF time variable corresponding to the given dates.
 
@@ -522,14 +522,13 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=False
     **nctime**: A netCDF time variable object. The nctime object must have a
     **units** attribute.
 
-    **calendar**: describes the calendar used in the time calculations.
+    **calendar**: describes the calendar to be used in the time calculations.
     All the values currently defined in the
     `CF metadata convention <http://cfconventions.org>`__ are supported.
     Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
-    Default is **'standard'**, which is a mixed Julian/Gregorian calendar.
-    If **calendar** is None, its value is given by **nctime.calendar** or
-    **standard** if no such attribute exists.
+    Default is `None` which means the calendar associated with the rist
+    input datetime instance will be used.
 
     **select**: **'exact', 'before', 'after', 'nearest'**
     The index selection method. **exact** will return the indices perfectly
@@ -539,9 +538,11 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=False
     correspond to the closest dates.
 
     **has_year_zero**:  boolean that determines whether astronomical year
-    number is used (if False (default), then there is no year zero). 
+    number is used (if False, then there is no year zero). 
     Ignored for idealized calendars like '360_day' where it is assumed
     year zero always exists.
+    Default is `None` which means the value associated with the rist
+    input datetime instance will be used.
 
     returns an index (indices) of the netCDF time variable corresponding
     to the given datetime object(s).
@@ -550,8 +551,31 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=False
         nctime.units
     except AttributeError:
         raise AttributeError("netcdf time variable is missing a 'units' attribute")
-    if calendar == None:
-        calendar = getattr(nctime, 'calendar', 'standard')
+
+    # if calendar is None or '', use calendar of first input cftime.datetime instances.
+    # if inputs are 'real' python datetime instances, use propleptic gregorian.
+    if not calendar:
+        d0 = dates.item(0)
+        if isinstance(d0,datetime_python):
+            calendar = 'proleptic_gregorian' 
+        else:
+            try:
+                calendar = d0.calendar
+            except AttributeError:
+                raise ValueError('no calendar specified',type(d0))
+
+    # if has_year_zero is None, use first input cftime.datetime instance
+    # to determine if year zero is to be included.
+    if has_year_zero is None:
+        d0 = dates.item(0)
+        if isinstance(d0,datetime_python):
+            has_year_zero = False
+        else:
+            try:
+                has_year_zero = d0.has_year_zero
+            except AttributeError:
+                raise ValueError('has_year_zero not specified',type(d0))
+
     calendar = calendar.lower()
     basedate = _dateparse(nctime.units,calendar=calendar,has_year_zero=has_year_zero)
     # real-world calendars limited to positive reference years.
@@ -565,7 +589,7 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=False
         times = date2num(dates,nctime.units,calendar=calendar)
         return time2index(times, nctime, calendar, select)
     else: # use cftime module for other cases
-        return _date2index(dates, nctime, calendar, select)
+        return _date2index(dates, nctime, calendar, select, has_year_zero)
 
 
 cdef _parse_timezone(tzstring):
@@ -691,7 +715,7 @@ cdef _check_index(indices, times, nctime, calendar, select):
         return np.all(delta_check <= delta_after) and np.all(delta_check <= delta_before)
 
 
-def _date2index(dates, nctime, calendar=None, select='exact', has_year_zero=False):
+def _date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None):
     """
     Return indices of a netCDF time variable corresponding to the given dates.
 
@@ -717,17 +741,16 @@ def _date2index(dates, nctime, calendar=None, select='exact', has_year_zero=Fals
     correspond to the closest dates.
 
     **has_year_zero**:  boolean that determines whether astronomical year
-    number is used (if False (default), then there is no year zero). 
+    number is used (if False, then there is no year zero). 
     Ignored for idealized calendars like '360_day' where it is assumed
     year zero always exists.
+    Default is `None` which means the valuer associated with the rist
+    input datetime instance will be used.
     """
     try:
         nctime.units
     except AttributeError:
         raise AttributeError("netcdf time variable is missing a 'units' attribute")
-    # Setting the calendar.
-    if calendar == None:
-        calendar = getattr(nctime, 'calendar', 'standard')
     times = date2num(dates,nctime.units,calendar=calendar, has_year_zero=has_year_zero)
     return time2index(times, nctime, calendar=calendar, select=select)
 
