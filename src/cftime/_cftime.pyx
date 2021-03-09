@@ -554,8 +554,9 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None)
 
     # if calendar is None or '', use calendar of first input cftime.datetime instances.
     # if inputs are 'real' python datetime instances, use propleptic gregorian.
+    dates_test = np.asanyarray(dates) # convert to numpy array
     if not calendar:
-        d0 = dates.item(0)
+        d0 = dates_test.item(0)
         if isinstance(d0,datetime_python):
             calendar = 'proleptic_gregorian' 
         else:
@@ -567,7 +568,7 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None)
     # if has_year_zero is None, use first input cftime.datetime instance
     # to determine if year zero is to be included.
     if has_year_zero is None:
-        d0 = dates.item(0)
+        d0 = dates_test.item(0)
         if isinstance(d0,datetime_python):
             has_year_zero = False
         else:
