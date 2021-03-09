@@ -292,7 +292,7 @@ class cftimeTestCase(unittest.TestCase):
         # test julian day from date, date from julian day
         d = cftime.datetime(1858, 11, 17, calendar='standard')
         # astronomical year numbering (with year zero)
-        dz = cftime.datetime(1858, 11, 17, calendar='standard',yearzero=True)
+        dz = cftime.datetime(1858, 11, 17, calendar='standard',has_year_zero=True)
         # toordinal should produce same result as JulianDayFromDate
         mjd1 = d.toordinal(fractional=True)
         mjd1z = dz.toordinal(fractional=True)

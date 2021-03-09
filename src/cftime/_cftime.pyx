@@ -844,11 +844,11 @@ and 'noleap'/'365_day'.
 If the calendar kwarg is set to a blank string ('') or None (the default is 'standard') the 
 instance will not be calendar-aware and some methods will not work.
 
-If the yearzero kwarg is set to True, astronomical year numbering
+If the has_year_zero kwarg is set to True, astronomical year numbering
 is used and the year zero exists (default False
 for all "real-world" calendars).  For the idealized calendars
 ('noleap', '365_day', '360_day',366_day','all_leap') the year zero
-always exists and the yearzero kwarg is ignored.
+always exists and the has_year_zero kwarg is ignored.
 
 Has isoformat, strftime, timetuple, replace, dayofwk, dayofyr, daysinmonth,
 __repr__, __add__, __sub__, __str__ and comparison methods. 
@@ -874,7 +874,7 @@ The default format of the string produced by strftime is controlled by self.form
 
     def __init__(self, int year, int month, int day, int hour=0, int minute=0,
                        int second=0, int microsecond=0, int dayofwk=-1, 
-                       int dayofyr = -1, calendar='standard', yearzero=False):
+                       int dayofyr = -1, calendar='standard', has_year_zero=False):
 
         self.year = year
         self.month = month
@@ -896,8 +896,8 @@ The default format of the string produced by strftime is controlled by self.form
                 self.datetime_compatible = True
             else:
                 self.datetime_compatible = False
-            assert_valid_date(self, is_leap_gregorian, True, has_year_zero=yearzero)
-            self.has_year_zero = yearzero
+            assert_valid_date(self, is_leap_gregorian, True, has_year_zero=has_year_zero)
+            self.has_year_zero = has_year_zero
         elif calendar == 'noleap' or calendar == '365_day':
             self.calendar = 'noleap'
             self.datetime_compatible = False
@@ -916,13 +916,13 @@ The default format of the string produced by strftime is controlled by self.form
         elif calendar == 'julian':
             self.calendar = calendar
             self.datetime_compatible = False
-            assert_valid_date(self, is_leap_julian, False, has_year_zero=yearzero)
-            self.has_year_zero = yearzero
+            assert_valid_date(self, is_leap_julian, False, has_year_zero=has_year_zero)
+            self.has_year_zero = has_year_zero
         elif calendar == 'proleptic_gregorian':
             self.calendar = calendar
             self.datetime_compatible = True
-            assert_valid_date(self, is_leap_proleptic_gregorian, False, has_year_zero=yearzero)
-            self.has_year_zero = yearzero
+            assert_valid_date(self, is_leap_proleptic_gregorian, False, has_year_zero=has_year_zero)
+            self.has_year_zero = has_year_zero
         elif calendar == '' or calendar is None:
             # instance not calendar-aware, some method will not work
             self.calendar = ''
@@ -1176,10 +1176,12 @@ The default format of the string produced by strftime is controlled by self.form
         if isinstance(self, datetime) and isinstance(other, timedelta):
             dt = self
             calendar = self.calendar
+            has_year_zero = self.has_year_zero
             delta = other
         elif isinstance(self, timedelta) and isinstance(other, datetime):
             dt = other
             calendar = other.calendar
+            has_year_zero = other.has_year_zero
             delta = self
         else:
             return NotImplemented
@@ -1195,14 +1197,14 @@ The default format of the string produced by strftime is controlled by self.form
             #return dt.__class__(*add_timedelta(dt, delta, all_leap, False, True),calendar=calendar)
             return DatetimeAllLeap(*add_timedelta(dt, delta, all_leap, False, True))
         elif calendar == 'julian':
-            #return dt.__class__(*add_timedelta(dt, delta, is_leap_julian, False, False),calendar=calendar)
-            return DatetimeJulian(*add_timedelta(dt, delta, is_leap_julian, False, False))
+            #return dt.__class__(*add_timedelta(dt, delta, is_leap_julian, False, False),calendar=calendar,has_year_zero=has_year_zero)
+            return DatetimeJulian(*add_timedelta(dt, delta, is_leap_julian, False, False),has_year_zero=has_year_zero)
         elif calendar == 'gregorian':
-            #return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, True, False),calendar=calendar)
-            return DatetimeGregorian(*add_timedelta(dt, delta, is_leap_gregorian, True, False))
+            #return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, True, False),calendar=calendar,has_year_zero=has_year_zero)
+            return DatetimeGregorian(*add_timedelta(dt, delta, is_leap_gregorian, True, False),has_year_zero=has_year_zero)
         elif calendar == 'proleptic_gregorian':
-            #return dt.__class__(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, False),calendar=calendar)
-            return DatetimeProlepticGregorian(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, False))
+            #return dt.__class__(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, False),calendar=calendar,has_year_zero=has_year_zero)
+            return DatetimeProlepticGregorian(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, False),has_year_zero=has_year_zero)
         else:
             return NotImplemented
 
@@ -1248,15 +1250,17 @@ datetime object."""
                     #return self.__class__(*add_timedelta(self, -other, all_leap, False, True),calendar=self.calendar)
                     return DatetimeAllLeap(*add_timedelta(self, -other, all_leap, False, True))
                 elif self.calendar == 'julian':
-                    #return self.__class__(*add_timedelta(self, -other, is_leap_julian, False, False),calendar=self.calendar)
-                    return DatetimeJulian(*add_timedelta(self, -other, is_leap_julian, False, False))
+                    #return self.__class__(*add_timedelta(self, -other, 
+                    #     is_leap_julian, False, False),calendar=self.calendar,has_year_zero=self.has_year_zero)
+                    return DatetimeJulian(*add_timedelta(self, -other, is_leap_julian, False, False),has_year_zero=self.has_year_zero)
                 elif self.calendar == 'gregorian':
-                    #return self.__class__(*add_timedelta(self, -other, is_leap_gregorian, True, False),calendar=self.calendar)
-                    return DatetimeGregorian(*add_timedelta(self, -other, is_leap_gregorian, True, False))
+                    #return self.__class__(*add_timedelta(self, -other, 
+                    #     is_leap_gregorian, True, False),calendar=self.calendar,has_year_zero=self.has_year_zero)
+                    return DatetimeGregorian(*add_timedelta(self, -other, is_leap_gregorian, True, False),has_year_zero=self.has_year_zero)
                 elif self.calendar == 'proleptic_gregorian':
                     #return self.__class__(*add_timedelta(self, -other,
-                    #    is_leap_proleptic_gregorian, False, False),calendar=self.calendar)
-                    return DatetimeProlepticGregorian(*add_timedelta(self, -other, is_leap_proleptic_gregorian, False, False))
+                    #    is_leap_proleptic_gregorian, False, False),calendar=self.calendar,has_year_zero=self.has_year_zero)
+                    return DatetimeProlepticGregorian(*add_timedelta(self, -other, is_leap_proleptic_gregorian, False, False),has_year_zero=self.has_year_zero)
                 else:
                     return NotImplemented
             else:
@@ -1329,33 +1333,33 @@ cdef _strftime(datetime dt, fmt):
         s = s[:site] + syear + s[site + 4:]
     return s
 
-cdef bint is_leap_julian(int year):
+cdef bint is_leap_julian(int year, bint has_year_zero):
     "Return 1 if year is a leap year in the Julian calendar, 0 otherwise."
-    return _is_leap(year, calendar='julian')
+    return _is_leap(year, calendar='julian',has_year_zero=has_year_zero)
 
-cdef bint is_leap_proleptic_gregorian(int year):
+cdef bint is_leap_proleptic_gregorian(int year, bint has_year_zero):
     "Return 1 if year is a leap year in the Proleptic Gregorian calendar, 0 otherwise."
-    return _is_leap(year, calendar='proleptic_gregorian')
+    return _is_leap(year, calendar='proleptic_gregorian',has_year_zero=has_year_zero)
 
-cdef bint is_leap_gregorian(int year):
+cdef bint is_leap_gregorian(int year, bint has_year_zero):
     "Return 1 if year is a leap year in the Gregorian calendar, 0 otherwise."
-    return _is_leap(year, calendar='standard')
+    return _is_leap(year, calendar='standard',has_year_zero=has_year_zero)
 
-cdef bint all_leap(int year):
+cdef bint all_leap(int year, bint has_year_zero):
     "Return True for all years."
     return True
 
-cdef bint no_leap(int year):
+cdef bint no_leap(int year, bint has_year_zero):
     "Return False for all years."
     return False
 
-cdef int * month_lengths(bint (*is_leap)(int), int year):
-    if is_leap(year):
+cdef int * month_lengths(bint (*is_leap)(int,bint), int year, bint has_year_zero):
+    if is_leap(year,has_year_zero):
         return _dayspermonth_leap
     else:
         return _dayspermonth
 
-cdef void assert_valid_date(datetime dt, bint (*is_leap)(int),
+cdef void assert_valid_date(datetime dt, bint (*is_leap)(int, bint),
                             bint julian_gregorian_mixed,
                             bint has_year_zero=False,
                             bint is_360_day=False) except *:
@@ -1367,7 +1371,7 @@ cdef void assert_valid_date(datetime dt, bint (*is_leap)(int),
     if is_360_day:
         month_length = 12*[30]
     else:
-        month_length = month_lengths(is_leap, dt.year)
+        month_length = month_lengths(is_leap, dt.year, has_year_zero)
 
     if dt.month < 1 or dt.month > 12:
         raise ValueError("invalid month provided in {0!r}".format(dt))
@@ -1404,7 +1408,7 @@ cdef void assert_valid_date(datetime dt, bint (*is_leap)(int),
 # The date of the transition from the Julian to Gregorian calendar and
 # the number of invalid dates are hard-wired (1582-10-4 is the last day
 # of the Julian calendar, after which follows 1582-10-15).
-cdef tuple add_timedelta(datetime dt, delta, bint (*is_leap)(int), bint julian_gregorian_mixed, bint has_year_zero):
+cdef tuple add_timedelta(datetime dt, delta, bint (*is_leap)(int,bint), bint julian_gregorian_mixed, bint has_year_zero):
     cdef int microsecond, second, minute, hour, day, month, year
     cdef int delta_microseconds, delta_seconds, delta_days
     cdef int* month_length
@@ -1424,7 +1428,7 @@ cdef tuple add_timedelta(datetime dt, delta, bint (*is_leap)(int), bint julian_g
     month = dt.month
     year = dt.year
 
-    month_length = month_lengths(is_leap, year)
+    month_length = month_lengths(is_leap, year, has_year_zero)
 
     n_invalid_dates = 10 if julian_gregorian_mixed else 0
 
@@ -1452,7 +1456,7 @@ cdef tuple add_timedelta(datetime dt, delta, bint (*is_leap)(int), bint julian_g
                 year -= 1
                 if year == 0 and not has_year_zero:
                     year = -1
-                month_length = month_lengths(is_leap, year)
+                month_length = month_lengths(is_leap, year, has_year_zero)
             day = month_length[month-1]
         else:
             day += delta_days
@@ -1470,7 +1474,7 @@ cdef tuple add_timedelta(datetime dt, delta, bint (*is_leap)(int), bint julian_g
                 year += 1
                 if year == 0 and not has_year_zero:
                     year = 1
-                month_length = month_lengths(is_leap, year)
+                month_length = month_lengths(is_leap, year, has_year_zero)
             day = 1
         else:
             day += delta_days
@@ -1528,7 +1532,7 @@ cdef _is_leap(int year, calendar, has_year_zero=False):
         raise ValueError('year zero does not exist in the %s calendar' %\
                 calendar)
     # Because there is no year 0 in the Julian calendar, years -1, -5, -9, etc
-    # are leap years.
+    # are leap years. year zero is a leap year if it exists.
     if year < 0 and not has_year_zero:
         tyear = year + 1
     else:
