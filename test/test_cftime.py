@@ -939,11 +939,12 @@ class TestDate2index(unittest.TestCase):
             raise ValueError('This test should have failed.')
 
     def test_select_dummy(self):
+        calendar='standard'
         nutime = self.TestTime(datetime(1950, 1, 1), 366, 24,
-                               'hours since 1400-01-01', 'standard')
+                               'hours since 1400-01-01', calendar)
 
-        dates = [datetime(1950, 1, 2, 6), datetime(
-            1950, 1, 3), datetime(1950, 1, 3, 18)]
+        dates = [datetimex(1950, 1, 2, 6, calendar=calendar), datetimex(
+            1950, 1, 3, calendar=calendar), datetimex(1950, 1, 3, 18, calendar=calendar)]
 
         t = date2index(dates, nutime, select='before')
         assert_equal(t, [1, 2, 2])
@@ -957,6 +958,7 @@ class TestDate2index(unittest.TestCase):
     def test_select_nc(self):
         nutime = self.time_vars['time']
 
+        # these are python datetimes ('proleptic_gregorian' calendar).
         dates = [datetime(1950, 1, 2, 6), datetime(
             1950, 1, 3), datetime(1950, 1, 3, 18)]
 

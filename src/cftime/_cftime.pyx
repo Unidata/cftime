@@ -587,10 +587,10 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None)
 
     if _can_use_python_datetime(basedate,calendar):
         # use python datetime
-        times = date2num(dates,nctime.units,calendar=calendar)
+        times = date2num(dates,nctime.units,calendar=calendar,has_year_zero=has_year_zero)
         return time2index(times, nctime, calendar, select)
     else: # use cftime module for other cases
-        return _date2index(dates, nctime, calendar, select, has_year_zero)
+        return _date2index(dates, nctime, calendar, select, has_year_zero=has_year_zero)
 
 
 cdef _parse_timezone(tzstring):
