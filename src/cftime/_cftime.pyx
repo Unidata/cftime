@@ -125,7 +125,7 @@ def _can_use_python_datetime(date,calendar):
            (calendar in ['gregorian','standard'] and date > gregorian and date.year <= MAXYEAR))
 
 @cython.embedsignature(True)
-def date2num(dates,units,calendar=None,has_year_zero=False):
+def date2num(dates,units,calendar=None,has_year_zero=None):
     """
     Return numeric time values given datetime objects. The units
     of the numeric time values are described by the **units** argument
@@ -149,6 +149,13 @@ def date2num(dates,units,calendar=None,has_year_zero=False):
     `CF metadata convention <http://cfconventions.org>`__ are supported.
     Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
+    Default is `None` which means the calendar associated with the rist
+    input datetime instance will be used.
+
+    **has_year_zero**:  boolean that determines whether astronomical year
+    number is used (if False, then there is no year zero). 
+    Ignored for idealized calendars like '360_day' where it is assumed
+    year zero always exists.
     Default is `None` which means the calendar associated with the rist
     input datetime instance will be used.
 
@@ -192,6 +199,18 @@ def date2num(dates,units,calendar=None,has_year_zero=False):
                     calendar = d0.calendar
                 except AttributeError:
                     raise ValueError('no calendar specified',type(d0))
+
+    # if has_year_zero is None, use first input cftime.datetime instance
+    # to determine if year zero is to be included.
+    if has_year_zero is None:
+        d0 = dates.item(0)
+        if isinstance(d0,datetime_python):
+            has_year_zero = False
+        else:
+            try:
+                has_year_zero = d0.has_year_zero
+            except AttributeError:
+                raise ValueError('has_year_zero not specified',type(d0))
 
     calendar = calendar.lower()
     basedate = _dateparse(units,calendar=calendar,has_year_zero=has_year_zero)
@@ -422,6 +441,11 @@ def num2date(
     objects and raise an error if this is not possible. Ignored unless
     **only_use_cftime_datetimes=False**. Default **False**.
 
+    **has_year_zero**:  boolean that determines whether astronomical year
+    number is used (if False (default), then there is no year zero). 
+    Ignored for idealized calendars like '360_day' where it is assumed
+    year zero always exists.
+
     returns a datetime instance, or an array of datetime instances with
     microsecond accuracy, if possible.
 
@@ -513,6 +537,11 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=False
     corresponding to the dates just before or just after the given dates if
     an exact match cannot be found. **nearest** will return the indices that
     correspond to the closest dates.
+
+    **has_year_zero**:  boolean that determines whether astronomical year
+    number is used (if False (default), then there is no year zero). 
+    Ignored for idealized calendars like '360_day' where it is assumed
+    year zero always exists.
 
     returns an index (indices) of the netCDF time variable corresponding
     to the given datetime object(s).
@@ -664,8 +693,6 @@ cdef _check_index(indices, times, nctime, calendar, select):
 
 def _date2index(dates, nctime, calendar=None, select='exact', has_year_zero=False):
     """
-    _date2index(dates, nctime, calendar=None, select='exact', has_year_zero=False)
-
     Return indices of a netCDF time variable corresponding to the given dates.
 
     **dates**: A datetime object or a sequence of datetime objects.
@@ -688,6 +715,11 @@ def _date2index(dates, nctime, calendar=None, select='exact', has_year_zero=Fals
     corresponding to the dates just before or just after the given dates if
     an exact match cannot be found. `nearest` will return the indices that
     correspond to the closest dates.
+
+    **has_year_zero**:  boolean that determines whether astronomical year
+    number is used (if False (default), then there is no year zero). 
+    Ignored for idealized calendars like '360_day' where it is assumed
+    year zero always exists.
     """
     try:
         nctime.units
