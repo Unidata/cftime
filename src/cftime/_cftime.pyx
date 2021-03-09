@@ -86,12 +86,18 @@ def _datesplit(timestr):
 
     return units.lower(), remainder
 
-def _dateparse(timestr,calendar,has_year_zero=False):
+def _dateparse(timestr,calendar,has_year_zero=None):
     """parse a string of the form time-units since yyyy-mm-dd hh:mm:ss,
     return a datetime instance"""
     # same as version in cftime, but returns a timezone naive
     # python datetime instance with the utc_offset included.
 
+    calendar = calendar.lower()
+    # set calendar-specific defaults for has_year_zero
+    if has_year_zero is None:
+        has_year_zero = _year_zero_defaults(calendar)
+    if not has_year_zero and calendar in ['all_leap','noleap','365_day','366_day', '360_day']:
+        warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
     (units, isostring) = _datesplit(timestr)
     if not ((units in month_units and calendar=='360_day') or units in _units):
         if units in month_units and calendar != '360_day':
@@ -149,15 +155,15 @@ def date2num(dates,units,calendar=None,has_year_zero=None):
     `CF metadata convention <http://cfconventions.org>`__ are supported.
     Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
-    Default is `None` which means the calendar associated with the rist
+    Default is `None` which means the calendar associated with the first
     input datetime instance will be used.
 
     **has_year_zero**:  boolean that determines whether astronomical year
-    number is used (if False, then there is no year zero). 
+    number is used. 
+    Default is `None` which means the value associated with the first
+    input datetime instance will be used.
     Ignored for idealized calendars like '360_day' where it is assumed
     year zero always exists.
-    Default is `None` which means the value associated with the rist
-    input datetime instance will be used.
 
     returns a numeric time value, or an array of numeric time values
     with approximately 1 microsecond accuracy.
@@ -326,7 +332,7 @@ DATE_TYPES = {
      "gregorian": DatetimeGregorian
  }
 
-def to_calendar_specific_datetime(dt, calendar, use_python_datetime,has_year_zero=False):
+def to_calendar_specific_datetime(dt, calendar, use_python_datetime,has_year_zero=None):
     if use_python_datetime:
         return real_datetime(
                dt.year,
@@ -410,7 +416,7 @@ def num2date(
     calendar='standard',
     only_use_cftime_datetimes=True,
     only_use_python_datetimes=False,
-    has_year_zero=False
+    has_year_zero=None
 ):
     """
     Return datetime objects given numeric time values. The units
@@ -462,6 +468,11 @@ def num2date(
     contains one.
     """
     calendar = calendar.lower()
+    # set calendar-specific defaults for has_year_zero
+    if has_year_zero is None:
+        has_year_zero = _year_zero_defaults(calendar)
+    if not has_year_zero and calendar in ['all_leap','noleap','365_day','366_day','360_day']:
+        warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
     basedate = _dateparse(units,calendar=calendar,has_year_zero=has_year_zero)
 
     can_use_python_datetime=_can_use_python_datetime(basedate,calendar)
@@ -527,7 +538,7 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None)
     `CF metadata convention <http://cfconventions.org>`__ are supported.
     Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
-    Default is `None` which means the calendar associated with the rist
+    Default is `None` which means the calendar associated with the first
     input datetime instance will be used.
 
     **select**: **'exact', 'before', 'after', 'nearest'**
@@ -539,10 +550,10 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None)
 
     **has_year_zero**:  boolean that determines whether astronomical year
     number is used (if False, then there is no year zero). 
+    Default is `None` which means the value associated with the first
+    input datetime instance will be used.
     Ignored for idealized calendars like '360_day' where it is assumed
     year zero always exists.
-    Default is `None` which means the value associated with the rist
-    input datetime instance will be used.
 
     returns an index (indices) of the netCDF time variable corresponding
     to the given datetime object(s).
@@ -743,10 +754,10 @@ def _date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None
 
     **has_year_zero**:  boolean that determines whether astronomical year
     number is used (if False, then there is no year zero). 
+    Default is `None` which means the valuer associated with the first
+    input datetime instance will be used.
     Ignored for idealized calendars like '360_day' where it is assumed
     year zero always exists.
-    Default is `None` which means the valuer associated with the rist
-    input datetime instance will be used.
     """
     try:
         nctime.units
@@ -877,6 +888,16 @@ cdef to_tuple(dt):
     return (dt.year, dt.month, dt.day, dt.hour, dt.minute,
             dt.second, dt.microsecond)
 
+cdef _year_zero_defaults(calendar):
+    if calendar in ['standard','gregorian','julian']:
+       return False
+    elif calendar in ['proleptic_gregorian']:
+       return False
+    elif calendar in ['all_leap','noleap','365_day','366_day','360_day']:
+       return True
+    else:
+       return False
+
 @cython.embedsignature(True)
 cdef class datetime(object):
     """
@@ -931,7 +952,7 @@ The default format of the string produced by strftime is controlled by self.form
 
     def __init__(self, int year, int month, int day, int hour=0, int minute=0,
                        int second=0, int microsecond=0, int dayofwk=-1, 
-                       int dayofyr = -1, calendar='standard', has_year_zero=False):
+                       int dayofyr = -1, calendar='standard', has_year_zero=None):
 
         self.year = year
         self.month = month
@@ -945,6 +966,12 @@ The default format of the string produced by strftime is controlled by self.form
         self.tzinfo = None
         if calendar:
             calendar = calendar.lower()
+        # set calendar-specific defaults for has_year_zero
+        if has_year_zero is None:
+            has_year_zero = _year_zero_defaults(calendar)
+        if not has_year_zero and calendar in ['all_leap','noleap','365_day','366_day', '360_day']:
+            warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
+        self.has_year_zero = has_year_zero
         if calendar == 'gregorian' or calendar == 'standard':
             # dates after 1582-10-15 can be converted to and compared to
             # proleptic Gregorian dates
@@ -954,37 +981,30 @@ The default format of the string produced by strftime is controlled by self.form
             else:
                 self.datetime_compatible = False
             assert_valid_date(self, is_leap_gregorian, True, has_year_zero=has_year_zero)
-            self.has_year_zero = has_year_zero
         elif calendar == 'noleap' or calendar == '365_day':
             self.calendar = 'noleap'
             self.datetime_compatible = False
             assert_valid_date(self, no_leap, False, has_year_zero=True)
-            self.has_year_zero = True
         elif calendar == 'all_leap' or calendar == '366_day':
             self.calendar = 'all_leap'
             self.datetime_compatible = False
             assert_valid_date(self, all_leap, False, has_year_zero=True)
-            self.has_year_zero = True
         elif calendar == '360_day':
             self.calendar = calendar
             self.datetime_compatible = False
             assert_valid_date(self, no_leap, False, has_year_zero=True, is_360_day=True)
-            self.has_year_zero = True
         elif calendar == 'julian':
             self.calendar = calendar
             self.datetime_compatible = False
             assert_valid_date(self, is_leap_julian, False, has_year_zero=has_year_zero)
-            self.has_year_zero = has_year_zero
         elif calendar == 'proleptic_gregorian':
             self.calendar = calendar
             self.datetime_compatible = True
             assert_valid_date(self, is_leap_proleptic_gregorian, False, has_year_zero=has_year_zero)
-            self.has_year_zero = has_year_zero
         elif calendar == '' or calendar is None:
             # instance not calendar-aware, some method will not work
             self.calendar = ''
             self.datetime_compatible = False
-            self.has_year_zero = False
         else:
             raise ValueError(
                 "calendar must be one of %s, got '%s'" % (str(_calendars), calendar))
@@ -1183,9 +1203,15 @@ The default format of the string produced by strftime is controlled by self.form
         return NotImplemented
 
     @staticmethod
-    def fromordinal(jday,calendar='standard',has_year_zero=False):
+    def fromordinal(jday,calendar='standard',has_year_zero=None):
         """Create a datetime instance from a julian day ordinal and calendar
         (inverse of toordinal)."""
+        calendar = calendar.lower()
+        # set calendar-specific defaults for has_year_zero
+        if has_year_zero is None:
+            has_year_zero = _year_zero_defaults(calendar)
+        if not has_year_zero and calendar in ['all_leap','noleap','365_day','366_day', '360_day']:
+            warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
         if calendar in ['standard','julian','gregorian']:
             if has_year_zero:
                units = 'days since -4712-1-1-12'
@@ -1584,10 +1610,15 @@ cdef tuple add_timedelta_360_day(datetime dt, delta):
 
     return (year, month, day, hour, minute, second, microsecond, -1, -1)
 
-cdef _is_leap(int year, calendar, has_year_zero=False):
+cdef _is_leap(int year, calendar, has_year_zero=None):
     cdef int tyear
     cdef bint leap
     calendar = _check_calendar(calendar)
+    # set calendar-specific defaults for has_year_zero
+    if has_year_zero is None:
+        has_year_zero = _year_zero_defaults(calendar)
+    if not has_year_zero and calendar in ['all_leap','noleap','365_day','366_day', '360_day']:
+        warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
     if year == 0 and not has_year_zero:
         raise ValueError('year zero does not exist in the %s calendar' %\
                 calendar)
@@ -1616,6 +1647,7 @@ cdef _is_leap(int year, calendar, has_year_zero=False):
 
 cdef _check_calendar(calendar):
     """validate calendars, convert to subset of names to get rid of synonyms"""
+    calendar = calendar.lower()
     if calendar not in _calendars:
         raise ValueError('unsupported calendar')
     calout = calendar
@@ -1635,7 +1667,7 @@ cdef _check_calendar(calendar):
 # with modifications to handle non-real-world calendars and negative years.
 
 
-cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=False,has_year_zero=False):
+cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=False,has_year_zero=None):
     """Compute integer Julian Day from year,month,day and calendar.
 
     Allowed calendars are 'standard', 'gregorian', 'julian',
@@ -1674,6 +1706,11 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
         msg = "date %04d-%02d-%02d does not exist in the %s calendar" %\
         (year,month,day,calendar)
         raise ValueError(msg)
+    # set calendar-specific defaults for has_year_zero
+    if has_year_zero is None:
+        has_year_zero = _year_zero_defaults(calendar)
+    if not has_year_zero and calendar in ['all_leap','noleap','365_day','366_day','360_day']:
+        warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
 
     if calendar == '360_day':
         return year*360 + (month-1)*30 + day - 1
