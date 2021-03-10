@@ -829,6 +829,20 @@ class cftimeTestCase(unittest.TestCase):
         # test astronomical year numbering
         jdref=2400000
         for calendar in ['julian','gregorian','proleptic_gregorian']:
+            has_year_zero=False
+            try:
+                d = cftime.datetime(0,1,1,0,has_year_zero=has_year_zero,calendar=calendar)
+            except ValueError:
+                d = cftime.datetime(-1,1,1,0,has_year_zero=has_year_zero,calendar=calendar)
+                pass
+            else:
+                raise AssertionError
+            d2 = cftime.datetime(1,1,1,0,has_year_zero=has_year_zero,calendar=calendar)
+            assert((d2-d).days==366) # 1-1-1 is 366 days after -1-1-1 if no year zero.
+            has_year_zero=True
+            d = cftime.datetime(0,1,1,0,has_year_zero=has_year_zero,calendar=calendar)
+            d2 = cftime.datetime(1,1,1,0,has_year_zero=has_year_zero,calendar=calendar)
+            assert((d2-d).days==366) # 1-1-1 is 366 days after 0-1-1 if year zero allowed.
             for has_year_zero in [True,False]:
                 if calendar == 'julian':
                     d = cftime.datetime(1858,11,4,12, has_year_zero=has_year_zero,calendar=calendar)
@@ -850,20 +864,6 @@ class cftimeTestCase(unittest.TestCase):
                 assert(JulianDayFromDate(d,calendar=calendar) == jdref)
                 d2 = cftime.datetime.fromordinal(jd,calendar=calendar,has_year_zero=has_year_zero)
                 assert(d2 == d)
-        has_year_zero=False
-        try:
-            d = cftime.datetime(0,1,1,0,has_year_zero=has_year_zero,calendar='gregorian')
-        except ValueError:
-            d = cftime.datetime(-1,1,1,0,has_year_zero=has_year_zero,calendar='gregorian')
-            pass
-        else:
-            raise AssertionError
-        d2 = cftime.datetime(1,1,1,0,has_year_zero=has_year_zero,calendar='gregorian')
-        assert((d2-d).days==366) # 1-1-1 is 366 days after -1-1-1 if no year zero.
-        has_year_zero=True
-        d = cftime.datetime(0,1,1,0,has_year_zero=has_year_zero,calendar='gregorian')
-        d2 = cftime.datetime(1,1,1,0,has_year_zero=has_year_zero,calendar='gregorian')
-        assert((d2-d).days==366) # 1-1-1 is 366 days after 0-1-1 if year zero allowed.
 
 
 
