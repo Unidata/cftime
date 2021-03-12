@@ -1235,10 +1235,11 @@ The default format of the string produced by strftime is controlled by self.form
         """Return (integer) julian day ordinal.
 
         Day 0 starts at noon January 1 of the year -4713 for the
-        julian, gregorian and standard calendars.
+        julian, gregorian and standard calendars (year -4712 if year
+        zero allowd).
 
         Day 0 starts at noon on November 24 of the year -4714 for the
-        proleptic gregorian calendar.
+        proleptic gregorian calendar (year -4713 if year zero allowed).
 
         Day 0 starts at noon on January 1 of the year zero is for the
         360_day, 365_day, 366_day, all_leap and noleap calendars.
