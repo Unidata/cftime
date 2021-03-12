@@ -1174,7 +1174,7 @@ The default format of the string produced by strftime is controlled by self.form
                 return PyObject_RichCompare(dt.to_tuple(), dt_other.to_tuple(), op)
             else:
                 # Note: it *is* possible to compare datetime
-                # instances that use difference calendars by using
+                # instances that use different calendars by using
                 # date2num, but this implementation does
                 # not attempt it.
                 raise TypeError("cannot compare {0!r} and {1!r} (different calendars or year zero conventions)".format(dt, dt_other))
