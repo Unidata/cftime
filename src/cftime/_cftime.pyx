@@ -931,7 +931,7 @@ for all "real-world" calendars).  For the idealized calendars
 always exists and the has_year_zero kwarg is ignored.
 
 Has isoformat, strftime, timetuple, replace, dayofwk, dayofyr, daysinmonth,
-__repr__, __add__, __sub__, __str__ and comparison methods. 
+__repr__,__format__, __add__, __sub__, __str__ and comparison methods. 
 
 dayofwk, dayofyr, daysinmonth, __add__ and __sub__ only work for calendar-aware
 instances.
