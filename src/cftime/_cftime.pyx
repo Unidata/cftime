@@ -447,9 +447,12 @@ def num2date(
     **only_use_cftime_datetimes=False**. Default **False**.
 
     **has_year_zero**:  boolean that determines whether astronomical year
-    number is used (if False (default), then there is no year zero). 
+    number is used (if False then there is no year zero). 
+    Default is False for all 'real-world' calendars.
     Ignored for idealized calendars like '360_day' where it is assumed
     year zero always exists.
+    This kwarg is not needed to define calendar systems allowed by CF 
+    (the calendar-specific defaults do this).
 
     returns a datetime instance, or an array of datetime instances with
     microsecond accuracy, if possible.
@@ -929,6 +932,8 @@ is used and the year zero exists (default False
 for all "real-world" calendars).  For the idealized calendars
 ('noleap', '365_day', '360_day',366_day','all_leap') the year zero
 always exists and the has_year_zero kwarg is ignored.
+This kwarg is not needed to define calendar systems allowed by CF 
+(the calendar-specific defaults do this).
 
 Has isoformat, strftime, timetuple, replace, dayofwk, dayofyr, daysinmonth,
 __repr__,__format__, __add__, __sub__, __str__ and comparison methods. 
