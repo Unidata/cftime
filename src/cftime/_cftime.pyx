@@ -1193,6 +1193,7 @@ The default format of the string produced by strftime is controlled by self.form
             return NotImplemented
 
     cdef _getstate(self):
+        """return args and kwargs needed to create class instance"""
         args = (self.year, self.month, self.day)
         kwargs = {'hour': self.hour,
                   'minute': self.minute,
