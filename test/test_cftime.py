@@ -749,7 +749,7 @@ class cftimeTestCase(unittest.TestCase):
         test = dates == np.ma.masked_array([datetime(1848, 1, 17, 6, 0, 0, 40), None],mask=[0,1])
         assert(test.all())
         dates = num2date(times, units=units, calendar='standard')
-        assert(str(dates)=="[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 0, 40) --]")
+        assert(str(dates)=="[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 0, 40, has_year_zero=False)\n --]")
 #  check that time range of 200,000 + years can be represented accurately
         calendar='standard'
         _MAX_INT64 = np.iinfo("int64").max
@@ -846,19 +846,19 @@ class cftimeTestCase(unittest.TestCase):
             assert((d2-d).days==366) # 1-1-1 is 366 days after 0-1-1 if year zero allowed.
             for has_year_zero in [True,False]:
                 if calendar == 'julian':
-                    d = cftime.datetime(1858,11,4,12, has_year_zero=has_year_zero,calendar=calendar)
+                    d = cftime.datetime(1858,11, 4,12,has_year_zero=has_year_zero,calendar=calendar)
                 else:
-                    d = cftime.datetime(1858,11,16,12, has_year_zero=has_year_zero,calendar=calendar)
+                    d = cftime.datetime(1858,11,16,12,has_year_zero=has_year_zero,calendar=calendar)
                 if has_year_zero:
                     if calendar == 'proleptic_gregorian':
                         d0 = cftime.datetime(-4713,11,24,12,has_year_zero=has_year_zero,calendar=calendar)
                     else:
-                        d0 = cftime.datetime(-4712,1,1,12,has_year_zero=has_year_zero,calendar=calendar)
+                        d0 = cftime.datetime(-4712, 1, 1,12,has_year_zero=has_year_zero,calendar=calendar)
                 else:
                     if calendar == 'proleptic_gregorian':
                         d0 = cftime.datetime(-4714,11,24,12,has_year_zero=has_year_zero,calendar=calendar)
                     else:
-                        d0 = cftime.datetime(-4713,1,1,12,has_year_zero=has_year_zero,calendar=calendar)
+                        d0 = cftime.datetime(-4713, 1, 1,12,has_year_zero=has_year_zero,calendar=calendar)
                 jd = d.toordinal()
                 assert((d-d0).days == jdref)
                 assert(jd == jdref)
@@ -1110,6 +1110,7 @@ class DateTime(unittest.TestCase):
         self.date1_365_day = DatetimeNoLeap(-5000, 1, 2, 12)
         self.date2_365_day = DatetimeNoLeap(-5000, 1, 3, 12)
         self.date3_gregorian = DatetimeGregorian(1969,  7, 20, 12)
+        self.date3_gregorian_yearzero = DatetimeGregorian(1969,  7, 20, 12, has_year_zero=True)
 
         # last day of the Julian calendar in the mixed Julian/Gregorian calendar
         self.date4_gregorian = DatetimeGregorian(1582, 10, 4)
@@ -1236,10 +1237,13 @@ class DateTime(unittest.TestCase):
         def invalid_sub_5():
             self.date3_gregorian - self.date1_365_day
 
+        def invalid_sub_6():
+            self.date3_gregorian - self.date3_gregorian_yearzero
+
         for func in [invalid_sub_1, invalid_sub_2]:
             self.assertRaises(TypeError, func)
 
-        for func in [invalid_sub_3, invalid_sub_4, invalid_sub_5]:
+        for func in [invalid_sub_3, invalid_sub_4, invalid_sub_5, invalid_sub_6] :
             self.assertRaises(ValueError, func)
 
     def test_replace(self):
@@ -1317,9 +1321,13 @@ class DateTime(unittest.TestCase):
 
         def not_comparable_5():
             "compare non-datetime to a datetime instance"
-            0 < self.date_1_365_day
+            0 < self.date1_365_day
 
-        for func in [not_comparable_1, not_comparable_2, not_comparable_3, not_comparable_4]:
+        def not_comparable_6():
+            "compare two datetime instances with different calendars"
+            self.date3_gregorian_yearzero > self.date3_gregorian
+
+        for func in [not_comparable_1, not_comparable_2, not_comparable_3, not_comparable_4, not_comparable_5, not_comparable_6]:
             self.assertRaises(TypeError, func)
 
     @pytest.mark.skipif(sys.version_info.major != 2,
@@ -1632,9 +1640,9 @@ def test_num2date_only_use_cftime_datetimes_post_gregorian(
 
 
 def test_repr():
-    expected = "cftime.datetime(2000, 1, 1, 0, 0, 0, 0, calendar='gregorian')"
+    expected = "cftime.datetime(2000, 1, 1, 0, 0, 0, 0, calendar='gregorian', has_year_zero=False)"
     assert repr(datetimex(2000, 1, 1, calendar='standard')) == expected
-    expected = "cftime.datetime(2000, 1, 1, 0, 0, 0, 0, calendar='')"
+    expected = "cftime.datetime(2000, 1, 1, 0, 0, 0, 0, calendar='', has_year_zero=False)"
     assert repr(datetimex(2000, 1, 1, calendar=None)) == expected
 
 def test_string_format():

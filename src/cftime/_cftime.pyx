@@ -15,7 +15,6 @@ from datetime import timedelta, MINYEAR, MAXYEAR
 import time                     # strftime
 import warnings
 
-
 microsec_units = ['microseconds','microsecond', 'microsec', 'microsecs']
 millisec_units = ['milliseconds', 'millisecond', 'millisec', 'millisecs', 'msec', 'msecs', 'ms']
 sec_units =      ['second', 'seconds', 'sec', 'secs', 's']
@@ -126,7 +125,7 @@ def _dateparse(timestr,calendar,has_year_zero=None):
     return basedate
 
 def _can_use_python_datetime(date,calendar):
-    gregorian = datetime(1582,10,15,calendar=calendar)
+    gregorian = datetime(1582,10,15,calendar=calendar,has_year_zero=date.has_year_zero)
     return ((calendar == 'proleptic_gregorian' and date.year >= MINYEAR and date.year <= MAXYEAR) or \
            (calendar in ['gregorian','standard'] and date > gregorian and date.year <= MAXYEAR))
 
@@ -898,6 +897,9 @@ cdef _year_zero_defaults(calendar):
     else:
        return False
 
+# factory function without optional kwargs that can be used in datetime.__reduce__
+def _create_datetime(args, kwargs): return datetime(*args, **kwargs)
+
 @cython.embedsignature(True)
 cdef class datetime(object):
     """
@@ -1114,17 +1116,17 @@ The default format of the string produced by strftime is controlled by self.form
 
     def __repr__(self):
         if self.__class__.__name__ != 'datetime': # a calendar-specific sub-class
-            return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
+            return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8}, has_year_zero={9})".format('cftime',
             self.__class__.__name__,
-            self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+            self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond,self.has_year_zero)
         if self.calendar == None:
-            return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8}, calendar={9})".format('cftime',
+            return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8}, calendar={9}, has_year_zero={10})".format('cftime',
             self.__class__.__name__,
-            self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond,self.calendar)
+            self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond,self.calendar,self.has_year_zero)
         else:
-            return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8}, calendar='{9}')".format('cftime',
+            return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8}, calendar='{9}', has_year_zero={10})".format('cftime',
             self.__class__.__name__,
-            self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond,self.calendar)
+            self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond,self.calendar,self.has_year_zero)
 
     def __str__(self):
         return self.isoformat(' ')
@@ -1168,14 +1170,14 @@ The default format of the string produced by strftime is controlled by self.form
         if isinstance(other, datetime):
             dt_other = other
             # comparing two datetime instances
-            if dt.calendar == dt_other.calendar:
+            if dt.calendar == dt_other.calendar and dt.has_year_zero == dt_other.has_year_zero:
                 return PyObject_RichCompare(dt.to_tuple(), dt_other.to_tuple(), op)
             else:
                 # Note: it *is* possible to compare datetime
                 # instances that use difference calendars by using
                 # date2num, but this implementation does
                 # not attempt it.
-                raise TypeError("cannot compare {0!r} and {1!r} (different calendars)".format(dt, dt_other))
+                raise TypeError("cannot compare {0!r} and {1!r} (different calendars or year zero conventions)".format(dt, dt_other))
         elif isinstance(other, datetime_python):
             # comparing datetime and real_datetime
             if not dt.datetime_compatible:
@@ -1186,18 +1188,21 @@ The default format of the string produced by strftime is controlled by self.form
             return NotImplemented
 
     cdef _getstate(self):
-        if self.__class__.__name__ != 'datetime': # a calendar-specific sub-class
-           return (self.year, self.month, self.day, self.hour,
-                   self.minute, self.second, self.microsecond,
-                   self._dayofwk, self._dayofyr)
-        else:
-           return (self.year, self.month, self.day, self.hour,
-                   self.minute, self.second, self.microsecond,
-                   self._dayofwk, self._dayofyr, self.calendar)
+        args = (self.year, self.month, self.day)
+        kwargs = {'hour': self.hour,
+                  'minute': self.minute,
+                  'second': self.second,
+                  'microsecond': self.microsecond,
+                  'dayofwk': self._dayofwk,
+                  'dayofyr': self._dayofyr,
+                  'calendar': self.calendar,
+                  'has_year_zero': self.has_year_zero}
+        return args, kwargs
 
     def __reduce__(self):
         """special method that allows instance to be pickled"""
-        return (self.__class__, self._getstate())
+        args, kwargs = self._getstate()
+        return (_create_datetime, (args, kwargs))
 
     cdef _add_timedelta(self, other):
         return NotImplemented
@@ -1303,6 +1308,8 @@ The default format of the string produced by strftime is controlled by self.form
                     raise ValueError("cannot compute the time difference between dates with different calendars")
                 if dt.calendar == "":
                     raise ValueError("cannot compute the time difference between dates that are not calendar-aware")
+                if dt.has_year_zero != other.has_year_zero:
+                    raise ValueError("cannot compute the time difference between dates with year zero conventions")
                 ordinal_self = self.toordinal() # julian day
                 ordinal_other = other.toordinal()
                 days = ordinal_self - ordinal_other
