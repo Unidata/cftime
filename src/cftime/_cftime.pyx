@@ -158,7 +158,7 @@ def date2num(dates,units,calendar=None,has_year_zero=None):
     input datetime instance will be used.
 
     **has_year_zero**:  boolean that determines whether astronomical year
-    number is used. 
+    numbering is used.
     Default is `None` which means the value associated with the first
     input datetime instance will be used.
     Ignored for idealized calendars like '360_day' where it is assumed
@@ -447,11 +447,11 @@ def num2date(
     **only_use_cftime_datetimes=False**. Default **False**.
 
     **has_year_zero**:  boolean that determines whether astronomical year
-    number is used (if False then there is no year zero). 
+    numbering is used (if False then there is no year zero).
     Default is False for all 'real-world' calendars.
     Ignored for idealized calendars like '360_day' where it is assumed
     year zero always exists.
-    This kwarg is not needed to define calendar systems allowed by CF 
+    This kwarg is not needed to define calendar systems allowed by CF
     (the calendar-specific defaults do this).
 
     returns a datetime instance, or an array of datetime instances with
@@ -551,7 +551,7 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None)
     correspond to the closest dates.
 
     **has_year_zero**:  boolean that determines whether astronomical year
-    number is used (if False, then there is no year zero). 
+    numbering is used (if False, then there is no year zero).
     Default is `None` which means the value associated with the first
     input datetime instance will be used.
     Ignored for idealized calendars like '360_day' where it is assumed
@@ -755,7 +755,7 @@ def _date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None
     correspond to the closest dates.
 
     **has_year_zero**:  boolean that determines whether astronomical year
-    number is used (if False, then there is no year zero). 
+    numbering is used (if False, then there is no year zero). 
     Default is `None` which means the valuer associated with the first
     input datetime instance will be used.
     Ignored for idealized calendars like '360_day' where it is assumed
