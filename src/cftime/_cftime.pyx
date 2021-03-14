@@ -1215,8 +1215,8 @@ The default format of the string produced by strftime is controlled by self.form
 
     @staticmethod
     def fromordinal(jday,calendar='standard',has_year_zero=None):
-        """Create a datetime instance from a julian day ordinal and calendar
-        (inverse of toordinal)."""
+        """Create a datetime instance from a julian day ordinal, calendar
+        and (optionally) year zero convention (inverse of toordinal)."""
         calendar = calendar.lower()
         # set calendar-specific defaults for has_year_zero
         if has_year_zero is None:
