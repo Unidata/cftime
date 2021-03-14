@@ -157,7 +157,7 @@ def date2num(dates,units,calendar=None,has_year_zero=None):
     Default is `None` which means the calendar associated with the first
     input datetime instance will be used.
 
-    **has_year_zero: If set to True, astronomical year numbering
+    **has_year_zero**: If set to True, astronomical year numbering
     is used and the year zero exists.  If set to False for real-world
     calendars, then historical year numbering is used and the year 1 is
     preceded by year -1 and no year zero exists.
