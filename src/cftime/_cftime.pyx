@@ -157,12 +157,19 @@ def date2num(dates,units,calendar=None,has_year_zero=None):
     Default is `None` which means the calendar associated with the first
     input datetime instance will be used.
 
-    **has_year_zero**:  boolean that determines whether astronomical year
-    numbering is used.
-    Default is `None` which means the value associated with the first
-    input datetime instance will be used.
-    Ignored for idealized calendars like '360_day' where it is assumed
-    year zero always exists.
+    **has_year_zero: If set to True, astronomical year numbering
+    is used and the year zero exists.  If set to False for real-world
+    calendars, then historical year numbering is used and the year 1 is
+    preceded by year -1 and no year zero exists.
+    The defaults are set to conform with
+    CF conventions (False for 'julian', 'gregorian'/'standard', True
+    for 'proleptic_gregorian' (ISO 8601) and True for the idealized
+    calendars 'noleap'/'365_day', '360_day', 366_day'/'all_leap')
+    The defaults can only be over-ridden for the real-world calendars,
+    for the the idealized calendars the year zero 
+    always exists and the has_year_zero kwarg is ignored.
+    This kwarg is not needed to define calendar systems allowed by CF
+    (the calendar-specific defaults do this).
 
     returns a numeric time value, or an array of numeric time values
     with approximately 1 microsecond accuracy.
@@ -446,11 +453,17 @@ def num2date(
     objects and raise an error if this is not possible. Ignored unless
     **only_use_cftime_datetimes=False**. Default **False**.
 
-    **has_year_zero**:  boolean that determines whether astronomical year
-    numbering is used (if False then there is no year zero).
-    Default is False for all 'real-world' calendars.
-    Ignored for idealized calendars like '360_day' where it is assumed
-    year zero always exists.
+    **has_year_zero**: if set to True, astronomical year numbering
+    is used and the year zero exists.  If set to False for real-world
+    calendars, then historical year numbering is used and the year 1 is
+    preceded by year -1 and no year zero exists.
+    The defaults are set to conform with
+    CF conventions (False for 'julian', 'gregorian'/'standard', True
+    for 'proleptic_gregorian' (ISO 8601) and True for the idealized
+    calendars 'noleap'/'365_day', '360_day', 366_day'/'all_leap')
+    The defaults can only be over-ridden for the real-world calendars,
+    for the the idealized calendars the year zero 
+    always exists and the has_year_zero kwarg is ignored.
     This kwarg is not needed to define calendar systems allowed by CF
     (the calendar-specific defaults do this).
 
@@ -550,12 +563,19 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None)
     an exact match cannot be found. **nearest** will return the indices that
     correspond to the closest dates.
 
-    **has_year_zero**:  boolean that determines whether astronomical year
-    numbering is used (if False, then there is no year zero).
-    Default is `None` which means the value associated with the first
-    input datetime instance will be used.
-    Ignored for idealized calendars like '360_day' where it is assumed
-    year zero always exists.
+    **has_year_zero**: if set to True, astronomical year numbering
+    is used and the year zero exists.  If set to False for real-world
+    calendars, then historical year numbering is used and the year 1 is
+    preceded by year -1 and no year zero exists.
+    The defaults are set to conform with
+    CF conventions (False for 'julian', 'gregorian'/'standard', True
+    for 'proleptic_gregorian' (ISO 8601) and True for the idealized
+    calendars 'noleap'/'365_day', '360_day', 366_day'/'all_leap')
+    The defaults can only be over-ridden for the real-world calendars,
+    for the the idealized calendars the year zero 
+    always exists and the has_year_zero kwarg is ignored.
+    This kwarg is not needed to define calendar systems allowed by CF
+    (the calendar-specific defaults do this).
 
     returns an index (indices) of the netCDF time variable corresponding
     to the given datetime object(s).
@@ -665,7 +685,7 @@ cpdef _parse_date(datestring):
         int(groups["fraction"]),\
         tzoffset_mins
 
-cdef _check_index(indices, times, nctime, calendar, select):
+cdef _check_index(indices, times, nctime, select):
     """Return True if the time indices given correspond to the given times,
     False otherwise.
 
@@ -679,9 +699,6 @@ cdef _check_index(indices, times, nctime, calendar, select):
 
     nctime : netCDF Variable object
     NetCDF time object.
-
-    calendar : string
-    Calendar of nctime.
 
     select : string
     Index selection method.
@@ -754,12 +771,19 @@ def _date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None
     an exact match cannot be found. `nearest` will return the indices that
     correspond to the closest dates.
 
-    **has_year_zero**:  boolean that determines whether astronomical year
-    numbering is used (if False, then there is no year zero). 
-    Default is `None` which means the valuer associated with the first
-    input datetime instance will be used.
-    Ignored for idealized calendars like '360_day' where it is assumed
-    year zero always exists.
+    **has_year_zero**: if set to True, astronomical year numbering
+    is used and the year zero exists.  If set to False for real-world
+    calendars, then historical year numbering is used and the year 1 is
+    preceded by year -1 and no year zero exists.
+    The defaults are set to conform with
+    CF conventions (False for 'julian', 'gregorian'/'standard', True
+    for 'proleptic_gregorian' (ISO 8601) and True for the idealized
+    calendars 'noleap'/'365_day', '360_day', 366_day'/'all_leap')
+    The defaults can only be over-ridden for the real-world calendars,
+    for the the idealized calendars the year zero 
+    always exists and the has_year_zero kwarg is ignored.
+    This kwarg is not needed to define calendar systems allowed by CF
+    (the calendar-specific defaults do this).
     """
     try:
         nctime.units
@@ -823,7 +847,7 @@ def time2index(times, nctime, calendar=None, select='exact'):
     # Checking that the index really corresponds to the given time.
     # If the times do not correspond, then it means that the times
     # are not increasing uniformly and we try the bisection method.
-    if not _check_index(index, times, nctime, calendar, select):
+    if not _check_index(index, times, nctime, select):
 
         # Use the bisection method. Assumes nctime is ordered.
         import bisect
@@ -894,7 +918,7 @@ cdef _year_zero_defaults(calendar):
     if calendar in ['standard','gregorian','julian']:
        return False
     elif calendar in ['proleptic_gregorian']:
-       return False
+       return True # ISO 8601 year zero=1 BC
     elif calendar in ['all_leap','noleap','365_day','366_day','360_day']:
        return True
     else:
@@ -928,11 +952,17 @@ If the calendar kwarg is set to a blank string ('') or None (the default is 'sta
 instance will not be calendar-aware and some methods will not work.
 
 If the has_year_zero kwarg is set to True, astronomical year numbering
-is used and the year zero exists (default False
-for all "real-world" calendars).  For the idealized calendars
-('noleap', '365_day', '360_day',366_day','all_leap') the year zero
+is used and the year zero exists.  If set to False for real-world
+calendars, then historical year numbering is used and the year 1 is
+preceded by year -1 and no year zero exists.
+The defaults are set to conform with
+CF conventions (False for 'julian', 'gregorian'/'standard', True
+for 'proleptic_gregorian' (ISO 8601) and True for the idealized
+calendars 'noleap'/'365_day', '360_day', 366_day'/'all_leap')
+The defaults can only be over-ridden for the real-world calendars,
+for the the idealized calendars the year zero 
 always exists and the has_year_zero kwarg is ignored.
-This kwarg is not needed to define calendar systems allowed by CF 
+This kwarg is not needed to define calendar systems allowed by CF
 (the calendar-specific defaults do this).
 
 Has isoformat, strftime, timetuple, replace, dayofwk, dayofyr, daysinmonth,
@@ -1702,8 +1732,19 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
     -4714-11-24 in the proleptic_gregorian calendar. Reference
     date is noon UTC 0-1-1 for other calendars.
 
-    There is no year zero in standard (mixed), julian, or proleptic_gregorian
-    calendars by default. If has_year_zero=True, then year zero is included.
+    If the has_year_zero kwarg is set to True, astronomical year numbering
+    is used and the year zero exists.  If set to False for real-world
+    calendars, then historical year numbering is used and the year 1 is
+    preceded by year -1 and no year zero exists.
+    The defaults are set to conform with
+    CF conventions (False for 'julian', 'gregorian'/'standard', True
+    for 'proleptic_gregorian' (ISO 8601) and True for the idealized
+    calendars 'noleap'/'365_day', '360_day', 366_day'/'all_leap')
+    The defaults can only be over-ridden for the real-world calendars,
+    for the the idealized calendars the year zero 
+    always exists and the has_year_zero kwarg is ignored.
+    This kwarg is not needed to define calendar systems allowed by CF
+    (the calendar-specific defaults do this).
 
     Subtract 0.5 to get 00 UTC on that day.
 

@@ -575,8 +575,11 @@ class cftimeTestCase(unittest.TestCase):
         assert (date2.second == date1.second)
         assert_almost_equal(JulianDayFromDate(date1), 1721057.5)
         # issue 596 - negative years fail in utime.num2date
-        u = utime("seconds since 1-1-1", "proleptic_gregorian")
-        d = u.num2date(u.date2num(datetimex(-1, 1, 1)))
+        units="seconds since 1-1-1"
+        calendar="proleptic_gregorian"
+        yrzero=False
+        din=datetimex(-1,1,1,calendar=calendar,has_year_zero=yrzero)
+        d=num2date(date2num(din,units),units,calendar=calendar,has_year_zero=yrzero)
         assert (d.year == -1)
         assert (d.month == 1)
         assert (d.day == 1)
@@ -787,10 +790,11 @@ class cftimeTestCase(unittest.TestCase):
         dt2 = num2date(date2num(dt1, units, calendar='standard'), units)
         assert(dt1 == dt2)
 # issue #189 - leap years calculated incorrectly for negative years in proleptic_gregorian calendar
-        dt1 = datetime(2020, 4, 24, 16, 15, 10)
+        dt1 = datetime(2020, 4, 24, 16, 15, 10) # python datetime
         units = 'days since -4713-01-01 12:00'
         cal = 'proleptic_gregorian'
-        dt2 = num2date(date2num(dt1, units, cal), units, cal)
+        dt2 = num2date(date2num(dt1, units, cal, has_year_zero=False), units,
+                cal, has_year_zero=False)
         assert(dt1 == dt2)
 # issue #198 - cftime.datetime creates calendar specific datetimes that
 # support addition/subtraction of timedeltas.
@@ -1483,8 +1487,10 @@ def days_per_month_leap_year(date_type, month):
 
 
 def test_zero_year(date_type):
-    # Year 0 is valid in the 360,365 and 366 day calendars
-    if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day]:
+    # Year 0 is valid in the 360,365 and 366 day and 
+    # Proleptic Gregorian calendars by default.
+    if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day,
+            DatetimeProlepticGregorian]:
         date_type(0, 1, 1)
     else:
         with pytest.raises(ValueError):
