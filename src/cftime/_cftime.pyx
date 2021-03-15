@@ -922,6 +922,7 @@ cdef _year_zero_defaults(calendar):
 
 # factory function without optional kwargs that can be used in datetime.__reduce__
 def _create_datetime(args, kwargs): return datetime(*args, **kwargs)
+# custorm warning for invalid CF dates.
 class CFWarning(UserWarning):
     pass
 
@@ -1265,9 +1266,9 @@ The default format of the string produced by strftime is controlled by self.form
         else:
             units = 'days since 0-1-1-12'
         # suppress warning about invalid CF date (year <= 0)
-        warnings.filterwarnings("ignore",category=CFWarning)
-        jd = num2date(jday,units=units,calendar=calendar,has_year_zero=has_year_zero)
-        warnings.filterwarnings("default",category=CFWarning)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=CFWarning)
+            jd = num2date(jday,units=units,calendar=calendar,has_year_zero=has_year_zero)
         return jd
 
     def toordinal(self,fractional=False):
