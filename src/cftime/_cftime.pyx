@@ -1008,6 +1008,9 @@ The default format of the string produced by strftime is controlled by self.form
             has_year_zero = _year_zero_defaults(calendar)
         if not has_year_zero and calendar in ['all_leap','noleap','365_day','366_day', '360_day']:
             warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
+        if calendar in ['julian','gregorian','mixed'] and year <= 0:
+            msg="dates before 1-1-1 are prohibited by CF for this calendar"
+            warnings.warn(msg)
         self.has_year_zero = has_year_zero
         if calendar == 'gregorian' or calendar == 'standard':
             # dates after 1582-10-15 can be converted to and compared to
