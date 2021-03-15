@@ -578,7 +578,9 @@ class cftimeTestCase(unittest.TestCase):
         # caused incorrect rountrip num2date(date2num(date)) roundtrip for dates with year
         # < 0.
         u = utime("seconds since 1-1-1",calendar='julian')
-        date1 = datetimex(-1, 1, 1)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            date1 = datetimex(-1, 1, 1)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore",category=cftime.CFWarning)
             date2 = u.num2date(u.date2num(date1))
@@ -593,8 +595,10 @@ class cftimeTestCase(unittest.TestCase):
         units="seconds since 1-1-1"
         calendar="proleptic_gregorian"
         yrzero=False
-        din=datetimex(-1,1,1,calendar=calendar,has_year_zero=yrzero)
-        d=num2date(date2num(din,units),units,calendar=calendar,has_year_zero=yrzero)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            din=datetimex(-1,1,1,calendar=calendar,has_year_zero=yrzero)
+            d=num2date(date2num(din,units),units,calendar=calendar,has_year_zero=yrzero)
         assert (d.year == -1)
         assert (d.month == 1)
         assert (d.day == 1)
@@ -814,8 +818,10 @@ class cftimeTestCase(unittest.TestCase):
         dt1 = datetime(2020, 4, 24, 16, 15, 10) # python datetime
         units = 'days since -4713-01-01 12:00'
         cal = 'proleptic_gregorian'
-        dt2 = num2date(date2num(dt1, units, cal, has_year_zero=False), units,
-                cal, has_year_zero=False)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            dt2 = num2date(date2num(dt1, units, cal, has_year_zero=False), units,
+                                    cal, has_year_zero=False)
         assert(dt1 == dt2)
 # issue #198 - cftime.datetime creates calendar specific datetimes that
 # support addition/subtraction of timedeltas.
@@ -1116,7 +1122,9 @@ class issue584TestCase(unittest.TestCase):
 
         # Pick the date corresponding to the Julian day of 1.0 to test
         # the transition from positive to negative Julian days.
-        julian_day = converter.date2num(datetimex(-4712, 1, 2, 12))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            julian_day = converter.date2num(datetimex(-4712, 1, 2, 12))
         # should be a Tuesday
 
         old_date = converter.num2date(julian_day)

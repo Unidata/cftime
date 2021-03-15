@@ -1017,8 +1017,9 @@ The default format of the string produced by strftime is controlled by self.form
             has_year_zero = _year_zero_defaults(calendar)
         if not has_year_zero and calendar in ['all_leap','noleap','365_day','366_day', '360_day']:
             warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
-        if calendar in ['julian','gregorian','mixed'] and year <= 0:
-            msg="dates before 1-1-1 are prohibited by CF for this calendar"
+        if (calendar in ['julian','gregorian','standard'] and year <= 0) or\
+           (calendar == 'proleptic_gregorian' and not has_year_zero and year < 1):
+            msg="this date/calendar/year zero convention is not supported by CF"
             warnings.warn(msg,category=CFWarning)
         self.has_year_zero = has_year_zero
         if calendar == 'gregorian' or calendar == 'standard':
@@ -1258,7 +1259,11 @@ The default format of the string produced by strftime is controlled by self.form
     @staticmethod
     def fromordinal(jday,calendar='standard',has_year_zero=None):
         """Create a datetime instance from a julian day ordinal, calendar
-        and (optionally) year zero convention (inverse of toordinal)."""
+        and (optionally) year zero convention (inverse of toordinal). The
+        Julian day number is the number of days since noon UTC January 1, 4713
+        in the proleptic julian calendar with no year zero  (November 24, 4713 
+        in the proleptic gregorian calendar that includes the year zero). For
+        idealized calendars, the origin is noon UTC of the year zero."""
         calendar = calendar.lower()
         # set calendar-specific defaults for has_year_zero
         if has_year_zero is None:
