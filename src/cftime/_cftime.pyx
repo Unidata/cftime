@@ -195,6 +195,22 @@ def date2num(dates,units,calendar=None,has_year_zero=None):
            all_python_datetimes = False
            break
 
+    # if has_year_zero is None and calendar is None, use first input cftime.datetime instance
+    # to determine if year zero is to be included.
+    # If calendar is specified, use calendar specific defaults
+    if has_year_zero is None:
+        if calendar is None:
+            d0 = dates.item(0)
+            if isinstance(d0,datetime_python):
+                has_year_zero = False
+            else:
+                try:
+                    has_year_zero = d0.has_year_zero
+                except AttributeError:
+                    raise ValueError('has_year_zero not specified',type(d0))
+        else:
+            has_year_zero = _year_zero_defaults(calendar)
+
     # if calendar is None or '', use calendar of first input cftime.datetime instances.
     # if inputs are 'real' python datetime instances, use propleptic gregorian.
     if not calendar:
@@ -209,18 +225,6 @@ def date2num(dates,units,calendar=None,has_year_zero=None):
                     calendar = d0.calendar
                 except AttributeError:
                     raise ValueError('no calendar specified',type(d0))
-
-    # if has_year_zero is None, use first input cftime.datetime instance
-    # to determine if year zero is to be included.
-    if has_year_zero is None:
-        d0 = dates.item(0)
-        if isinstance(d0,datetime_python):
-            has_year_zero = False
-        else:
-            try:
-                has_year_zero = d0.has_year_zero
-            except AttributeError:
-                raise ValueError('has_year_zero not specified',type(d0))
 
     calendar = calendar.lower()
     basedate = _dateparse(units,calendar=calendar,has_year_zero=has_year_zero)
@@ -581,9 +585,26 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None)
     except AttributeError:
         raise AttributeError("netcdf time variable is missing a 'units' attribute")
 
+    dates_test = np.asanyarray(dates) # convert to numpy array
+
+    # if has_year_zero is None and calendar is None, use first input cftime.datetime instance
+    # to determine if year zero is to be included.
+    # If calendar is specified, use calendar specific defaults
+    if has_year_zero is None:
+        if calendar is None:
+            d0 = dates_test.item(0)
+            if isinstance(d0,datetime_python):
+                has_year_zero = False
+            else:
+                try:
+                    has_year_zero = d0.has_year_zero
+                except AttributeError:
+                    raise ValueError('has_year_zero not specified',type(d0))
+        else:
+            has_year_zero = _year_zero_defaults(calendar)
+
     # if calendar is None or '', use calendar of first input cftime.datetime instances.
     # if inputs are 'real' python datetime instances, use propleptic gregorian.
-    dates_test = np.asanyarray(dates) # convert to numpy array
     if not calendar:
         d0 = dates_test.item(0)
         if isinstance(d0,datetime_python):
@@ -593,18 +614,6 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None)
                 calendar = d0.calendar
             except AttributeError:
                 raise ValueError('no calendar specified',type(d0))
-
-    # if has_year_zero is None, use first input cftime.datetime instance
-    # to determine if year zero is to be included.
-    if has_year_zero is None:
-        d0 = dates_test.item(0)
-        if isinstance(d0,datetime_python):
-            has_year_zero = False
-        else:
-            try:
-                has_year_zero = d0.has_year_zero
-            except AttributeError:
-                raise ValueError('has_year_zero not specified',type(d0))
 
     calendar = calendar.lower()
     basedate = _dateparse(nctime.units,calendar=calendar,has_year_zero=has_year_zero)
@@ -911,6 +920,7 @@ cdef to_tuple(dt):
             dt.second, dt.microsecond)
 
 cdef _year_zero_defaults(calendar):
+    calendar = calendar.lower()
     if calendar in ['standard','gregorian','julian']:
        return False
     elif calendar in ['proleptic_gregorian']:
