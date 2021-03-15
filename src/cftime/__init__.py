@@ -5,6 +5,7 @@ from ._cftime import (microsec_units, millisec_units,
                      sec_units, hr_units, day_units, min_units,
                      UNIT_CONVERSION_FACTORS)
 from ._cftime import __version__
+# these will be removed in a future release
 from ._cftime import (DatetimeNoLeap, DatetimeAllLeap, Datetime360Day,
                      Datetime360Day, DatetimeJulian, 
                      DatetimeGregorian, DatetimeProlepticGregorian)
