@@ -14,6 +14,9 @@ version 1.5.0 (not yet released)
    does not allow for dates before 1-1-1 in the 'julian'
    or 'gregorian'/'standard' calendars, but cftime will handle dates
    before this without raising an exception or issuing a warning.
+ * remove legacy `utime` class, and legacy `JulianDayFromDate` and 
+   `DateFromJulianDay` functions (replaced by `cftime.datetime.toordinal`
+   and `cftime.datetime.fromordinal`).  PR #235.
 
 version 1.4.1 (release tag v1.4.1.rel)
 ======================================
