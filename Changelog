@@ -16,7 +16,7 @@ version 1.5.0 (not yet released)
    (they always have year zero). Strictly speaking, CF
    does not allow for dates before 1-1-1 in the 'julian'
    or 'gregorian'/'standard' calendars, but cftime will handle dates
-   before this without raising an exception or issuing a warning.
+   before this without raising an exception but will issue a warning.
 
 version 1.4.1 (release tag v1.4.1.rel)
 ======================================
