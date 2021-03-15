@@ -1296,9 +1296,9 @@ class DateTime(unittest.TestCase):
         self.assertEqual(self.date3_gregorian.strftime(None),
                          "1969-07-20 12:00:00")
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore",category=cftime.CFWarning)
-            def invalid_year():
+        def invalid_year():
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore",category=cftime.CFWarning)
                 DatetimeGregorian(0, 1, 1) + self.delta
 
         def invalid_month():
