@@ -922,6 +922,8 @@ cdef _year_zero_defaults(calendar):
 
 # factory function without optional kwargs that can be used in datetime.__reduce__
 def _create_datetime(args, kwargs): return datetime(*args, **kwargs)
+class CFWarning(UserWarning):
+    pass
 
 @cython.embedsignature(True)
 cdef class datetime(object):
@@ -1006,7 +1008,7 @@ The default format of the string produced by strftime is controlled by self.form
             warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
         if calendar in ['julian','gregorian','mixed'] and year <= 0:
             msg="dates before 1-1-1 are prohibited by CF for this calendar"
-            warnings.warn(msg)
+            warnings.warn(msg,category=CFWarning)
         self.has_year_zero = has_year_zero
         if calendar == 'gregorian' or calendar == 'standard':
             # dates after 1582-10-15 can be converted to and compared to
@@ -1262,7 +1264,11 @@ The default format of the string produced by strftime is controlled by self.form
                 units = 'days since -4714-11-24-12'
         else:
             units = 'days since 0-1-1-12'
-        return num2date(jday,units=units,calendar=calendar,has_year_zero=has_year_zero)
+        # suppress warning about invalid CF date (year <= 0)
+        warnings.filterwarnings("ignore",category=CFWarning)
+        jd = num2date(jday,units=units,calendar=calendar,has_year_zero=has_year_zero)
+        warnings.filterwarnings("default",category=CFWarning)
+        return jd
 
     def toordinal(self,fractional=False):
         """Return (integer) julian day ordinal.
