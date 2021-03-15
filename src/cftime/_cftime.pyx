@@ -920,7 +920,7 @@ cdef to_tuple(dt):
             dt.second, dt.microsecond)
 
 cdef _year_zero_defaults(calendar):
-    calendar = calendar.lower()
+    if calendar: calendar = calendar.lower()
     if calendar in ['standard','gregorian','julian']:
        return False
     elif calendar in ['proleptic_gregorian']:
