@@ -95,8 +95,6 @@ def _dateparse(timestr,calendar,has_year_zero=None):
     # set calendar-specific defaults for has_year_zero
     if has_year_zero is None:
         has_year_zero = _year_zero_defaults(calendar)
-    if not has_year_zero and calendar in ['all_leap','noleap','365_day','366_day', '360_day']:
-        warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
     (units, isostring) = _datesplit(timestr)
     if not ((units in month_units and calendar=='360_day') or units in _units):
         if units in month_units and calendar != '360_day':
@@ -486,8 +484,6 @@ def num2date(
     # set calendar-specific defaults for has_year_zero
     if has_year_zero is None:
         has_year_zero = _year_zero_defaults(calendar)
-    if not has_year_zero and calendar in ['all_leap','noleap','365_day','366_day','360_day']:
-        warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
     basedate = _dateparse(units,calendar=calendar,has_year_zero=has_year_zero)
 
     can_use_python_datetime=_can_use_python_datetime(basedate,calendar)
@@ -1254,8 +1250,6 @@ The default format of the string produced by strftime is controlled by self.form
         # set calendar-specific defaults for has_year_zero
         if has_year_zero is None:
             has_year_zero = _year_zero_defaults(calendar)
-        if not has_year_zero and calendar in ['all_leap','noleap','365_day','366_day', '360_day']:
-            warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
         if calendar in ['standard','julian','gregorian']:
             if has_year_zero:
                units = 'days since -4712-1-1-12'
@@ -1664,8 +1658,6 @@ cdef _is_leap(int year, calendar, has_year_zero=None):
     # set calendar-specific defaults for has_year_zero
     if has_year_zero is None:
         has_year_zero = _year_zero_defaults(calendar)
-    if not has_year_zero and calendar in ['all_leap','noleap','365_day','366_day', '360_day']:
-        warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
     if year == 0 and not has_year_zero:
         raise ValueError('year zero does not exist in the %s calendar' %\
                 calendar)
@@ -1767,9 +1759,6 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
     # set calendar-specific defaults for has_year_zero
     if has_year_zero is None:
         has_year_zero = _year_zero_defaults(calendar)
-    if not has_year_zero and calendar in ['all_leap','noleap','365_day','366_day','360_day']:
-        warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
-
     if calendar == '360_day':
         return year*360 + (month-1)*30 + day - 1
     elif calendar == '365_day':
