@@ -1522,6 +1522,7 @@ cdef void assert_valid_date(datetime dt, bint (*is_leap)(int, bint),
     else:
         month_length = month_lengths(is_leap, dt.year, has_year_zero)
 
+
     if dt.month < 1 or dt.month > 12:
         raise ValueError("invalid month provided in {0!r}".format(dt))
 
@@ -1739,15 +1740,10 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
     'all_leap' is a synonym for '366_day'
     'gregorian' is a synonym for 'standard'
 
-    Negative years allowed back to -4714
-    (proleptic_gregorian) or -4713 (standard or gregorian calendar).
-
-    Negative year values are allowed in 360_day,365_day,366_day calendars.
-
     Integer julian day is number of days since noon UTC -4713-1-1
     in the julian or mixed julian/gregorian calendar, or noon UTC
-    -4714-11-24 in the proleptic_gregorian calendar. Reference
-    date is noon UTC 0-1-1 for other calendars.
+    -4714-11-24 in the proleptic_gregorian calendar (without year zero).
+    Reference date is noon UTC 0-1-1 for other calendars.
 
     If the has_year_zero kwarg is set to True, astronomical year numbering
     is used and the year zero exists.  If set to False for real-world
@@ -1794,9 +1790,6 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
     if year == 0 and not has_year_zero:
         raise ValueError('year zero does not exist in the %s calendar' %\
                 calendar)
-    if (calendar == 'proleptic_gregorian'  and year < -4714) or\
-       (calendar in ['julian','standard']  and year < -4713):
-        raise ValueError('year out of range for %s calendar' % calendar)
     leap = _is_leap(year,calendar,has_year_zero=has_year_zero)
     if not leap and month == 2 and day == 29:
         raise ValueError('%s is not a leap year' % year)
