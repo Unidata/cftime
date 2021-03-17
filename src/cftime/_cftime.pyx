@@ -29,16 +29,13 @@ _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 # for definitions.
 _calendars = ['standard', 'gregorian', 'proleptic_gregorian',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
+_idealized_calendars= ['all_leap','noleap','366_day','365_day']
 # Following are number of days per month
 cdef int[12] _dayspermonth      = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 cdef int[12] _dayspermonth_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 # same as above, but including accumulated days of previous months.
 cdef int[13] _cumdayspermonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
 cdef int[13] _cumdayspermonth_leap = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
-
-# Reverse operator lookup for datetime.__richcmp__
-_rop_lookup = {Py_LT: '__gt__', Py_LE: '__ge__', Py_EQ: '__eq__',
-               Py_GT: '__lt__', Py_GE: '__le__', Py_NE: '__ne__'}
 
 __version__ = '1.5.0'
 
@@ -925,7 +922,7 @@ cdef _year_zero_defaults(calendar):
        return False
     elif calendar in ['proleptic_gregorian']:
        return True # ISO 8601 year zero=1 BC
-    elif calendar in ['all_leap','noleap','365_day','366_day','360_day']:
+    elif calendar in _idealized_calendars:
        return True
     else:
        return False
@@ -1015,7 +1012,7 @@ The default format of the string produced by strftime is controlled by self.form
         # set calendar-specific defaults for has_year_zero
         if has_year_zero is None:
             has_year_zero = _year_zero_defaults(calendar)
-        if not has_year_zero and calendar in ['all_leap','noleap','365_day','366_day', '360_day']:
+        if not has_year_zero and calendar in _idealized_calendars:
             warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
         if (calendar in ['julian','gregorian','standard'] and year <= 0) or\
            (calendar == 'proleptic_gregorian' and not has_year_zero and year < 1):
@@ -1213,7 +1210,7 @@ The default format of the string produced by strftime is controlled by self.form
                 self.second, self.microsecond)
 
     def __richcmp__(self, other, int op):
-        cdef datetime dt, dt_other
+        cdef datetime dt, dt_other, d1, d2
         dt = self
         if isinstance(other, datetime):
             dt_other = other
@@ -1221,11 +1218,19 @@ The default format of the string produced by strftime is controlled by self.form
             if dt.calendar == dt_other.calendar and dt.has_year_zero == dt_other.has_year_zero:
                 return PyObject_RichCompare(dt.to_tuple(), dt_other.to_tuple(), op)
             else:
-                # Note: it *is* possible to compare datetime
-                # instances that use different calendars by using
-                # date2num, but this implementation does
-                # not attempt it.
-                raise TypeError("cannot compare {0!r} and {1!r} (different calendars or year zero conventions)".format(dt, dt_other))
+                # convert both to common calendar (ISO 8601), then compare
+                try:
+                    if self.calendar == 'proleptic_gregorian' and self.has_year_zero:
+                        d1 = self
+                    else:
+                        d1 = self.change_calendar('proleptic_gregorian',has_year_zero=True)
+                    if other.calendar == 'proleptic_gregorian' and other.has_year_zero:
+                        d2 = other
+                    else:
+                        d2 = other.change_calendar('proleptic_gregorian',has_year_zero=True)
+                except ValueError: # change_calendar won't work for idealized calendars (ValueError)
+                    raise TypeError("cannot compare {0!r} and {1!r}".format(dt, dt_other))
+                return PyObject_RichCompare(d1.to_tuple(), d2.to_tuple(), op)
         elif isinstance(other, datetime_python):
             # comparing datetime and real_datetime
             if not dt.datetime_compatible:
@@ -1314,6 +1319,15 @@ The default format of the string produced by strftime is controlled by self.form
             return ijd - 0.5 + fracday
         else:
             return ijd
+
+    def change_calendar(self,calendar,has_year_zero=None):
+        cdef datetime dt
+        """return a new cftime.datetime instance with a different 'real-world' calendar."""
+        if calendar in _idealized_calendars or self.calendar in _idealized_calendars:
+            raise ValueError('change_calendar only works for real-world calendars')
+        # fixed frame of reference is days since -4713-1-1 in the Julian calendar with no year zero
+        return self.fromordinal(self.toordinal(fractional=True),
+                                calendar=calendar,has_year_zero=has_year_zero)
 
     def __add__(self, other):
         cdef datetime dt

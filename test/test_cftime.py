@@ -1136,6 +1136,8 @@ class DateTime(unittest.TestCase):
         self.date2_365_day = DatetimeNoLeap(-5000, 1, 3, 12)
         self.date3_gregorian = DatetimeGregorian(1969,  7, 20, 12)
         self.date3_gregorian_yearzero = DatetimeGregorian(1969,  7, 20, 12, has_year_zero=True)
+        self.date4_proleptic_gregorian = cftime.datetime(-1,5,5,2,30,59,999999,calendar='proleptic_gregorian',has_year_zero=False)
+        self.date4_julian = self.date4_proleptic_gregorian.change_calendar('julian',True)
 
         # last day of the Julian calendar in the mixed Julian/Gregorian calendar
         self.date4_gregorian = DatetimeGregorian(1582, 10, 4)
@@ -1333,6 +1335,9 @@ class DateTime(unittest.TestCase):
         self.assertTrue(self.datetime_date1 > self.date3_gregorian)
         # compare datetime and real_datetime
         self.assertFalse(self.date3_gregorian > self.datetime_date1)
+        # compare different calendars (uses change_calendar method)
+        self.assertTrue(self.date3_gregorian_yearzero == self.date3_gregorian)
+        self.assertTrue(self.date4_proleptic_gregorian == self.date4_julian)
 
         def not_comparable_1():
             "compare two datetime instances with different calendars"
@@ -1354,11 +1359,7 @@ class DateTime(unittest.TestCase):
             "compare non-datetime to a datetime instance"
             0 < self.date1_365_day
 
-        def not_comparable_6():
-            "compare two datetime instances with different calendars"
-            self.date3_gregorian_yearzero > self.date3_gregorian
-
-        for func in [not_comparable_1, not_comparable_2, not_comparable_3, not_comparable_4, not_comparable_5, not_comparable_6]:
+        for func in [not_comparable_1, not_comparable_2, not_comparable_3, not_comparable_4, not_comparable_5]:
             self.assertRaises(TypeError, func)
 
     @pytest.mark.skipif(sys.version_info.major != 2,
