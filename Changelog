@@ -18,9 +18,9 @@ version 1.5.0 (not yet released)
    or 'gregorian'/'standard' calendars, or dates before 1-1-1 in
    the 'proleptic_gregorian' calendar without a year zero, but cftime will
    but will issue a warning without raising an exception.
- * add "change_calendar" cftime.datetime method to switch to another 
-   'real-world' calendar. Enable comparison of cftime.datetime instances
-   with different 'real-world' calendars (using the new change_calendar method)
+ * PR #234 also added "change_calendar" cftime.datetime method to switch to another 
+   'real-world' calendar. Enables comparison of cftime.datetime instances
+   with different 'real-world' calendars.
 
 version 1.4.1 (release tag v1.4.1.rel)
 ======================================
