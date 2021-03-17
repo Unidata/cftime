@@ -15,8 +15,12 @@ version 1.5.0 (not yet released)
    Ignored for idealized calendars like '360_day'
    (they always have year zero). Strictly speaking, CF
    does not allow for dates before 1-1-1 in the 'julian'
-   or 'gregorian'/'standard' calendars, but cftime will handle dates
-   before this without raising an exception but will issue a warning.
+   or 'gregorian'/'standard' calendars, or dates before 1-1-1 in
+   the 'proleptic_gregorian' calendar without a year zero, but cftime will
+   but will issue a warning without raising an exception.
+ * add "change_calendar" cftime.datetime method to switch to another 
+   'real-world' calendar. Enable comparison of cftime.datetime instances
+   with different 'real-world' calendars (using the new change_calendar method)
  * remove legacy `utime` class, and legacy `JulianDayFromDate` and 
    `DateFromJulianDay` functions (replaced by `cftime.datetime.toordinal`
    and `cftime.datetime.fromordinal`).  PR #235.
