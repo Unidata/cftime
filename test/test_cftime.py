@@ -1147,7 +1147,9 @@ class DateTime(unittest.TestCase):
         self.date2_365_day = DatetimeNoLeap(-5000, 1, 3, 12)
         self.date3_gregorian = DatetimeGregorian(1969,  7, 20, 12)
         self.date3_gregorian_yearzero = DatetimeGregorian(1969,  7, 20, 12, has_year_zero=True)
-        self.date4_proleptic_gregorian = cftime.datetime(-1,5,5,2,30,59,999999,calendar='proleptic_gregorian',has_year_zero=False)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            self.date4_proleptic_gregorian = cftime.datetime(-1,5,5,2,30,59,999999,calendar='proleptic_gregorian',has_year_zero=False)
         self.date4_julian = self.date4_proleptic_gregorian.change_calendar('julian',True)
 
         # last day of the Julian calendar in the mixed Julian/Gregorian calendar
@@ -1528,12 +1530,14 @@ def days_per_month_leap_year(date_type, month):
 def test_zero_year(date_type):
     # Year 0 is valid in the 360,365 and 366 day and 
     # Proleptic Gregorian calendars by default.
-    if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day,
-            DatetimeProlepticGregorian]:
-        date_type(0, 1, 1)
-    else:
-        with pytest.raises(ValueError):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore",category=cftime.CFWarning)
+        if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day,
+                DatetimeProlepticGregorian]:
             date_type(0, 1, 1)
+        else:
+            with pytest.raises(ValueError):
+                date_type(0, 1, 1)
 
 
 def test_invalid_month(date_type):
@@ -1654,8 +1658,10 @@ _EXPECTED_DATE_TYPES = {'noleap': DatetimeNoLeap,
 )
 def test_num2date_only_use_cftime_datetimes_negative_years(
         calendar, expected_date_type):
-    result = num2date(-1000., units='days since 0001-01-01', calendar=calendar,
-                      only_use_cftime_datetimes=True)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore",category=cftime.CFWarning)
+        result = num2date(-1000., units='days since 0001-01-01', calendar=calendar,
+                          only_use_cftime_datetimes=True)
     assert isinstance(result, datetimex)
     assert (result.calendar == adjust_calendar(calendar))
 
