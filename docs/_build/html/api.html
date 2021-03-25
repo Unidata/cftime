@@ -12,7 +12,6 @@
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Installation" href="installing.html" />
@@ -59,10 +58,8 @@ correspond to the closest dates.</p>
 is used and the year zero exists.  If set to False for real-world
 calendars, then historical year numbering is used and the year 1 is
 preceded by year -1 and no year zero exists.
-The defaults are set to conform with
-CF conventions (False for ‘julian’, ‘gregorian’/’standard’, True
-for ‘proleptic_gregorian’ (ISO 8601) and True for the idealized
-calendars ‘noleap’/’365_day’, ‘360_day’, 366_day’/’all_leap’)
+The defaults are False for real-world calendars
+and True for idealized calendars.
 The defaults can only be over-ridden for the real-world calendars,
 for the the idealized calendars the year zero 
 always exists and the has_year_zero kwarg is ignored.
@@ -100,10 +97,8 @@ input datetime instance will be used.</p>
 is used and the year zero exists.  If set to False for real-world
 calendars, then historical year numbering is used and the year 1 is
 preceded by year -1 and no year zero exists.
-The defaults are set to conform with
-CF conventions (False for ‘julian’, ‘gregorian’/’standard’, True
-for ‘proleptic_gregorian’ (ISO 8601) and True for the idealized
-calendars ‘noleap’/’365_day’, ‘360_day’, 366_day’/’all_leap’)
+The defaults are False for real-world calendars
+and True for idealized calendars.
 The defaults can only be over-ridden for the real-world calendars,
 for the the idealized calendars the year zero 
 always exists and the has_year_zero kwarg is ignored.
@@ -137,10 +132,8 @@ instance will not be calendar-aware and some methods will not work.</p>
 is used and the year zero exists.  If set to False for real-world
 calendars, then historical year numbering is used and the year 1 is
 preceded by year -1 and no year zero exists.
-The defaults are set to conform with
-CF conventions (False for ‘julian’, ‘gregorian’/’standard’, True
-for ‘proleptic_gregorian’ (ISO 8601) and True for the idealized
-calendars ‘noleap’/’365_day’, ‘360_day’, 366_day’/’all_leap’)
+The defaults are False for real-world calendars
+and True for idealized calendars.
 The defaults can only be over-ridden for the real-world calendars,
 for the the idealized calendars the year zero 
 always exists and the has_year_zero kwarg is ignored.
@@ -153,10 +146,19 @@ instances.</p>
 <p>The default format of the string produced by strftime is controlled by self.format
 (default %Y-%m-%d %H:%M:%S).</p>
 <dl class="py method">
+<dt id="cftime.datetime.change_calendar">
+<code class="sig-name descname">change_calendar</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">calendar</span></em>, <em class="sig-param"><span class="n">has_year_zero</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.datetime.change_calendar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="cftime.datetime.fromordinal">
 <em class="property">static </em><code class="sig-name descname">fromordinal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">jday</span></em>, <em class="sig-param"><span class="n">calendar</span><span class="o">=</span><span class="default_value">'standard'</span></em>, <em class="sig-param"><span class="n">has_year_zero</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.datetime.fromordinal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a datetime instance from a julian day ordinal, calendar
-and (optionally) year zero convention (inverse of toordinal).</p>
+and (optionally) year zero convention (inverse of toordinal). The
+Julian day number is the number of days since noon UTC January 1, 4713
+in the proleptic julian calendar with no year zero  (November 24, 4713 
+in the proleptic gregorian calendar that includes the year zero). For
+idealized calendars, the origin is noon UTC of the year zero.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -234,10 +236,8 @@ objects and raise an error if this is not possible. Ignored unless
 is used and the year zero exists.  If set to False for real-world
 calendars, then historical year numbering is used and the year 1 is
 preceded by year -1 and no year zero exists.
-The defaults are set to conform with
-CF conventions (False for ‘julian’, ‘gregorian’/’standard’, True
-for ‘proleptic_gregorian’ (ISO 8601) and True for the idealized
-calendars ‘noleap’/’365_day’, ‘360_day’, 366_day’/’all_leap’)
+The defaults are False for real-world calendars
+and True for idealized calendars.
 The defaults can only be over-ridden for the real-world calendars,
 for the the idealized calendars the year zero 
 always exists and the has_year_zero kwarg is ignored.
@@ -347,7 +347,7 @@ correspond to the closest times.</p>
       &copy;2018, Jeff Whitaker.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.4.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
