@@ -4,6 +4,7 @@ import copy
 import operator
 import sys
 import unittest
+import warnings
 from collections import namedtuple
 from datetime import datetime, timedelta, MINYEAR
 
@@ -291,11 +292,17 @@ class cftimeTestCase(unittest.TestCase):
         self.assertTrue(str(d) == str(date))
         # test julian day from date, date from julian day
         d = cftime.datetime(1858, 11, 17, calendar='standard')
+        # astronomical year numbering (with year zero)
+        dz = cftime.datetime(1858, 11, 17, calendar='standard',has_year_zero=True)
         # toordinal should produce same result as JulianDayFromDate
         mjd1 = d.toordinal(fractional=True)
+        mjd1z = dz.toordinal(fractional=True)
         mjd2 = JulianDayFromDate(d)
+        mjd2z = JulianDayFromDate(dz)
         assert_almost_equal(mjd1, 2400000.5)
         assert_almost_equal(mjd1,mjd2)
+        assert_almost_equal(mjd1,mjd1z)
+        assert_almost_equal(mjd2,mjd2z)
         # fromordinal should produce the same result as DateFromJulianDay
         date1 = DateFromJulianDay(mjd1)
         date2 = cftime.datetime.fromordinal(mjd1)
@@ -559,8 +566,12 @@ class cftimeTestCase(unittest.TestCase):
         # caused incorrect rountrip num2date(date2num(date)) roundtrip for dates with year
         # < 0.
         u = utime("seconds since 1-1-1",calendar='julian')
-        date1 = datetimex(-1, 1, 1)
-        date2 = u.num2date(u.date2num(date1))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            date1 = datetimex(-1, 1, 1)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            date2 = u.num2date(u.date2num(date1))
         assert (date2.year == date1.year)
         assert (date2.month == date1.month)
         assert (date2.day == date1.day)
@@ -569,8 +580,13 @@ class cftimeTestCase(unittest.TestCase):
         assert (date2.second == date1.second)
         assert_almost_equal(JulianDayFromDate(date1), 1721057.5)
         # issue 596 - negative years fail in utime.num2date
-        u = utime("seconds since 1-1-1", "proleptic_gregorian")
-        d = u.num2date(u.date2num(datetimex(-1, 1, 1)))
+        units="seconds since 1-1-1"
+        calendar="proleptic_gregorian"
+        yrzero=False
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            din=datetimex(-1,1,1,calendar=calendar,has_year_zero=yrzero)
+            d=num2date(date2num(din,units),units,calendar=calendar,has_year_zero=yrzero)
         assert (d.year == -1)
         assert (d.month == 1)
         assert (d.day == 1)
@@ -619,20 +635,22 @@ class cftimeTestCase(unittest.TestCase):
         assert (d.minute == 0)
         assert (d.second == 0)
         # cftime issue #52
-        d = DateFromJulianDay(1684958.5,calendar='gregorian')
-        assert (d.year == -100)
-        assert (d.month == 3)
-        assert (d.day == 2)
-        assert (d.hour == 0)
-        assert (d.minute == 0)
-        assert (d.second == 0)
-        d = DateFromJulianDay(1684958.5,calendar='standard')
-        assert (d.year == -100)
-        assert (d.month == 3)
-        assert (d.day == 2)
-        assert (d.hour == 0)
-        assert (d.minute == 0)
-        assert (d.second == 0)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            d = DateFromJulianDay(1684958.5,calendar='gregorian')
+            assert (d.year == -100)
+            assert (d.month == 3)
+            assert (d.day == 2)
+            assert (d.hour == 0)
+            assert (d.minute == 0)
+            assert (d.second == 0)
+            d = DateFromJulianDay(1684958.5,calendar='standard')
+            assert (d.year == -100)
+            assert (d.month == 3)
+            assert (d.day == 2)
+            assert (d.hour == 0)
+            assert (d.minute == 0)
+            assert (d.second == 0)
         # test dayofwk, dayofyr attribute setting (cftime issue #13)
         d1 = DatetimeGregorian(2020,2,29)
         d2 = real_datetime(2020,2,29)
@@ -679,9 +697,11 @@ class cftimeTestCase(unittest.TestCase):
         # gives 2446433 (365 days more - is it counting year 0?)
         # however http://aa.usno.navy.mil/data/docs/JulianDate.php gives
         # 2446068, which agrees with us
-        units = "days since -4713-01-01T00:00:00Z"
-        t = date2num(datetime(1985,1,2), units, calendar="standard")
-        assert_almost_equal(t, 2446068)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            units = "days since -4713-01-01T00:00:00Z"
+            t = date2num(datetime(1985,1,2), units, calendar="standard")
+            assert_almost_equal(t, 2446068)
 
         # issue #68: allow months since for 360_day calendar
         d = num2date(1, 'months since 0000-01-01 00:00:00', calendar='360_day')
@@ -743,7 +763,7 @@ class cftimeTestCase(unittest.TestCase):
         test = dates == np.ma.masked_array([datetime(1848, 1, 17, 6, 0, 0, 40), None],mask=[0,1])
         assert(test.all())
         dates = num2date(times, units=units, calendar='standard')
-        assert(str(dates)=="[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 0, 40) --]")
+        assert(str(dates)=="[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 0, 40, has_year_zero=False)\n --]")
 #  check that time range of 200,000 + years can be represented accurately
         calendar='standard'
         _MAX_INT64 = np.iinfo("int64").max
@@ -776,15 +796,20 @@ class cftimeTestCase(unittest.TestCase):
         assert (date2num(dates, units="hours since 2010-02-01 00:00:00") == 24.)
 # issue #187 - roundtrip near second boundary
         dt1 = datetime(1810, 4, 24, 16, 15, 10)
-        units = 'days since -4713-01-01 12:00'
-        dt2 = num2date(date2num(dt1, units), units, calendar='proleptic_gregorian')
-        dt2 = num2date(date2num(dt1, units, calendar='standard'), units)
-        assert(dt1 == dt2)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            units = 'days since -4713-01-01 12:00'
+            dt2 = num2date(date2num(dt1, units), units, calendar='proleptic_gregorian')
+            dt2 = num2date(date2num(dt1, units, calendar='standard'), units)
+            assert(dt1 == dt2)
 # issue #189 - leap years calculated incorrectly for negative years in proleptic_gregorian calendar
-        dt1 = datetime(2020, 4, 24, 16, 15, 10)
+        dt1 = datetime(2020, 4, 24, 16, 15, 10) # python datetime
         units = 'days since -4713-01-01 12:00'
         cal = 'proleptic_gregorian'
-        dt2 = num2date(date2num(dt1, units, cal), units, cal)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            dt2 = num2date(date2num(dt1, units, cal, has_year_zero=False), units,
+                                    cal, has_year_zero=False)
         assert(dt1 == dt2)
 # issue #198 - cftime.datetime creates calendar specific datetimes that
 # support addition/subtraction of timedeltas.
@@ -796,19 +821,21 @@ class cftimeTestCase(unittest.TestCase):
         assert(cftime.date2num(cftime.datetime(18000, 12, 1, 0, 0), 'days since 18000-1-1', '360_day') == 330.0)
         # julian day not including year zero
         d = cftime.datetime(2020, 12, 1, 12, calendar='julian')
-        units = 'days since -4713-1-1 12:00'
-        jd = cftime.date2num(d,units,calendar='julian')
-        assert(jd == 2459198.0)
-        # if calendar=None, use input date to determine calendar
-        jd = cftime.date2num(d,units,calendar=None)
-        assert(jd == 2459198.0)
-        # if no calendar specified, use calendar associated with datetime
-        # instance.
-        jd = cftime.date2num(d,units)
-        assert(jd == 2459198.0)
-        # use 'standard' calendar
-        jd = cftime.date2num(d,units,calendar='standard')
-        assert(jd == 2459185.0)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            units = 'days since -4713-1-1 12:00'
+            jd = cftime.date2num(d,units,calendar='julian')
+            assert(jd == 2459198.0)
+            # if calendar=None, use input date to determine calendar
+            jd = cftime.date2num(d,units,calendar=None)
+            assert(jd == 2459198.0)
+            # if no calendar specified, use calendar associated with datetime
+            # instance.
+            jd = cftime.date2num(d,units)
+            assert(jd == 2459198.0)
+            # use 'standard' calendar
+            jd = cftime.date2num(d,units,calendar='standard')
+            assert(jd == 2459185.0)
 
         # issue #211
         # (masked array handling in date2num - AttributeError:
@@ -819,6 +846,48 @@ class cftimeTestCase(unittest.TestCase):
         assert(
              cftime.date2num(m, units="seconds since 2000-1-1")==[4.602096e+08]
               )
+
+        # test astronomical year numbering
+        jdref=2400000
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            for calendar in ['julian','gregorian','proleptic_gregorian']:
+                has_year_zero=False
+                try:
+                    # this should raise ValueError
+                    d = cftime.datetime(0,1,1,0,has_year_zero=has_year_zero,calendar=calendar)
+                except ValueError:
+                    d = cftime.datetime(-1,1,1,0,has_year_zero=has_year_zero,calendar=calendar)
+                    pass
+                else:
+                    raise AssertionError # fail if ValueError not raised
+                d2 = cftime.datetime(1,1,1,0,has_year_zero=has_year_zero,calendar=calendar)
+                assert((d2-d).days==366) # 1-1-1 is 366 days after -1-1-1 if no year zero.
+                has_year_zero=True
+                d = cftime.datetime(0,1,1,0,has_year_zero=has_year_zero,calendar=calendar)
+                d2 = cftime.datetime(1,1,1,0,has_year_zero=has_year_zero,calendar=calendar)
+                assert((d2-d).days==366) # 1-1-1 is 366 days after 0-1-1 if year zero allowed.
+                for has_year_zero in [True,False]:
+                    if calendar == 'julian':
+                        d = cftime.datetime(1858,11, 4,12,has_year_zero=has_year_zero,calendar=calendar)
+                    else:
+                        d = cftime.datetime(1858,11,16,12,has_year_zero=has_year_zero,calendar=calendar)
+                    if has_year_zero:
+                        if calendar == 'proleptic_gregorian':
+                            d0 = cftime.datetime(-4713,11,24,12,has_year_zero=has_year_zero,calendar=calendar)
+                        else:
+                            d0 = cftime.datetime(-4712, 1, 1,12,has_year_zero=has_year_zero,calendar=calendar)
+                    else:
+                        if calendar == 'proleptic_gregorian':
+                            d0 = cftime.datetime(-4714,11,24,12,has_year_zero=has_year_zero,calendar=calendar)
+                        else:
+                            d0 = cftime.datetime(-4713, 1, 1,12,has_year_zero=has_year_zero,calendar=calendar)
+                    jd = d.toordinal()
+                    assert((d-d0).days == jdref)
+                    assert(jd == jdref)
+                    assert(JulianDayFromDate(d,calendar=calendar) == jdref)
+                    d2 = cftime.datetime.fromordinal(jd,calendar=calendar,has_year_zero=has_year_zero)
+                    assert(d2 == d)
 
 
 
@@ -933,11 +1002,12 @@ class TestDate2index(unittest.TestCase):
             raise ValueError('This test should have failed.')
 
     def test_select_dummy(self):
+        calendar='standard'
         nutime = self.TestTime(datetime(1950, 1, 1), 366, 24,
-                               'hours since 1400-01-01', 'standard')
+                               'hours since 1400-01-01', calendar)
 
-        dates = [datetime(1950, 1, 2, 6), datetime(
-            1950, 1, 3), datetime(1950, 1, 3, 18)]
+        dates = [datetimex(1950, 1, 2, 6, calendar=calendar), datetimex(
+            1950, 1, 3, calendar=calendar), datetimex(1950, 1, 3, 18, calendar=calendar)]
 
         t = date2index(dates, nutime, select='before')
         assert_equal(t, [1, 2, 2])
@@ -951,6 +1021,7 @@ class TestDate2index(unittest.TestCase):
     def test_select_nc(self):
         nutime = self.time_vars['time']
 
+        # these are python datetimes ('proleptic_gregorian' calendar).
         dates = [datetime(1950, 1, 2, 6), datetime(
             1950, 1, 3), datetime(1950, 1, 3, 18)]
 
@@ -1040,7 +1111,9 @@ class issue584TestCase(unittest.TestCase):
 
         # Pick the date corresponding to the Julian day of 1.0 to test
         # the transition from positive to negative Julian days.
-        julian_day = converter.date2num(datetimex(-4712, 1, 2, 12))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            julian_day = converter.date2num(datetimex(-4712, 1, 2, 12))
         # should be a Tuesday
 
         old_date = converter.num2date(julian_day)
@@ -1062,6 +1135,11 @@ class DateTime(unittest.TestCase):
         self.date1_365_day = DatetimeNoLeap(-5000, 1, 2, 12)
         self.date2_365_day = DatetimeNoLeap(-5000, 1, 3, 12)
         self.date3_gregorian = DatetimeGregorian(1969,  7, 20, 12)
+        self.date3_gregorian_yearzero = DatetimeGregorian(1969,  7, 20, 12, has_year_zero=True)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            self.date4_proleptic_gregorian = cftime.datetime(-1,5,5,2,30,59,999999,calendar='proleptic_gregorian',has_year_zero=False)
+        self.date4_julian = self.date4_proleptic_gregorian.change_calendar('julian',True)
 
         # last day of the Julian calendar in the mixed Julian/Gregorian calendar
         self.date4_gregorian = DatetimeGregorian(1582, 10, 4)
@@ -1110,8 +1188,10 @@ class DateTime(unittest.TestCase):
                          DatetimeAllLeap(11, 2, 1))
 
         # The Gregorian calendar has no year zero.
-        self.assertEqual(DatetimeGregorian(-1, 12, 31) + self.delta,
-                         DatetimeGregorian(1, 1, 1, 1))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            self.assertEqual(DatetimeGregorian(-1, 12, 31) + self.delta,
+                             DatetimeGregorian(1, 1, 1, 1))
 
         def invalid_add_1():
             self.date1_365_day + 1
@@ -1156,9 +1236,11 @@ class DateTime(unittest.TestCase):
         self.assertEqual(self.date6_proleptic_gregorian - self.delta,
                          DatetimeProlepticGregorian(1582, 10, 13, 23))
 
-        # The Gregorian calendar has no year zero.
-        self.assertEqual(DatetimeGregorian(1, 1, 1) - self.delta,
-                         DatetimeGregorian(-1, 12, 30, 23))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",category=cftime.CFWarning)
+            # The Gregorian calendar has no year zero.
+            self.assertEqual(DatetimeGregorian(1, 1, 1) - self.delta,
+                             DatetimeGregorian(-1, 12, 30, 23))
 
         # The 360_day calendar has year zero.
 
@@ -1188,10 +1270,13 @@ class DateTime(unittest.TestCase):
         def invalid_sub_5():
             self.date3_gregorian - self.date1_365_day
 
+        def invalid_sub_6():
+            self.date3_gregorian - self.date3_gregorian_yearzero
+
         for func in [invalid_sub_1, invalid_sub_2]:
             self.assertRaises(TypeError, func)
 
-        for func in [invalid_sub_3, invalid_sub_4, invalid_sub_5]:
+        for func in [invalid_sub_3, invalid_sub_4, invalid_sub_5, invalid_sub_6] :
             self.assertRaises(ValueError, func)
 
     def test_replace(self):
@@ -1224,7 +1309,9 @@ class DateTime(unittest.TestCase):
                          "1969-07-20 12:00:00")
 
         def invalid_year():
-            DatetimeGregorian(0, 1, 1) + self.delta
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore",category=cftime.CFWarning)
+                DatetimeGregorian(0, 1, 1) + self.delta
 
         def invalid_month():
             DatetimeGregorian(1, 13, 1) + self.delta
@@ -1250,6 +1337,9 @@ class DateTime(unittest.TestCase):
         self.assertTrue(self.datetime_date1 > self.date3_gregorian)
         # compare datetime and real_datetime
         self.assertFalse(self.date3_gregorian > self.datetime_date1)
+        # compare different calendars (uses change_calendar method)
+        self.assertTrue(self.date3_gregorian_yearzero == self.date3_gregorian)
+        self.assertTrue(self.date4_proleptic_gregorian == self.date4_julian)
 
         def not_comparable_1():
             "compare two datetime instances with different calendars"
@@ -1269,9 +1359,9 @@ class DateTime(unittest.TestCase):
 
         def not_comparable_5():
             "compare non-datetime to a datetime instance"
-            0 < self.date_1_365_day
+            0 < self.date1_365_day
 
-        for func in [not_comparable_1, not_comparable_2, not_comparable_3, not_comparable_4]:
+        for func in [not_comparable_1, not_comparable_2, not_comparable_3, not_comparable_4, not_comparable_5]:
             self.assertRaises(TypeError, func)
 
     @pytest.mark.skipif(sys.version_info.major != 2,
@@ -1427,12 +1517,17 @@ def days_per_month_leap_year(date_type, month):
 
 
 def test_zero_year(date_type):
-    # Year 0 is valid in the 360,365 and 366 day calendars
-    if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day]:
-        date_type(0, 1, 1)
-    else:
-        with pytest.raises(ValueError):
+    # Year 0 is valid in the 360,365 and 366 day and 
+    # Proleptic Gregorian calendars by default.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore",category=cftime.CFWarning)
+        #if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day,
+        #        DatetimeProlepticGregorian]:
+        if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day]: 
             date_type(0, 1, 1)
+        else:
+            with pytest.raises(ValueError):
+                date_type(0, 1, 1)
 
 
 def test_invalid_month(date_type):
@@ -1553,8 +1648,10 @@ _EXPECTED_DATE_TYPES = {'noleap': DatetimeNoLeap,
 )
 def test_num2date_only_use_cftime_datetimes_negative_years(
         calendar, expected_date_type):
-    result = num2date(-1000., units='days since 0001-01-01', calendar=calendar,
-                      only_use_cftime_datetimes=True)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore",category=cftime.CFWarning)
+        result = num2date(-1000., units='days since 0001-01-01', calendar=calendar,
+                          only_use_cftime_datetimes=True)
     assert isinstance(result, datetimex)
     assert (result.calendar == adjust_calendar(calendar))
 
@@ -1584,9 +1681,9 @@ def test_num2date_only_use_cftime_datetimes_post_gregorian(
 
 
 def test_repr():
-    expected = "cftime.datetime(2000, 1, 1, 0, 0, 0, 0, calendar='gregorian')"
+    expected = "cftime.datetime(2000, 1, 1, 0, 0, 0, 0, calendar='gregorian', has_year_zero=False)"
     assert repr(datetimex(2000, 1, 1, calendar='standard')) == expected
-    expected = "cftime.datetime(2000, 1, 1, 0, 0, 0, 0, calendar='')"
+    expected = "cftime.datetime(2000, 1, 1, 0, 0, 0, 0, calendar='', has_year_zero=False)"
     assert repr(datetimex(2000, 1, 1, calendar=None)) == expected
 
 def test_string_format():

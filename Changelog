@@ -1,7 +1,15 @@
-since version 1.4.1
-===================
- * clean-up deprecated calendar specific subclasses.
+version 1.5.0 (not yet released)     
+=====================================
+ * clean-up deprecated calendar specific subclasses (PR #231).
  * added string formatting support to `cftime.datetime` objects
+   (via `cftime.datetime.__format__`) PR #232.
+ * add support for astronomical year numbering (including year zero) for
+   real-world calendars using 'has_year_zero' cftime.datetime kwarg (PR #234).
+   Default is False for 'real-world' calendars and True 
+   for idealized calendars.
+ * PR #234 also added "change_calendar" cftime.datetime method to switch to another 
+   'real-world' calendar. Enables comparison of cftime.datetime instances
+   with different 'real-world' calendars.
 
 version 1.4.1 (release tag v1.4.1.rel)
 ======================================

@@ -15,7 +15,6 @@ from datetime import timedelta, MINYEAR, MAXYEAR
 import time                     # strftime
 import warnings
 
-
 microsec_units = ['microseconds','microsecond', 'microsec', 'microsecs']
 millisec_units = ['milliseconds', 'millisecond', 'millisec', 'millisecs', 'msec', 'msecs', 'ms']
 sec_units =      ['second', 'seconds', 'sec', 'secs', 's']
@@ -30,6 +29,7 @@ _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 # for definitions.
 _calendars = ['standard', 'gregorian', 'proleptic_gregorian',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
+_idealized_calendars= ['all_leap','noleap','366_day','365_day']
 # Following are number of days per month
 cdef int[12] _dayspermonth      = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 cdef int[12] _dayspermonth_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
@@ -37,11 +37,7 @@ cdef int[12] _dayspermonth_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 3
 cdef int[13] _cumdayspermonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
 cdef int[13] _cumdayspermonth_leap = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
 
-# Reverse operator lookup for datetime.__richcmp__
-_rop_lookup = {Py_LT: '__gt__', Py_LE: '__ge__', Py_EQ: '__eq__',
-               Py_GT: '__lt__', Py_GE: '__le__', Py_NE: '__ne__'}
-
-__version__ = '1.4.1'
+__version__ = '1.5.0'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
@@ -86,12 +82,16 @@ def _datesplit(timestr):
 
     return units.lower(), remainder
 
-def _dateparse(timestr,calendar):
+def _dateparse(timestr,calendar,has_year_zero=None):
     """parse a string of the form time-units since yyyy-mm-dd hh:mm:ss,
     return a datetime instance"""
     # same as version in cftime, but returns a timezone naive
     # python datetime instance with the utc_offset included.
 
+    calendar = calendar.lower()
+    # set calendar-specific defaults for has_year_zero
+    if has_year_zero is None:
+        has_year_zero = _year_zero_defaults(calendar)
     (units, isostring) = _datesplit(timestr)
     if not ((units in month_units and calendar=='360_day') or units in _units):
         if units in month_units and calendar != '360_day':
@@ -113,19 +113,19 @@ def _dateparse(timestr,calendar):
         raise ValueError(
             'there are only 30 days in every month with the 360_day calendar')
     basedate = datetime(year, month, day, hour, minute, second,
-                        microsecond,calendar=calendar)
+                        microsecond,calendar=calendar,has_year_zero=has_year_zero)
     # subtract utc_offset from basedate time instance (which is timezone naive)
     if utc_offset:
         basedate -= timedelta(days=utc_offset/1440.)
     return basedate
 
 def _can_use_python_datetime(date,calendar):
-    gregorian = datetime(1582,10,15,calendar=calendar)
+    gregorian = datetime(1582,10,15,calendar=calendar,has_year_zero=date.has_year_zero)
     return ((calendar == 'proleptic_gregorian' and date.year >= MINYEAR and date.year <= MAXYEAR) or \
            (calendar in ['gregorian','standard'] and date > gregorian and date.year <= MAXYEAR))
 
 @cython.embedsignature(True)
-def date2num(dates,units,calendar=None):
+def date2num(dates,units,calendar=None,has_year_zero=None):
     """
     Return numeric time values given datetime objects. The units
     of the numeric time values are described by the **units** argument
@@ -149,8 +149,20 @@ def date2num(dates,units,calendar=None):
     `CF metadata convention <http://cfconventions.org>`__ are supported.
     Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
-    Default is `None` which means the calendar associated with the rist
+    Default is `None` which means the calendar associated with the first
     input datetime instance will be used.
+
+    **has_year_zero**: If set to True, astronomical year numbering
+    is used and the year zero exists.  If set to False for real-world
+    calendars, then historical year numbering is used and the year 1 is
+    preceded by year -1 and no year zero exists.
+    The defaults are False for real-world calendars
+    and True for idealized calendars.
+    The defaults can only be over-ridden for the real-world calendars,
+    for the the idealized calendars the year zero 
+    always exists and the has_year_zero kwarg is ignored.
+    This kwarg is not needed to define calendar systems allowed by CF
+    (the calendar-specific defaults do this).
 
     returns a numeric time value, or an array of numeric time values
     with approximately 1 microsecond accuracy.
@@ -178,6 +190,22 @@ def date2num(dates,units,calendar=None):
            all_python_datetimes = False
            break
 
+    # if has_year_zero is None and calendar is None, use first input cftime.datetime instance
+    # to determine if year zero is to be included.
+    # If calendar is specified, use calendar specific defaults
+    if has_year_zero is None:
+        if calendar is None:
+            d0 = dates.item(0)
+            if isinstance(d0,datetime_python):
+                has_year_zero = False
+            else:
+                try:
+                    has_year_zero = d0.has_year_zero
+                except AttributeError:
+                    raise ValueError('has_year_zero not specified',type(d0))
+        else:
+            has_year_zero = _year_zero_defaults(calendar)
+
     # if calendar is None or '', use calendar of first input cftime.datetime instances.
     # if inputs are 'real' python datetime instances, use propleptic gregorian.
     if not calendar:
@@ -194,10 +222,10 @@ def date2num(dates,units,calendar=None):
                     raise ValueError('no calendar specified',type(d0))
 
     calendar = calendar.lower()
-    basedate = _dateparse(units,calendar=calendar)
+    basedate = _dateparse(units,calendar=calendar,has_year_zero=has_year_zero)
     (unit, isostring) = _datesplit(units)
     # real-world calendars cannot have zero as a reference year.
-    if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
+    if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian'] and not has_year_zero:
         if basedate.year == 0:
             msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
             raise ValueError(msg)
@@ -217,7 +245,7 @@ def date2num(dates,units,calendar=None):
     else:
         use_python_datetime = False
         # convert basedate to specified calendar
-        basedate =  to_calendar_specific_datetime(basedate, calendar, False)
+        basedate =  to_calendar_specific_datetime(basedate, calendar, False, has_year_zero=has_year_zero)
     times = []; n = 0
     for date in dates.flat:
         # use python datetime if possible.
@@ -226,7 +254,7 @@ def date2num(dates,units,calendar=None):
             if getattr(date, 'tzinfo',None) is not None:
                 date = date.replace(tzinfo=None) - date.utcoffset()
         else: # convert date to same calendar specific cftime.datetime instance
-            date = to_calendar_specific_datetime(date, calendar, False)
+            date = to_calendar_specific_datetime(date, calendar, False, has_year_zero=has_year_zero)
         if ismasked and mask.flat[n]:
             times.append(None)
         else:
@@ -307,7 +335,7 @@ DATE_TYPES = {
      "gregorian": DatetimeGregorian
  }
 
-def to_calendar_specific_datetime(dt, calendar, use_python_datetime):
+def to_calendar_specific_datetime(dt, calendar, use_python_datetime,has_year_zero=None):
     if use_python_datetime:
         return real_datetime(
                dt.year,
@@ -327,7 +355,7 @@ def to_calendar_specific_datetime(dt, calendar, use_python_datetime):
                dt.minute,
                dt.second,
                dt.microsecond,
-               calendar=calendar)
+               calendar=calendar,has_year_zero=has_year_zero)
 
 _MAX_INT64 = np.iinfo("int64").max
 _MIN_INT64 = np.iinfo("int64").min
@@ -390,7 +418,8 @@ def num2date(
     units,
     calendar='standard',
     only_use_cftime_datetimes=True,
-    only_use_python_datetimes=False
+    only_use_python_datetimes=False,
+    has_year_zero=None
 ):
     """
     Return datetime objects given numeric time values. The units
@@ -421,6 +450,18 @@ def num2date(
     objects and raise an error if this is not possible. Ignored unless
     **only_use_cftime_datetimes=False**. Default **False**.
 
+    **has_year_zero**: if set to True, astronomical year numbering
+    is used and the year zero exists.  If set to False for real-world
+    calendars, then historical year numbering is used and the year 1 is
+    preceded by year -1 and no year zero exists.
+    The defaults are False for real-world calendars
+    and True for idealized calendars.
+    The defaults can only be over-ridden for the real-world calendars,
+    for the the idealized calendars the year zero 
+    always exists and the has_year_zero kwarg is ignored.
+    This kwarg is not needed to define calendar systems allowed by CF
+    (the calendar-specific defaults do this).
+
     returns a datetime instance, or an array of datetime instances with
     microsecond accuracy, if possible.
 
@@ -437,7 +478,10 @@ def num2date(
     contains one.
     """
     calendar = calendar.lower()
-    basedate = _dateparse(units,calendar=calendar)
+    # set calendar-specific defaults for has_year_zero
+    if has_year_zero is None:
+        has_year_zero = _year_zero_defaults(calendar)
+    basedate = _dateparse(units,calendar=calendar,has_year_zero=has_year_zero)
 
     can_use_python_datetime=_can_use_python_datetime(basedate,calendar)
     if not only_use_cftime_datetimes and only_use_python_datetimes:
@@ -448,9 +492,9 @@ def num2date(
     unit, ignore = _datesplit(units)
 
     # real-world calendars limited to positive reference years.
-    if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
+    if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian'] and not has_year_zero:
         if basedate.year == 0:
-            msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
+            msg='zero not allowed as a reference year unless has_year_zero=True'
             raise ValueError(msg)
 
     use_python_datetime = False
@@ -462,7 +506,7 @@ def num2date(
         # return python datetime if possible.
         use_python_datetime = True
 
-    basedate = to_calendar_specific_datetime(basedate, calendar, use_python_datetime)
+    basedate = to_calendar_specific_datetime(basedate, calendar, use_python_datetime, has_year_zero=has_year_zero)
 
     if unit not in UNIT_CONVERSION_FACTORS:
         raise ValueError("Unsupported time units provided, {!r}.".format(unit))
@@ -487,7 +531,7 @@ def num2date(
 
 
 @cython.embedsignature(True)
-def date2index(dates, nctime, calendar=None, select='exact'):
+def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None):
     """
     Return indices of a netCDF time variable corresponding to the given dates.
 
@@ -497,14 +541,13 @@ def date2index(dates, nctime, calendar=None, select='exact'):
     **nctime**: A netCDF time variable object. The nctime object must have a
     **units** attribute.
 
-    **calendar**: describes the calendar used in the time calculations.
+    **calendar**: describes the calendar to be used in the time calculations.
     All the values currently defined in the
     `CF metadata convention <http://cfconventions.org>`__ are supported.
     Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
-    Default is **'standard'**, which is a mixed Julian/Gregorian calendar.
-    If **calendar** is None, its value is given by **nctime.calendar** or
-    **standard** if no such attribute exists.
+    Default is `None` which means the calendar associated with the first
+    input datetime instance will be used.
 
     **select**: **'exact', 'before', 'after', 'nearest'**
     The index selection method. **exact** will return the indices perfectly
@@ -513,6 +556,18 @@ def date2index(dates, nctime, calendar=None, select='exact'):
     an exact match cannot be found. **nearest** will return the indices that
     correspond to the closest dates.
 
+    **has_year_zero**: if set to True, astronomical year numbering
+    is used and the year zero exists.  If set to False for real-world
+    calendars, then historical year numbering is used and the year 1 is
+    preceded by year -1 and no year zero exists.
+    The defaults are False for real-world calendars
+    and True for idealized calendars.
+    The defaults can only be over-ridden for the real-world calendars,
+    for the the idealized calendars the year zero 
+    always exists and the has_year_zero kwarg is ignored.
+    This kwarg is not needed to define calendar systems allowed by CF
+    (the calendar-specific defaults do this).
+
     returns an index (indices) of the netCDF time variable corresponding
     to the given datetime object(s).
     """
@@ -520,22 +575,51 @@ def date2index(dates, nctime, calendar=None, select='exact'):
         nctime.units
     except AttributeError:
         raise AttributeError("netcdf time variable is missing a 'units' attribute")
-    if calendar == None:
-        calendar = getattr(nctime, 'calendar', 'standard')
+
+    dates_test = np.asanyarray(dates) # convert to numpy array
+
+    # if has_year_zero is None and calendar is None, use first input cftime.datetime instance
+    # to determine if year zero is to be included.
+    # If calendar is specified, use calendar specific defaults
+    if has_year_zero is None:
+        if calendar is None:
+            d0 = dates_test.item(0)
+            if isinstance(d0,datetime_python):
+                has_year_zero = False
+            else:
+                try:
+                    has_year_zero = d0.has_year_zero
+                except AttributeError:
+                    raise ValueError('has_year_zero not specified',type(d0))
+        else:
+            has_year_zero = _year_zero_defaults(calendar)
+
+    # if calendar is None or '', use calendar of first input cftime.datetime instances.
+    # if inputs are 'real' python datetime instances, use propleptic gregorian.
+    if not calendar:
+        d0 = dates_test.item(0)
+        if isinstance(d0,datetime_python):
+            calendar = 'proleptic_gregorian' 
+        else:
+            try:
+                calendar = d0.calendar
+            except AttributeError:
+                raise ValueError('no calendar specified',type(d0))
+
     calendar = calendar.lower()
-    basedate = _dateparse(nctime.units,calendar=calendar)
+    basedate = _dateparse(nctime.units,calendar=calendar,has_year_zero=has_year_zero)
     # real-world calendars limited to positive reference years.
-    if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
+    if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian'] and not has_year_zero:
         if basedate.year == 0:
             msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
             raise ValueError(msg)
 
     if _can_use_python_datetime(basedate,calendar):
         # use python datetime
-        times = date2num(dates,nctime.units,calendar=calendar)
+        times = date2num(dates,nctime.units,calendar=calendar,has_year_zero=has_year_zero)
         return time2index(times, nctime, calendar, select)
     else: # use cftime module for other cases
-        return _date2index(dates, nctime, calendar, select)
+        return _date2index(dates, nctime, calendar, select, has_year_zero=has_year_zero)
 
 
 cdef _parse_timezone(tzstring):
@@ -597,7 +681,7 @@ cpdef _parse_date(datestring):
         int(groups["fraction"]),\
         tzoffset_mins
 
-cdef _check_index(indices, times, nctime, calendar, select):
+cdef _check_index(indices, times, nctime, select):
     """Return True if the time indices given correspond to the given times,
     False otherwise.
 
@@ -611,9 +695,6 @@ cdef _check_index(indices, times, nctime, calendar, select):
 
     nctime : netCDF Variable object
     NetCDF time object.
-
-    calendar : string
-    Calendar of nctime.
 
     select : string
     Index selection method.
@@ -661,10 +742,8 @@ cdef _check_index(indices, times, nctime, calendar, select):
         return np.all(delta_check <= delta_after) and np.all(delta_check <= delta_before)
 
 
-def _date2index(dates, nctime, calendar=None, select='exact'):
+def _date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None):
     """
-    _date2index(dates, nctime, calendar=None, select='exact')
-
     Return indices of a netCDF time variable corresponding to the given dates.
 
     **dates**: A datetime object or a sequence of datetime objects.
@@ -687,15 +766,24 @@ def _date2index(dates, nctime, calendar=None, select='exact'):
     corresponding to the dates just before or just after the given dates if
     an exact match cannot be found. `nearest` will return the indices that
     correspond to the closest dates.
+
+    **has_year_zero**: if set to True, astronomical year numbering
+    is used and the year zero exists.  If set to False for real-world
+    calendars, then historical year numbering is used and the year 1 is
+    preceded by year -1 and no year zero exists.
+    The defaults are False for real-world calendars
+    and True for idealized calendars.
+    The defaults can only be over-ridden for the real-world calendars,
+    for the the idealized calendars the year zero 
+    always exists and the has_year_zero kwarg is ignored.
+    This kwarg is not needed to define calendar systems allowed by CF
+    (the calendar-specific defaults do this).
     """
     try:
         nctime.units
     except AttributeError:
         raise AttributeError("netcdf time variable is missing a 'units' attribute")
-    # Setting the calendar.
-    if calendar == None:
-        calendar = getattr(nctime, 'calendar', 'standard')
-    times = date2num(dates,nctime.units,calendar=calendar)
+    times = date2num(dates,nctime.units,calendar=calendar, has_year_zero=has_year_zero)
     return time2index(times, nctime, calendar=calendar, select=select)
 
 
@@ -753,7 +841,7 @@ def time2index(times, nctime, calendar=None, select='exact'):
     # Checking that the index really corresponds to the given time.
     # If the times do not correspond, then it means that the times
     # are not increasing uniformly and we try the bisection method.
-    if not _check_index(index, times, nctime, calendar, select):
+    if not _check_index(index, times, nctime, select):
 
         # Use the bisection method. Assumes nctime is ordered.
         import bisect
@@ -820,6 +908,24 @@ cdef to_tuple(dt):
     return (dt.year, dt.month, dt.day, dt.hour, dt.minute,
             dt.second, dt.microsecond)
 
+cdef _year_zero_defaults(calendar):
+    if calendar: calendar = calendar.lower()
+    if calendar in ['standard','gregorian','julian']:
+       return False
+    elif calendar in ['proleptic_gregorian']:
+       #return True # ISO 8601 year zero=1 BC
+       return False
+    elif calendar in _idealized_calendars:
+       return True
+    else:
+       return False
+
+# factory function without optional kwargs that can be used in datetime.__reduce__
+def _create_datetime(args, kwargs): return datetime(*args, **kwargs)
+# custorm warning for invalid CF dates.
+class CFWarning(UserWarning):
+    pass
+
 @cython.embedsignature(True)
 cdef class datetime(object):
     """
@@ -844,8 +950,20 @@ and 'noleap'/'365_day'.
 If the calendar kwarg is set to a blank string ('') or None (the default is 'standard') the 
 instance will not be calendar-aware and some methods will not work.
 
+If the has_year_zero kwarg is set to True, astronomical year numbering
+is used and the year zero exists.  If set to False for real-world
+calendars, then historical year numbering is used and the year 1 is
+preceded by year -1 and no year zero exists.
+The defaults are False for real-world calendars
+and True for idealized calendars.
+The defaults can only be over-ridden for the real-world calendars,
+for the the idealized calendars the year zero 
+always exists and the has_year_zero kwarg is ignored.
+This kwarg is not needed to define calendar systems allowed by CF
+(the calendar-specific defaults do this).
+
 Has isoformat, strftime, timetuple, replace, dayofwk, dayofyr, daysinmonth,
-__repr__, __add__, __sub__, __str__ and comparison methods. 
+__repr__,__format__, __add__, __sub__, __str__ and comparison methods. 
 
 dayofwk, dayofyr, daysinmonth, __add__ and __sub__ only work for calendar-aware
 instances.
@@ -868,7 +986,7 @@ The default format of the string produced by strftime is controlled by self.form
 
     def __init__(self, int year, int month, int day, int hour=0, int minute=0,
                        int second=0, int microsecond=0, int dayofwk=-1, 
-                       int dayofyr = -1, calendar='standard'):
+                       int dayofyr = -1, calendar='standard', has_year_zero=None):
 
         self.year = year
         self.month = month
@@ -882,6 +1000,16 @@ The default format of the string produced by strftime is controlled by self.form
         self.tzinfo = None
         if calendar:
             calendar = calendar.lower()
+        # set calendar-specific defaults for has_year_zero
+        if has_year_zero is None:
+            has_year_zero = _year_zero_defaults(calendar)
+        if not has_year_zero and calendar in _idealized_calendars:
+            warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
+        #if (calendar in ['julian','gregorian','standard'] and year <= 0) or\
+        #   (calendar == 'proleptic_gregorian' and not has_year_zero and year < 1):
+        #    msg="this date/calendar/year zero convention is not supported by CF"
+        #    warnings.warn(msg,category=CFWarning)
+        self.has_year_zero = has_year_zero
         if calendar == 'gregorian' or calendar == 'standard':
             # dates after 1582-10-15 can be converted to and compared to
             # proleptic Gregorian dates
@@ -890,38 +1018,31 @@ The default format of the string produced by strftime is controlled by self.form
                 self.datetime_compatible = True
             else:
                 self.datetime_compatible = False
-            assert_valid_date(self, is_leap_gregorian, True)
-            self.has_year_zero = False
+            assert_valid_date(self, is_leap_gregorian, True, has_year_zero=has_year_zero)
         elif calendar == 'noleap' or calendar == '365_day':
             self.calendar = 'noleap'
             self.datetime_compatible = False
             assert_valid_date(self, no_leap, False, has_year_zero=True)
-            self.has_year_zero = True
         elif calendar == 'all_leap' or calendar == '366_day':
             self.calendar = 'all_leap'
             self.datetime_compatible = False
             assert_valid_date(self, all_leap, False, has_year_zero=True)
-            self.has_year_zero = True
         elif calendar == '360_day':
             self.calendar = calendar
             self.datetime_compatible = False
             assert_valid_date(self, no_leap, False, has_year_zero=True, is_360_day=True)
-            self.has_year_zero = True
         elif calendar == 'julian':
             self.calendar = calendar
             self.datetime_compatible = False
-            assert_valid_date(self, is_leap_julian, False)
-            self.has_year_zero = False
+            assert_valid_date(self, is_leap_julian, False, has_year_zero=has_year_zero)
         elif calendar == 'proleptic_gregorian':
             self.calendar = calendar
             self.datetime_compatible = True
-            assert_valid_date(self, is_leap_proleptic_gregorian, False)
-            self.has_year_zero = False
+            assert_valid_date(self, is_leap_proleptic_gregorian, False, has_year_zero=has_year_zero)
         elif calendar == '' or calendar is None:
             # instance not calendar-aware, some method will not work
             self.calendar = ''
             self.datetime_compatible = False
-            self.has_year_zero = False
         else:
             raise ValueError(
                 "calendar must be one of %s, got '%s'" % (str(_calendars), calendar))
@@ -1031,17 +1152,17 @@ The default format of the string produced by strftime is controlled by self.form
 
     def __repr__(self):
         if self.__class__.__name__ != 'datetime': # a calendar-specific sub-class
-            return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8})".format('cftime',
+            return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8}, has_year_zero={9})".format('cftime',
             self.__class__.__name__,
-            self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond)
+            self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond,self.has_year_zero)
         if self.calendar == None:
-            return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8}, calendar={9})".format('cftime',
+            return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8}, calendar={9}, has_year_zero={10})".format('cftime',
             self.__class__.__name__,
-            self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond,self.calendar)
+            self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond,self.calendar,self.has_year_zero)
         else:
-            return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8}, calendar='{9}')".format('cftime',
+            return "{0}.{1}({2}, {3}, {4}, {5}, {6}, {7}, {8}, calendar='{9}', has_year_zero={10})".format('cftime',
             self.__class__.__name__,
-            self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond,self.calendar)
+            self.year,self.month,self.day,self.hour,self.minute,self.second,self.microsecond,self.calendar,self.has_year_zero)
 
     def __str__(self):
         return self.isoformat(' ')
@@ -1080,19 +1201,27 @@ The default format of the string produced by strftime is controlled by self.form
                 self.second, self.microsecond)
 
     def __richcmp__(self, other, int op):
-        cdef datetime dt, dt_other
+        cdef datetime dt, dt_other, d1, d2
         dt = self
         if isinstance(other, datetime):
             dt_other = other
             # comparing two datetime instances
-            if dt.calendar == dt_other.calendar:
+            if dt.calendar == dt_other.calendar and dt.has_year_zero == dt_other.has_year_zero:
                 return PyObject_RichCompare(dt.to_tuple(), dt_other.to_tuple(), op)
             else:
-                # Note: it *is* possible to compare datetime
-                # instances that use difference calendars by using
-                # date2num, but this implementation does
-                # not attempt it.
-                raise TypeError("cannot compare {0!r} and {1!r} (different calendars)".format(dt, dt_other))
+                # convert both to common calendar (ISO 8601), then compare
+                try:
+                    if self.calendar == 'proleptic_gregorian' and self.has_year_zero:
+                        d1 = self
+                    else:
+                        d1 = self.change_calendar('proleptic_gregorian',has_year_zero=True)
+                    if other.calendar == 'proleptic_gregorian' and other.has_year_zero:
+                        d2 = other
+                    else:
+                        d2 = other.change_calendar('proleptic_gregorian',has_year_zero=True)
+                except ValueError: # change_calendar won't work for idealized calendars (ValueError)
+                    raise TypeError("cannot compare {0!r} and {1!r}".format(dt, dt_other))
+                return PyObject_RichCompare(d1.to_tuple(), d2.to_tuple(), op)
         elif isinstance(other, datetime_python):
             # comparing datetime and real_datetime
             if not dt.datetime_compatible:
@@ -1103,42 +1232,65 @@ The default format of the string produced by strftime is controlled by self.form
             return NotImplemented
 
     cdef _getstate(self):
-        if self.__class__.__name__ != 'datetime': # a calendar-specific sub-class
-           return (self.year, self.month, self.day, self.hour,
-                   self.minute, self.second, self.microsecond,
-                   self._dayofwk, self._dayofyr)
-        else:
-           return (self.year, self.month, self.day, self.hour,
-                   self.minute, self.second, self.microsecond,
-                   self._dayofwk, self._dayofyr, self.calendar)
+        """return args and kwargs needed to create class instance"""
+        args = (self.year, self.month, self.day)
+        kwargs = {'hour': self.hour,
+                  'minute': self.minute,
+                  'second': self.second,
+                  'microsecond': self.microsecond,
+                  'dayofwk': self._dayofwk,
+                  'dayofyr': self._dayofyr,
+                  'calendar': self.calendar,
+                  'has_year_zero': self.has_year_zero}
+        return args, kwargs
 
     def __reduce__(self):
         """special method that allows instance to be pickled"""
-        return (self.__class__, self._getstate())
+        args, kwargs = self._getstate()
+        return (_create_datetime, (args, kwargs))
 
     cdef _add_timedelta(self, other):
         return NotImplemented
 
     @staticmethod
-    def fromordinal(jday,calendar='standard'):
-        """Create a datetime instance from a julian day ordinal and calendar
-        (inverse of toordinal)."""
+    def fromordinal(jday,calendar='standard',has_year_zero=None):
+        """Create a datetime instance from a julian day ordinal, calendar
+        and (optionally) year zero convention (inverse of toordinal). The
+        Julian day number is the number of days since noon UTC January 1, 4713
+        in the proleptic julian calendar with no year zero  (November 24, 4713 
+        in the proleptic gregorian calendar that includes the year zero). For
+        idealized calendars, the origin is noon UTC of the year zero."""
+        calendar = calendar.lower()
+        # set calendar-specific defaults for has_year_zero
+        if has_year_zero is None:
+            has_year_zero = _year_zero_defaults(calendar)
         if calendar in ['standard','julian','gregorian']:
-            units = 'days since -4713-1-1-12'
+            if has_year_zero:
+               units = 'days since -4712-1-1-12'
+            else:
+               units = 'days since -4713-1-1-12'
         elif calendar == 'proleptic_gregorian':
-            units = 'days since -4714-11-24-12'
+            if has_year_zero:
+                units = 'days since -4713-11-24-12'
+            else:
+                units = 'days since -4714-11-24-12'
         else:
             units = 'days since 0-1-1-12'
-        return num2date(jday,units=units,calendar=calendar)
+        # suppress warning about invalid CF date (year <= 0)
+        #with warnings.catch_warnings():
+        #    warnings.simplefilter("ignore",category=CFWarning)
+        jd = num2date(jday,units=units,calendar=calendar,has_year_zero=has_year_zero)
+        return jd
 
     def toordinal(self,fractional=False):
         """Return (integer) julian day ordinal.
 
         Day 0 starts at noon January 1 of the year -4713 for the
-        julian, gregorian and standard calendars.
+        julian, gregorian and standard calendars (year -4712 if year
+        zero allowd).
 
         Day 0 starts at noon on November 24 of the year -4714 for the
-        proleptic gregorian calendar.
+        proleptic gregorian calendar (year -4713 if year zero allowed).
 
         Day 0 starts at noon on January 1 of the year zero is for the
         360_day, 365_day, 366_day, all_leap and noleap calendars.
@@ -1159,15 +1311,27 @@ The default format of the string produced by strftime is controlled by self.form
         else:
             return ijd
 
+    def change_calendar(self,calendar,has_year_zero=None):
+        cdef datetime dt
+        """return a new cftime.datetime instance with a different 'real-world' calendar."""
+        if calendar in _idealized_calendars or self.calendar in _idealized_calendars:
+            raise ValueError('change_calendar only works for real-world calendars')
+        # fixed frame of reference is days since -4713-1-1 in the Julian calendar with no year zero
+        return self.fromordinal(self.toordinal(fractional=True),
+                                calendar=calendar,has_year_zero=has_year_zero)
+
     def __add__(self, other):
         cdef datetime dt
+        cdef bint has_year_zero
         if isinstance(self, datetime) and isinstance(other, timedelta):
             dt = self
             calendar = self.calendar
+            has_year_zero = self.has_year_zero
             delta = other
         elif isinstance(self, timedelta) and isinstance(other, datetime):
             dt = other
             calendar = other.calendar
+            has_year_zero = other.has_year_zero
             delta = self
         else:
             return NotImplemented
@@ -1183,19 +1347,20 @@ The default format of the string produced by strftime is controlled by self.form
             #return dt.__class__(*add_timedelta(dt, delta, all_leap, False, True),calendar=calendar)
             return DatetimeAllLeap(*add_timedelta(dt, delta, all_leap, False, True))
         elif calendar == 'julian':
-            #return dt.__class__(*add_timedelta(dt, delta, is_leap_julian, False, False),calendar=calendar)
-            return DatetimeJulian(*add_timedelta(dt, delta, is_leap_julian, False, False))
+            #return dt.__class__(*add_timedelta(dt, delta, is_leap_julian, False, has_year_zero),calendar=calendar,has_year_zero=has_year_zero)
+            return DatetimeJulian(*add_timedelta(dt, delta, is_leap_julian, False, has_year_zero),has_year_zero=has_year_zero)
         elif calendar == 'gregorian':
-            #return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, True, False),calendar=calendar)
-            return DatetimeGregorian(*add_timedelta(dt, delta, is_leap_gregorian, True, False))
+            #return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, True, has_year_zero),calendar=calendar,has_year_zero=has_year_zero)
+            return DatetimeGregorian(*add_timedelta(dt, delta, is_leap_gregorian, True, has_year_zero),has_year_zero=has_year_zero)
         elif calendar == 'proleptic_gregorian':
-            #return dt.__class__(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, False),calendar=calendar)
-            return DatetimeProlepticGregorian(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, False))
+            #return dt.__class__(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, has_year_zero),calendar=calendar,has_year_zero=has_year_zero)
+            return DatetimeProlepticGregorian(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, has_year_zero),has_year_zero=has_year_zero)
         else:
             return NotImplemented
 
     def __sub__(self, other):
         cdef datetime dt
+        cdef bint has_year_zero
         if isinstance(self, datetime): # left arg is a datetime instance
             dt = self
             if isinstance(other, datetime):
@@ -1204,6 +1369,8 @@ The default format of the string produced by strftime is controlled by self.form
                     raise ValueError("cannot compute the time difference between dates with different calendars")
                 if dt.calendar == "":
                     raise ValueError("cannot compute the time difference between dates that are not calendar-aware")
+                if dt.has_year_zero != other.has_year_zero:
+                    raise ValueError("cannot compute the time difference between dates with year zero conventions")
                 ordinal_self = self.toordinal() # julian day
                 ordinal_other = other.toordinal()
                 days = ordinal_self - ordinal_other
@@ -1226,6 +1393,7 @@ datetime object."""
                 # datetime - timedelta
                 # return calendar-specific subclasses for backward compatbility,
                 # even though after 1.3.0 this is no longer necessary.
+                has_year_zero=self.has_year_zero
                 if self.calendar == '360_day':
                     #return self.__class__(*add_timedelta_360_day(self, -other),calendar=self.calendar)
                     return Datetime360Day(*add_timedelta_360_day(self, -other))
@@ -1236,15 +1404,17 @@ datetime object."""
                     #return self.__class__(*add_timedelta(self, -other, all_leap, False, True),calendar=self.calendar)
                     return DatetimeAllLeap(*add_timedelta(self, -other, all_leap, False, True))
                 elif self.calendar == 'julian':
-                    #return self.__class__(*add_timedelta(self, -other, is_leap_julian, False, False),calendar=self.calendar)
-                    return DatetimeJulian(*add_timedelta(self, -other, is_leap_julian, False, False))
+                    #return self.__class__(*add_timedelta(self, -other, 
+                    #     is_leap_julian, False, has_year_zero),calendar=self.calendar,has_year_zero=self.has_year_zero)
+                    return DatetimeJulian(*add_timedelta(self, -other, is_leap_julian, False, has_year_zero),has_year_zero=self.has_year_zero)
                 elif self.calendar == 'gregorian':
-                    #return self.__class__(*add_timedelta(self, -other, is_leap_gregorian, True, False),calendar=self.calendar)
-                    return DatetimeGregorian(*add_timedelta(self, -other, is_leap_gregorian, True, False))
+                    #return self.__class__(*add_timedelta(self, -other, 
+                    #     is_leap_gregorian, True, has_year_zero),calendar=self.calendar,has_year_zero=self.has_year_zero)
+                    return DatetimeGregorian(*add_timedelta(self, -other, is_leap_gregorian, True, has_year_zero),has_year_zero=self.has_year_zero)
                 elif self.calendar == 'proleptic_gregorian':
                     #return self.__class__(*add_timedelta(self, -other,
-                    #    is_leap_proleptic_gregorian, False, False),calendar=self.calendar)
-                    return DatetimeProlepticGregorian(*add_timedelta(self, -other, is_leap_proleptic_gregorian, False, False))
+                    #    is_leap_proleptic_gregorian, False, has_year_zero),calendar=self.calendar,has_year_zero=self.has_year_zero)
+                    return DatetimeProlepticGregorian(*add_timedelta(self, -other, is_leap_proleptic_gregorian, False, has_year_zero),has_year_zero=self.has_year_zero)
                 else:
                     return NotImplemented
             else:
@@ -1317,33 +1487,33 @@ cdef _strftime(datetime dt, fmt):
         s = s[:site] + syear + s[site + 4:]
     return s
 
-cdef bint is_leap_julian(int year):
+cdef bint is_leap_julian(int year, bint has_year_zero):
     "Return 1 if year is a leap year in the Julian calendar, 0 otherwise."
-    return _is_leap(year, calendar='julian')
+    return _is_leap(year, calendar='julian',has_year_zero=has_year_zero)
 
-cdef bint is_leap_proleptic_gregorian(int year):
+cdef bint is_leap_proleptic_gregorian(int year, bint has_year_zero):
     "Return 1 if year is a leap year in the Proleptic Gregorian calendar, 0 otherwise."
-    return _is_leap(year, calendar='proleptic_gregorian')
+    return _is_leap(year, calendar='proleptic_gregorian',has_year_zero=has_year_zero)
 
-cdef bint is_leap_gregorian(int year):
+cdef bint is_leap_gregorian(int year, bint has_year_zero):
     "Return 1 if year is a leap year in the Gregorian calendar, 0 otherwise."
-    return _is_leap(year, calendar='standard')
+    return _is_leap(year, calendar='standard',has_year_zero=has_year_zero)
 
-cdef bint all_leap(int year):
+cdef bint all_leap(int year, bint has_year_zero):
     "Return True for all years."
     return True
 
-cdef bint no_leap(int year):
+cdef bint no_leap(int year, bint has_year_zero):
     "Return False for all years."
     return False
 
-cdef int * month_lengths(bint (*is_leap)(int), int year):
-    if is_leap(year):
+cdef int * month_lengths(bint (*is_leap)(int,bint), int year, bint has_year_zero):
+    if is_leap(year,has_year_zero):
         return _dayspermonth_leap
     else:
         return _dayspermonth
 
-cdef void assert_valid_date(datetime dt, bint (*is_leap)(int),
+cdef void assert_valid_date(datetime dt, bint (*is_leap)(int, bint),
                             bint julian_gregorian_mixed,
                             bint has_year_zero=False,
                             bint is_360_day=False) except *:
@@ -1355,7 +1525,8 @@ cdef void assert_valid_date(datetime dt, bint (*is_leap)(int),
     if is_360_day:
         month_length = 12*[30]
     else:
-        month_length = month_lengths(is_leap, dt.year)
+        month_length = month_lengths(is_leap, dt.year, has_year_zero)
+
 
     if dt.month < 1 or dt.month > 12:
         raise ValueError("invalid month provided in {0!r}".format(dt))
@@ -1392,7 +1563,7 @@ cdef void assert_valid_date(datetime dt, bint (*is_leap)(int),
 # The date of the transition from the Julian to Gregorian calendar and
 # the number of invalid dates are hard-wired (1582-10-4 is the last day
 # of the Julian calendar, after which follows 1582-10-15).
-cdef tuple add_timedelta(datetime dt, delta, bint (*is_leap)(int), bint julian_gregorian_mixed, bint has_year_zero):
+cdef tuple add_timedelta(datetime dt, delta, bint (*is_leap)(int,bint), bint julian_gregorian_mixed, bint has_year_zero):
     cdef int microsecond, second, minute, hour, day, month, year
     cdef int delta_microseconds, delta_seconds, delta_days
     cdef int* month_length
@@ -1412,7 +1583,7 @@ cdef tuple add_timedelta(datetime dt, delta, bint (*is_leap)(int), bint julian_g
     month = dt.month
     year = dt.year
 
-    month_length = month_lengths(is_leap, year)
+    month_length = month_lengths(is_leap, year, has_year_zero)
 
     n_invalid_dates = 10 if julian_gregorian_mixed else 0
 
@@ -1440,7 +1611,7 @@ cdef tuple add_timedelta(datetime dt, delta, bint (*is_leap)(int), bint julian_g
                 year -= 1
                 if year == 0 and not has_year_zero:
                     year = -1
-                month_length = month_lengths(is_leap, year)
+                month_length = month_lengths(is_leap, year, has_year_zero)
             day = month_length[month-1]
         else:
             day += delta_days
@@ -1458,7 +1629,7 @@ cdef tuple add_timedelta(datetime dt, delta, bint (*is_leap)(int), bint julian_g
                 year += 1
                 if year == 0 and not has_year_zero:
                     year = 1
-                month_length = month_lengths(is_leap, year)
+                month_length = month_lengths(is_leap, year, has_year_zero)
             day = 1
         else:
             day += delta_days
@@ -1508,15 +1679,18 @@ cdef tuple add_timedelta_360_day(datetime dt, delta):
 
     return (year, month, day, hour, minute, second, microsecond, -1, -1)
 
-cdef _is_leap(int year, calendar, has_year_zero=False):
+cdef _is_leap(int year, calendar, has_year_zero=None):
     cdef int tyear
     cdef bint leap
     calendar = _check_calendar(calendar)
+    # set calendar-specific defaults for has_year_zero
+    if has_year_zero is None:
+        has_year_zero = _year_zero_defaults(calendar)
     if year == 0 and not has_year_zero:
         raise ValueError('year zero does not exist in the %s calendar' %\
                 calendar)
     # Because there is no year 0 in the Julian calendar, years -1, -5, -9, etc
-    # are leap years.
+    # are leap years. year zero is a leap year if it exists.
     if year < 0 and not has_year_zero:
         tyear = year + 1
     else:
@@ -1540,6 +1714,7 @@ cdef _is_leap(int year, calendar, has_year_zero=False):
 
 cdef _check_calendar(calendar):
     """validate calendars, convert to subset of names to get rid of synonyms"""
+    calendar = calendar.lower()
     if calendar not in _calendars:
         raise ValueError('unsupported calendar')
     calout = calendar
@@ -1559,7 +1734,7 @@ cdef _check_calendar(calendar):
 # with modifications to handle non-real-world calendars and negative years.
 
 
-cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=False,has_year_zero=False):
+cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=False,has_year_zero=None):
     """Compute integer Julian Day from year,month,day and calendar.
 
     Allowed calendars are 'standard', 'gregorian', 'julian',
@@ -1570,18 +1745,22 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
     'all_leap' is a synonym for '366_day'
     'gregorian' is a synonym for 'standard'
 
-    Negative years allowed back to -4714
-    (proleptic_gregorian) or -4713 (standard or gregorian calendar).
-
-    Negative year values are allowed in 360_day,365_day,366_day calendars.
-
     Integer julian day is number of days since noon UTC -4713-1-1
     in the julian or mixed julian/gregorian calendar, or noon UTC
-    -4714-11-24 in the proleptic_gregorian calendar. Reference
-    date is noon UTC 0-1-1 for other calendars.
+    -4714-11-24 in the proleptic_gregorian calendar (without year zero).
+    Reference date is noon UTC 0-1-1 for other calendars.
 
-    There is no year zero in standard (mixed), julian, or proleptic_gregorian
-    calendars by default. If has_year_zero=True, then year zero is included.
+    If the has_year_zero kwarg is set to True, astronomical year numbering
+    is used and the year zero exists.  If set to False for real-world
+    calendars, then historical year numbering is used and the year 1 is
+    preceded by year -1 and no year zero exists.
+    The defaults are False for real-world calendars
+    and True for idealized calendars.
+    The defaults can only be over-ridden for the real-world calendars,
+    for the the idealized calendars the year zero 
+    always exists and the has_year_zero kwarg is ignored.
+    This kwarg is not needed to define calendar systems allowed by CF
+    (the calendar-specific defaults do this).
 
     Subtract 0.5 to get 00 UTC on that day.
 
@@ -1598,7 +1777,9 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
         msg = "date %04d-%02d-%02d does not exist in the %s calendar" %\
         (year,month,day,calendar)
         raise ValueError(msg)
-
+    # set calendar-specific defaults for has_year_zero
+    if has_year_zero is None:
+        has_year_zero = _year_zero_defaults(calendar)
     if calendar == '360_day':
         return year*360 + (month-1)*30 + day - 1
     elif calendar == '365_day':
@@ -1612,9 +1793,6 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
     if year == 0 and not has_year_zero:
         raise ValueError('year zero does not exist in the %s calendar' %\
                 calendar)
-    if (calendar == 'proleptic_gregorian'  and year < -4714) or\
-       (calendar in ['julian','standard']  and year < -4713):
-        raise ValueError('year out of range for %s calendar' % calendar)
     leap = _is_leap(year,calendar,has_year_zero=has_year_zero)
     if not leap and month == 2 and day == 29:
         raise ValueError('%s is not a leap year' % year)
