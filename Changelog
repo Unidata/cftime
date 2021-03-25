@@ -5,19 +5,10 @@ version 1.5.0 (not yet released)
    (via `cftime.datetime.__format__`) PR #232.
  * add support for astronomical year numbering (including year zero) for
    real-world calendars using 'has_year_zero' cftime.datetime kwarg (PR #234).
-   Default is False for 'julian','gregorian'/'standard', but True 
-   for 'proleptic_gregorian' (since ISO 8601 has a year zero).
-   The change for proleptic_gregorian is not backwards-compatible, users
-   who have been employing dates before 1-1-1 must now set has_year_zero=False
-   explicitly.
-   The calendar-specific defaults conform to the proposed updated CF standard
-   (https://github.com/cf-convention/cf-conventions/issues/298).
+   Default is False for 'real-world' calendars and True 
+   for idealized calendars.
    Ignored for idealized calendars like '360_day'
-   (they always have year zero). Strictly speaking, CF
-   does not allow for dates before 1-1-1 in the 'julian'
-   or 'gregorian'/'standard' calendars, or dates before 1-1-1 in
-   the 'proleptic_gregorian' calendar without a year zero, but cftime will
-   but will issue a warning without raising an exception.
+   (they always have year zero).
  * add "change_calendar" cftime.datetime method to switch to another 
    'real-world' calendar. Enable comparison of cftime.datetime instances
    with different 'real-world' calendars (using the new change_calendar method)
