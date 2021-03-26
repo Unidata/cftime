@@ -15,10 +15,10 @@ from numpy.testing import assert_almost_equal, assert_equal
 import cftime
 from cftime import datetime as datetimex
 from cftime import real_datetime
-from cftime import (DateFromJulianDay, Datetime360Day, DatetimeAllLeap,
+from cftime import (Datetime360Day, DatetimeAllLeap,
                     DatetimeGregorian, DatetimeJulian, DatetimeNoLeap,
-                    DatetimeProlepticGregorian, JulianDayFromDate, _parse_date,
-                    date2index, date2num, num2date, utime, UNIT_CONVERSION_FACTORS)
+                    DatetimeProlepticGregorian, _parse_date,
+                    date2index, date2num, num2date,  UNIT_CONVERSION_FACTORS)
 
 try:
     from datetime import timezone
@@ -43,6 +43,24 @@ except ImportError: # python2.7
         def dst(self, dt):
             return timedelta(hours=0)
 
+
+# legacy class included here since tests use it.
+class utime:
+    def __init__(self, unit_string, calendar='standard',
+                 only_use_cftime_datetimes=True,
+                 only_use_python_datetimes=False):
+        calendar = calendar.lower()
+        units, isostring = cftime._datesplit(unit_string)
+        self.origin = cftime._dateparse(unit_string,calendar=calendar)
+        self.units = units
+        self.calendar = calendar
+        self.unit_string = unit_string
+        self.only_use_cftime_datetimes = only_use_cftime_datetimes
+        self.only_use_python_datetimes = only_use_python_datetimes
+    def date2num(self, date):
+        return date2num(date,self.unit_string,calendar=self.calendar)
+    def num2date(self, time_value):
+        return num2date(time_value,self.unit_string,calendar=self.calendar,only_use_cftime_datetimes=self.only_use_cftime_datetimes,only_use_python_datetimes=self.only_use_python_datetimes)
 
 utc = timezone(timedelta(hours=0), 'UTC')
 est = timezone(timedelta(hours=-5), 'UTC')
@@ -294,20 +312,14 @@ class cftimeTestCase(unittest.TestCase):
         d = cftime.datetime(1858, 11, 17, calendar='standard')
         # astronomical year numbering (with year zero)
         dz = cftime.datetime(1858, 11, 17, calendar='standard',has_year_zero=True)
-        # toordinal should produce same result as JulianDayFromDate
+        # toordinal (with fractional = True) is same as old JulianDayFromDate
         mjd1 = d.toordinal(fractional=True)
         mjd1z = dz.toordinal(fractional=True)
-        mjd2 = JulianDayFromDate(d)
-        mjd2z = JulianDayFromDate(dz)
         assert_almost_equal(mjd1, 2400000.5)
-        assert_almost_equal(mjd1,mjd2)
-        assert_almost_equal(mjd1,mjd1z)
-        assert_almost_equal(mjd2,mjd2z)
-        # fromordinal should produce the same result as DateFromJulianDay
-        date1 = DateFromJulianDay(mjd1)
-        date2 = cftime.datetime.fromordinal(mjd1)
+        assert_almost_equal(mjd1z, 2400000.5)
+        # fromordinal (same as old DateFromJulianDay)
+        date1 = cftime.datetime.fromordinal(mjd1)
         self.assertTrue(str(date1) == str(d))
-        self.assertTrue(str(date1) == str(date2))
         # test iso 8601 units string
         d = datetime(1970, 1, 1, 1)
         t = self.cdftime_iso.date2num(d)
@@ -578,7 +590,7 @@ class cftimeTestCase(unittest.TestCase):
         assert (date2.hour == date1.hour)
         assert (date2.minute == date1.minute)
         assert (date2.second == date1.second)
-        assert_almost_equal(JulianDayFromDate(date1), 1721057.5)
+        assert_almost_equal(cftime.datetime.toordinal(date1,fractional=True), 1721057.5)
         # issue 596 - negative years fail in utime.num2date
         units="seconds since 1-1-1"
         calendar="proleptic_gregorian"
@@ -627,7 +639,7 @@ class cftimeTestCase(unittest.TestCase):
         # n should always be 0 as all units refer to the same point in time
         assert_almost_equal(n, 0)
         # cftime issue #49
-        d = DateFromJulianDay(2450022.5, "standard")
+        d = cftime.datetime.fromordinal(2450022.5, calendar="standard")
         assert (d.year == 1995)
         assert (d.month == 11)
         assert (d.day == 1)
@@ -637,14 +649,14 @@ class cftimeTestCase(unittest.TestCase):
         # cftime issue #52
         with warnings.catch_warnings():
             warnings.simplefilter("ignore",category=cftime.CFWarning)
-            d = DateFromJulianDay(1684958.5,calendar='gregorian')
+            d = cftime.datetime.fromordinal(1684958.5,calendar='gregorian')
             assert (d.year == -100)
             assert (d.month == 3)
             assert (d.day == 2)
             assert (d.hour == 0)
             assert (d.minute == 0)
             assert (d.second == 0)
-            d = DateFromJulianDay(1684958.5,calendar='standard')
+            d = cftime.datetime.fromordinal(1684958.5,calendar='standard')
             assert (d.year == -100)
             assert (d.month == 3)
             assert (d.day == 2)
@@ -885,10 +897,9 @@ class cftimeTestCase(unittest.TestCase):
                     jd = d.toordinal()
                     assert((d-d0).days == jdref)
                     assert(jd == jdref)
-                    assert(JulianDayFromDate(d,calendar=calendar) == jdref)
+                    assert(d.toordinal() == jdref)
                     d2 = cftime.datetime.fromordinal(jd,calendar=calendar,has_year_zero=has_year_zero)
                     assert(d2 == d)
-
 
 
 class TestDate2index(unittest.TestCase):

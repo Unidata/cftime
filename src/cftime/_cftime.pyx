@@ -1890,6 +1890,3 @@ but allows for dates that don't exist in the proleptic gregorian calendar.
     def __init__(self, *args, **kwargs):
         kwargs['calendar']='proleptic_gregorian'
         super().__init__( *args, **kwargs)
-
-# include legacy stuff no longer used by cftime.datetime
-include "_cftime_legacy.pyx"

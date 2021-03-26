@@ -7,9 +7,14 @@ version 1.5.0 (not yet released)
    real-world calendars using 'has_year_zero' cftime.datetime kwarg (PR #234).
    Default is False for 'real-world' calendars and True 
    for idealized calendars.
- * PR #234 also added "change_calendar" cftime.datetime method to switch to another 
-   'real-world' calendar. Enables comparison of cftime.datetime instances
-   with different 'real-world' calendars.
+   Ignored for idealized calendars like '360_day'
+   (they always have year zero).
+ * add "change_calendar" cftime.datetime method to switch to another 
+   'real-world' calendar. Enable comparison of cftime.datetime instances
+   with different 'real-world' calendars (using the new change_calendar method)
+ * remove legacy `utime` class, and legacy `JulianDayFromDate` and 
+   `DateFromJulianDay` functions (replaced by `cftime.datetime.toordinal`
+   and `cftime.datetime.fromordinal`).  PR #235.
 
 version 1.4.1 (release tag v1.4.1.rel)
 ======================================
