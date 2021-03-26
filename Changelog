@@ -15,6 +15,7 @@ version 1.5.0 (not yet released)
  * remove legacy `utime` class, and legacy `JulianDayFromDate` and 
    `DateFromJulianDay` functions (replaced by `cftime.datetime.toordinal`
    and `cftime.datetime.fromordinal`).  PR #235.
+ * Change ValueError to TypeError in __sub__ (issue #236, PR #236).
 
 version 1.4.1 (release tag v1.4.1.rel)
 ======================================

@@ -1366,11 +1366,11 @@ The default format of the string produced by strftime is controlled by self.form
             if isinstance(other, datetime):
                 # datetime - datetime
                 if dt.calendar != other.calendar:
-                    raise ValueError("cannot compute the time difference between dates with different calendars")
+                    raise TypeError("cannot compute the time difference between dates with different calendars")
                 if dt.calendar == "":
-                    raise ValueError("cannot compute the time difference between dates that are not calendar-aware")
+                    raise TypeError("cannot compute the time difference between dates that are not calendar-aware")
                 if dt.has_year_zero != other.has_year_zero:
-                    raise ValueError("cannot compute the time difference between dates with year zero conventions")
+                    raise TypeError("cannot compute the time difference between dates with year zero conventions")
                 ordinal_self = self.toordinal() # julian day
                 ordinal_other = other.toordinal()
                 days = ordinal_self - ordinal_other
@@ -1387,7 +1387,7 @@ Cannot compute the time difference between dates with different calendars.
 One of the datetime objects may have been converted to a native python
 datetime instance.  Try using only_use_cftime_datetimes=True when creating the
 datetime object."""
-                    raise ValueError(msg)
+                    raise TypeError(msg)
                 return dt._to_real_datetime() - other
             elif isinstance(other, timedelta):
                 # datetime - timedelta
@@ -1428,7 +1428,7 @@ Cannot compute the time difference between dates with different calendars.
 One of the datetime objects may have been converted to a native python
 datetime instance.  Try using only_use_cftime_datetimes=True when creating the
 datetime object."""
-                    raise ValueError(msg)
+                    raise TypeError(msg)
                 return self - other._to_real_datetime()
             else:
                 return NotImplemented
