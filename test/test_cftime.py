@@ -1284,11 +1284,8 @@ class DateTime(unittest.TestCase):
         def invalid_sub_6():
             self.date3_gregorian - self.date3_gregorian_yearzero
 
-        for func in [invalid_sub_1, invalid_sub_2]:
+        for func in [invalid_sub_1, invalid_sub_2, invalid_sub_3, invalid_sub_4, invalid_sub_5, invalid_sub_6]:
             self.assertRaises(TypeError, func)
-
-        for func in [invalid_sub_3, invalid_sub_4, invalid_sub_5, invalid_sub_6] :
-            self.assertRaises(ValueError, func)
 
     def test_replace(self):
         self.assertEqual(self.date1_365_day.replace(year=4000).year, 4000)
