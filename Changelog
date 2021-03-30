@@ -16,6 +16,9 @@ version 1.5.0 (not yet released)
    `DateFromJulianDay` functions (replaced by `cftime.datetime.toordinal`
    and `cftime.datetime.fromordinal`).  PR #235.
  * Change ValueError to TypeError in __sub__ (issue #236, PR #236).
+ * Change default behavior of proleptic_gregorian to have a year zero to
+   conform to upcoming changes in CF v1.9.  Enable warning if calendar used
+   does not conform to CF v1.9.  PR #237.
 
 version 1.4.1 (release tag v1.4.1.rel)
 ======================================

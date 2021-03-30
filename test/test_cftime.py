@@ -1529,9 +1529,8 @@ def test_zero_year(date_type):
     # Proleptic Gregorian calendars by default.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore",category=cftime.CFWarning)
-        #if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day,
-        #        DatetimeProlepticGregorian]:
-        if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day]: 
+        if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day,
+                DatetimeProlepticGregorian]:
             date_type(0, 1, 1)
         else:
             with pytest.raises(ValueError):
