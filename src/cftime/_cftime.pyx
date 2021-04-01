@@ -25,7 +25,7 @@ month_units =    ['month', 'months'] # only allowed for 360_day calendar
 _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 # supported calendars. Includes synonyms ('standard'=='gregorian',
 # '366_day'=='all_leap','365_day'=='noleap')
-# see http://cfconventions.org/cf-conventions/cf-conventions.html#calendar
+# see http://cfconventions.org/cf-conventions/cf-conventions#calendar
 # for definitions.
 _calendars = ['standard', 'gregorian', 'proleptic_gregorian',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
@@ -146,7 +146,7 @@ def date2num(dates,units,calendar=None,has_year_zero=None):
 
     **calendar**: describes the calendar to be used in the time calculations.
     All the values currently defined in the
-    `CF metadata convention <http://cfconventions.org>`__ are supported.
+    `CF metadata convention <http://cfconventions.org/cf-conventions/cf-conventions#calendar>`__ are supported.
     Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
     Default is `None` which means the calendar associated with the first
@@ -439,7 +439,7 @@ def num2date(
 
     **calendar**: describes the calendar used in the time calculations.
     All the values currently defined in the
-    `CF metadata convention <http://cfconventions.org>`__ are supported.
+    `CF metadata convention <http://cfconventions.org/cf-conventions/cf-conventions#calendar>`__ are supported.
     Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
     Default is **'standard'**, which is a mixed Julian/Gregorian calendar.
@@ -547,7 +547,7 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None)
 
     **calendar**: describes the calendar to be used in the time calculations.
     All the values currently defined in the
-    `CF metadata convention <http://cfconventions.org>`__ are supported.
+    `CF metadata convention <http://cfconventions.org/cf-conventions/cf-conventions#calendar>`__ are supported.
     Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
     Default is `None` which means the calendar associated with the first
@@ -947,7 +947,7 @@ for cftime.datetime instances using
 'gregorian' and 'proleptic_gregorian' calendars.
 
 All the calendars currently defined in the
-`CF metadata convention <http://cfconventions.org>`__ are supported.
+`CF metadata convention <http://cfconventions.org/cf-conventions/cf-conventions#calendar>`__ are supported.
 Valid calendars are 'standard', 'gregorian', 'proleptic_gregorian'
 'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'.
 Default is 'standard', which is a mixed Julian/Gregorian calendar.
