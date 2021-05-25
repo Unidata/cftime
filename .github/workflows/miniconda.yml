@@ -12,14 +12,16 @@ jobs:
       matrix:
         python-version: [ "3.7", "3.8", "3.9"]
         os: [windows-latest, ubuntu-latest, macos-latest]
-        platform: [x64, x32]
+        platform: [x64, x32, aarch64]
 #  debug on a single os/platform/python version
 #       python-version: [ "3.9"]
 #       os: [ubuntu-latest]
 #       platform: [x64]
         exclude:
           - os: macos-latest  
-            platform: x32
+            platform: x32, aarch64
+          - os: windows-latest  
+            platform: aarch64
 
     env:
       TRAVIS_BUILD_DIR: ${{ github.workspace }}
