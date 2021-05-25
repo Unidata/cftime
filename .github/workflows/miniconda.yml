@@ -83,3 +83,43 @@ jobs:
         #rm -f docs/build/html/_static/underscore-*.js
         #rm -f docs/build/html/.buildinfo
         #sh ./ci/deploy_docs.sh
+
+  run_aarch64:
+    name: "run (${{ matrix.pyver }}, aarch64)"
+    strategy:
+      matrix:
+        pyver: [cp37-cp37m, cp38-cp38, cp39-cp39]
+      fail-fast: false
+    runs-on: ubuntu-latest
+    env:
+      py: /opt/python/${{ matrix.pyver }}/bin/python
+      img: quay.io/pypa/manylinux2014_aarch64
+      python-version: ${{ matrix.pyver }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up QEMU
+      id: qemu
+      uses: docker/setup-qemu-action@v1
+    - name: Build and Test
+      run: |
+        docker run --rm -v ${{ github.workspace }}:/ws:rw --workdir=/ws \
+          ${{ env.img }} \
+          bash -exc 'yum install -y wget && \
+          echo "Set Up Conda Env" && \
+          wget https://github.com/conda-forge/miniforge/releases/download/4.8.2-1/Miniforge3-4.8.2-1-Linux-aarch64.sh -O miniconda.sh && \
+          export MINICONDA_PATH=/root/miniconda && \
+          chmod +x miniconda.sh && ./miniconda.sh -b -p $MINICONDA_PATH && \
+          export PATH=$MINICONDA_PATH/bin:$PATH && \
+          export Python=${{ env.python-version }} && \
+          conda create --name TEST python=${Python:2:1}.${Python:3:1} --file requirements.txt --file requirements-dev.txt && \
+          source activate TEST && \
+          pip install -v -e  . --no-deps --force-reinstall && \
+          conda info --all && \
+          conda list && \
+          py.test -vv test && \
+          python setup.py --version && \
+          pip wheel . -w dist --no-deps && \
+          check-manifest --verbose && \
+          pip install readme-renderer && \
+          twine check dist/* && \
+          deactivate'
