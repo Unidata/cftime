@@ -46,7 +46,7 @@ ISO8601_REGEX = re.compile(r"(?P<year>[+-]?[0-9]+)(-(?P<month>[0-9]{1,2})(-(?P<d
                            r"(((?P<separator1>.)(?P<hour>[0-9]{1,2}):(?P<minute>[0-9]{1,2})(:(?P<second>[0-9]{1,2})(\.(?P<fraction>[0-9]+))?)?)?"
                            r"((?P<separator2>.?)(?P<timezone>Z|(([-+])([0-9]{2})((:([0-9]{2}))|([0-9]{2}))?)))?)?)?)?"
                            )
-# Note: The re module apparently does not support branch reset groups that allow redifinition of the same group name in alternative branches as PCRE does.
+# Note: The re module apparently does not support branch reset groups that allow redefinition of the same group name in alternative branches as PCRE does.
 #       Using two different group names is also somewhat ugly, but other solutions might hugely inflate the expression. feel free to contribute a better solution.
 TIMEZONE_REGEX = re.compile(
     "(?P<prefix>[+-])(?P<hours>[0-9]{2})(?:(?::(?P<minutes1>[0-9]{2}))|(?P<minutes2>[0-9]{2}))?")
@@ -499,7 +499,7 @@ def num2date(
 
     use_python_datetime = False
     if only_use_python_datetimes and not only_use_cftime_datetimes:
-        # only_use_cftime_datetimes takes precendence
+        # only_use_cftime_datetimes takes precedence
         use_python_datetime = True
     if not only_use_python_datetimes and not only_use_cftime_datetimes and can_use_python_datetime:
         # if only_use_cftimes_datetimes and only_use_python_datetimes are False
@@ -1287,7 +1287,7 @@ The default format of the string produced by strftime is controlled by self.form
 
         Day 0 starts at noon January 1 of the year -4713 for the
         julian, gregorian and standard calendars (year -4712 if year
-        zero allowd).
+        zero allowed).
 
         Day 0 starts at noon on November 24 of the year -4714 for the
         proleptic gregorian calendar (year -4713 if year zero allowed).
@@ -1335,7 +1335,7 @@ The default format of the string produced by strftime is controlled by self.form
             delta = self
         else:
             return NotImplemented
-        # return calendar-specific subclasses for backward compatbility,
+        # return calendar-specific subclasses for backward compatibility,
         # even though after 1.3.0 this is no longer necessary.
         if calendar == '360_day':
             #return dt.__class__(*add_timedelta_360_day(dt, delta),calendar=calendar)
@@ -1391,7 +1391,7 @@ datetime object."""
                 return dt._to_real_datetime() - other
             elif isinstance(other, timedelta):
                 # datetime - timedelta
-                # return calendar-specific subclasses for backward compatbility,
+                # return calendar-specific subclasses for backward compatibility,
                 # even though after 1.3.0 this is no longer necessary.
                 has_year_zero=self.has_year_zero
                 if self.calendar == '360_day':

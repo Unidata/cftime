@@ -167,7 +167,7 @@ class cftimeTestCase(unittest.TestCase):
         # check num2date method.
         d2 = self.cdftime_mixed.num2date(t1)
         self.assertTrue(str(d) == str(d2))
-        # this is a non-existant date, should raise ValueError.
+        # this is a non-existent date, should raise ValueError.
         d = datetime(1582, 10, 5, 0)
         self.assertRaises(ValueError, self.cdftime_mixed.date2num, d)
         # check date2num/num2date with date after switch.
@@ -210,7 +210,7 @@ class cftimeTestCase(unittest.TestCase):
         ndayr = d.timetuple()[7]
         self.assertTrue(ndayr == 125)
         # check noleap calendar.
-        # this is a non-existant date, should raise ValueError.
+        # this is a non-existent date, should raise ValueError.
         self.assertRaises(
             ValueError, utime, 'days since 1600-02-29 00:00:00', calendar='noleap')
         self.assertTrue(self.cdftime_noleap.units == 'days')
@@ -236,7 +236,7 @@ class cftimeTestCase(unittest.TestCase):
         # check day of year.
         ndayr = d2.timetuple()[7]
         self.assertTrue(ndayr == 59)
-        # non-existant date, should raise ValueError.
+        # non-existent date, should raise ValueError.
         date = datetime(2000, 2, 29)
         self.assertRaises(ValueError, self.cdftime_noleap.date2num, date)
         # check all_leap calendar.
@@ -407,7 +407,7 @@ class cftimeTestCase(unittest.TestCase):
         units = 'hours since 2013-12-12T12:00:00'
         assert(1.0 == date2num(num2date(1.0, units), units))
 
-        # test rountrip accuracy
+        # test roundtrip accuracy
         # also tests error found in issue #349
         dateref = datetime(2015,2,28,12)
         verbose = True # print out max error diagnostics
@@ -575,7 +575,7 @@ class cftimeTestCase(unittest.TestCase):
         except ValueError:
             pass
         # test fix for issue #596 - julian day calculations wrong for negative years,
-        # caused incorrect rountrip num2date(date2num(date)) roundtrip for dates with year
+        # caused incorrect roundtrip num2date(date2num(date)) roundtrip for dates with year
         # < 0.
         u = utime("seconds since 1-1-1",calendar='julian')
         with warnings.catch_warnings():
