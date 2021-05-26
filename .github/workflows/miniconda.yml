@@ -19,7 +19,9 @@ jobs:
 #       platform: [x64]
         exclude:
           - os: macos-latest  
-            platform: [x32, aarch64]
+            platform: x32
+          - os: macos-latest  
+            platform: aarch64
           - os: windows-latest  
             platform: aarch64
 
