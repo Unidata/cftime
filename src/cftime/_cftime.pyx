@@ -22,7 +22,7 @@ min_units =      ['minute', 'minutes', 'min', 'mins']
 hr_units =       ['hour', 'hours', 'hr', 'hrs', 'h']
 day_units =      ['day', 'days', 'd']
 month_units =    ['month', 'months'] # only allowed for 360_day calendar
-year_units =     ['common_year', 'years'] # only allowed for 365_day and noleap calendars
+year_units =     ['common_year', 'common_years'] # only allowed for 365_day and noleap calendars
 _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 # supported calendars. Includes synonyms ('standard'=='gregorian',
 # '366_day'=='all_leap','365_day'=='noleap')
@@ -325,7 +325,7 @@ UNIT_CONVERSION_FACTORS = {
     "month": 30 * 86400 * 1000000,  # Only allowed for 360_day calendar
     "months": 30 * 86400 * 1000000,
     "common_year": 365 * 86400 * 1000000, # Only allowed for 365_day and no_leap calendars
-    "years": 365 * 86400 * 1000000 # Only allowed for 365_day and no_leap calendars
+    "common_years": 365 * 86400 * 1000000 # Only allowed for 365_day and no_leap calendars
     
 }
 

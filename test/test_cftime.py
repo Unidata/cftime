@@ -1755,7 +1755,7 @@ _MINUTE_UNITS = ["minutes", "minute", "min", "mins"]
 _HOUR_UNITS = ["hours", "hour", "hr", "hrs", "h"]
 _DAY_UNITS = ["day", "days", "d"]
 _MONTH_UNITS = ["month", "months"]
-_YEAR_UNITS = ["years", "common_year"]
+_YEAR_UNITS = ["common_years", "common_year"]
 _DTYPES = [np.dtype("int64"), np.dtype("float64")]
 _STANDARD_CALENDARS = [
     "standard",
