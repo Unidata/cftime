@@ -1,4 +1,4 @@
-version x.x.x (release tag vx.x.x.rel)
+version 1.5.1 (not yet released)
 ======================================
  * added support for "common_year" and "common_years" units for "noleap" 
    and "365_day" calendars (issue #5, PR #246)
