@@ -1755,6 +1755,7 @@ _MINUTE_UNITS = ["minutes", "minute", "min", "mins"]
 _HOUR_UNITS = ["hours", "hour", "hr", "hrs", "h"]
 _DAY_UNITS = ["day", "days", "d"]
 _MONTH_UNITS = ["month", "months"]
+_YEAR_UNITS = ["common_years", "common_year"]
 _DTYPES = [np.dtype("int64"), np.dtype("float64")]
 _STANDARD_CALENDARS = [
     "standard",
@@ -1874,6 +1875,23 @@ def test_num2date_month_units(calendar, unit, shape, dtype):
     units = "{} since 2000-01-01".format(unit)
 
     if calendar != "360_day":
+        with pytest.raises(ValueError):
+            num2date(numeric_times, units=units, calendar=calendar)
+    else:
+        result = num2date(numeric_times, units=units, calendar=calendar)
+        np.testing.assert_equal(result, expected)
+
+@pytest.mark.parametrize("unit", _YEAR_UNITS)
+def test_num2date_year_units(calendar, unit, shape, dtype):
+    date_type = _EXPECTED_DATE_TYPES[calendar]
+    expected = np.array([date_type(2001, 1, 1, 0, 0, 0, 0),
+                         date_type(2002, 1, 1, 0, 0, 0, 0),
+                         date_type(2003, 1, 1, 0, 0, 0, 0),
+                         date_type(2004, 1, 1, 0, 0, 0, 0)]).reshape(shape)
+    numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
+    units = "{} since 2000-01-01".format(unit)
+
+    if calendar not in {"365_day", "noleap"}:
         with pytest.raises(ValueError):
             num2date(numeric_times, units=units, calendar=calendar)
     else:
