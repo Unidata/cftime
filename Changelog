@@ -4,7 +4,7 @@ version 1.5.1 (not yet released)
    and "365_day" calendars (issue #5, PR #246)
  * check consistency of year arg and has_year_zero kwarg in cftime.datetime
    (issue #248).  Also ssume if has_year_zero not specified it should be True
-   if year=0.
+   if year=0. Allow replace method to change has_year_zero.
 
 version 1.5.0 (release tag v1.5.0.rel)
 ======================================
