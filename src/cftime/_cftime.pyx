@@ -1010,7 +1010,17 @@ The default format of the string produced by strftime is controlled by self.form
             calendar = calendar.lower()
         # set calendar-specific defaults for has_year_zero
         if has_year_zero is None:
-            has_year_zero = _year_zero_defaults(calendar)
+            if year == 0:
+                # assume if user sets year to zero, the calendar should
+                # include the year zero (issue #248)
+                has_year_zero=True
+            else:
+                has_year_zero = _year_zero_defaults(calendar)
+        # raise exception if year zero requested but has_year_zero set
+        # to False (issue #248).
+        if year == 0 and not has_year_zero:
+            msg='year zero requested, but has_year_zero=False'
+            raise ValueError(msg)
         if not has_year_zero and calendar in _idealized_calendars:
             warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
         #if (calendar in ['julian','gregorian','standard'] and year <= 0) or\
@@ -1127,6 +1137,7 @@ The default format of the string produced by strftime is controlled by self.form
                 "minute": self.minute,
                 "second": self.second,
                 "microsecond": self.microsecond,
+                "has_year_zero": self.has_year_zero,
                 "calendar": self.calendar}
 
         if 'dayofyr' in kwargs or 'dayofwk' in kwargs:
@@ -1137,8 +1148,15 @@ The default format of the string produced by strftime is controlled by self.form
             raise ValueError('Replacing the calendar of a datetime is '
                              'not supported.')
 
+        # if attempting to set year to zero, also set has_year_zero=True
+        # (issue #248)
+        if 'year' in kwargs:
+            if kwargs['year']==0 and 'has_year_zero' not in kwargs:
+                kwargs['has_year_zero']=True
+
         for name, value in kwargs.items():
             args[name] = value
+
 
         return self.__class__(**args)
 
