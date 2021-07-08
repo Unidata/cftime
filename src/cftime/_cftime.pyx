@@ -1157,7 +1157,6 @@ The default format of the string produced by strftime is controlled by self.form
         for name, value in kwargs.items():
             args[name] = value
 
-
         return self.__class__(**args)
 
     def timetuple(self):
