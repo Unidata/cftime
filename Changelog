@@ -5,6 +5,7 @@ version 1.5.1 (not yet released)
  * check consistency of year arg and has_year_zero kwarg in cftime.datetime
    (issue #248).  Also assume if has_year_zero not specified it should be True
    if year=0. Allow replace method to change has_year_zero.
+ * '360_day' was missing from list of 'idealized' calendars.
 
 version 1.5.0 (release tag v1.5.0.rel)
 ======================================
