@@ -1534,8 +1534,10 @@ def test_zero_year(date_type):
         if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day]: 
             date_type(0, 1, 1)
         else:
+            d=date_type(0,1,1) # has_year_zero=True set if year 0 specified
+            assert(d.has_year_zero) # (issue #248) 
             with pytest.raises(ValueError):
-                date_type(0, 1, 1)
+                date_type(0, 1, 1, has_year_zero=False)
 
 
 def test_invalid_month(date_type):
