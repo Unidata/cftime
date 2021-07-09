@@ -30,7 +30,7 @@ _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 # for definitions.
 _calendars = ['standard', 'gregorian', 'proleptic_gregorian',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
-_idealized_calendars= ['all_leap','noleap','366_day','365_day']
+_idealized_calendars= ['all_leap','noleap','366_day','365_day','360_day']
 # Following are number of days per month
 cdef int[12] _dayspermonth      = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 cdef int[12] _dayspermonth_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
