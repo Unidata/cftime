@@ -900,6 +900,21 @@ class cftimeTestCase(unittest.TestCase):
                     assert(d.toordinal() == jdref)
                     d2 = cftime.datetime.fromordinal(jd,calendar=calendar,has_year_zero=has_year_zero)
                     assert(d2 == d)
+        # issue #248.  Set has_year_zero=True if year zero requested
+        # on instance creation, or by using replace method.
+        d=cftime.datetime(0, 0, 0, calendar=None)
+        assert(d.has_year_zero==True)
+        d=cftime.datetime(1, 0, 0, calendar=None)
+        assert(d.has_year_zero==False)
+        d = d.replace(year=0)
+        assert(d.has_year_zero==True)
+        # check that for idealized calendars has_year_zero is always True
+        d=cftime.datetime(0, 1, 1, calendar='360_day')
+        assert(d.has_year_zero==True)
+        d=cftime.datetime(1, 1, 1, calendar='360_day')
+        assert(d.has_year_zero==True)
+        d = d.replace(year=0)
+        assert(d.has_year_zero==True)
 
 
 class TestDate2index(unittest.TestCase):
