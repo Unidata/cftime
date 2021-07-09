@@ -1319,7 +1319,7 @@ class DateTime(unittest.TestCase):
         def invalid_year():
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore",category=cftime.CFWarning)
-                DatetimeGregorian(0, 1, 1) + self.delta
+                DatetimeGregorian(0, 1, 1, has_year_zero=False) + self.delta
 
         def invalid_month():
             DatetimeGregorian(1, 13, 1) + self.delta
