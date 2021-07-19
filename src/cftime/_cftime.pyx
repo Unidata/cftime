@@ -1016,7 +1016,7 @@ The default format of the string produced by strftime is controlled by self.form
                 # include the year zero (issue #248)
                 # warn if calendar is being set to non-CF calendar
                 msg="year=0 was specified - this date/calendar/year zero convention is not supported by CF"
-                if not _year_zero_defaults(calendar):
+                if calendar is not None and not _year_zero_defaults(calendar):
                     warnings.warn(msg,category=CFWarning)
                 has_year_zero=True
             else:

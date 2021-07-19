@@ -908,6 +908,10 @@ class cftimeTestCase(unittest.TestCase):
         assert(d.has_year_zero==False)
         d = d.replace(year=0)
         assert(d.has_year_zero==True)
+        # this should raise a warning, since the default has_year_zero
+        # is changed if year specified as zero. (issue #248, PR #249)
+        self.assertWarns(UserWarning, cftime.datetime, 0, 1, 1,\
+                calendar='standard')
         # check that for idealized calendars has_year_zero is always True
         d=cftime.datetime(0, 1, 1, calendar='360_day')
         assert(d.has_year_zero==True)
