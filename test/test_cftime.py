@@ -921,7 +921,7 @@ class TestDate2index(unittest.TestCase):
             self.calendar = calendar
             t0 = date2num(start, units, calendar)
             self._data = (t0 + np.arange(n) * step).astype('float')
-            self.dtype = np.float
+            self.dtype = float
 
         def __getitem__(self, item):
             return self._data[item]
