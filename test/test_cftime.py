@@ -1309,6 +1309,11 @@ class DateTime(unittest.TestCase):
         self.assertEqual(date, deserialized)
         self.assertEqual(type(date), type(deserialized))
 
+        date = datetimex(1, 2, 3, 4, 5, 6, 7, calendar="360_day")
+        deserialized = pickle.loads(pickle.dumps(date))
+        self.assertEqual(date, deserialized)
+        self.assertEqual(type(date), type(deserialized))
+        
     def test_misc(self):
         "Miscellaneous tests."
         # make sure repr succeeds
