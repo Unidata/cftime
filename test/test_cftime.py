@@ -1305,7 +1305,9 @@ class DateTime(unittest.TestCase):
         import pickle
 
         date = Datetime360Day(year=1, month=2, day=3, hour=4, minute=5, second=6, microsecond=7)
-        self.assertEqual(date, pickle.loads(pickle.dumps(date)))
+        deserialized = pickle.loads(pickle.dumps(date))
+        self.assertEqual(date, deserialized)
+        self.assertEqual(type(date), type(deserialized))
 
     def test_misc(self):
         "Miscellaneous tests."
