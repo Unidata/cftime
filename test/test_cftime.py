@@ -940,7 +940,7 @@ class TestDate2index(unittest.TestCase):
             self.calendar = calendar
             t0 = date2num(start, units, calendar)
             self._data = (t0 + np.arange(n) * step).astype('float')
-            self.dtype = np.float
+            self.dtype = float
 
         def __getitem__(self, item):
             return self._data[item]
@@ -1324,8 +1324,15 @@ class DateTime(unittest.TestCase):
         import pickle
 
         date = Datetime360Day(year=1, month=2, day=3, hour=4, minute=5, second=6, microsecond=7)
-        self.assertEqual(date, pickle.loads(pickle.dumps(date)))
+        deserialized = pickle.loads(pickle.dumps(date))
+        self.assertEqual(date, deserialized)
+        self.assertEqual(type(date), type(deserialized))
 
+        date = datetimex(1, 2, 3, 4, 5, 6, 7, calendar="360_day")
+        deserialized = pickle.loads(pickle.dumps(date))
+        self.assertEqual(date, deserialized)
+        self.assertEqual(type(date), type(deserialized))
+        
     def test_misc(self):
         "Miscellaneous tests."
         # make sure repr succeeds

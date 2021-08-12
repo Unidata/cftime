@@ -8,6 +8,9 @@ version 1.5.1 (not yet released)
    if year set to zero and calendar default is changed from False to True
    (so that user is aware the resulting instance will not be CF compliant).
  * '360_day' was missing from list of 'idealized' calendars.
+ * fixed a bug that led to subclasses losing their type identity upon
+   pickling (issue #251, PR #252).
+
 
 version 1.5.0 (release tag v1.5.0.rel)
 ======================================

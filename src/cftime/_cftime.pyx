@@ -929,7 +929,7 @@ cdef _year_zero_defaults(calendar):
        return False
 
 # factory function without optional kwargs that can be used in datetime.__reduce__
-def _create_datetime(args, kwargs): return datetime(*args, **kwargs)
+def _create_datetime(date_type, args, kwargs): return date_type(*args, **kwargs)
 # custorm warning for invalid CF dates.
 cfwarnmsg="this date/calendar/year zero convention is not supported by CF"
 class CFWarning(UserWarning):
@@ -1276,7 +1276,8 @@ The default format of the string produced by strftime is controlled by self.form
     def __reduce__(self):
         """special method that allows instance to be pickled"""
         args, kwargs = self._getstate()
-        return (_create_datetime, (args, kwargs))
+        date_type = type(self)
+        return (_create_datetime, (date_type, args, kwargs))
 
     cdef _add_timedelta(self, other):
         return NotImplemented
