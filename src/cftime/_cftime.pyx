@@ -30,7 +30,7 @@ _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 # for definitions.
 _calendars = ['standard', 'gregorian', 'proleptic_gregorian',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
-_idealized_calendars= ['all_leap','noleap','366_day','365_day']
+_idealized_calendars= ['all_leap','noleap','366_day','365_day','360_day']
 # Following are number of days per month
 cdef int[12] _dayspermonth      = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 cdef int[12] _dayspermonth_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
@@ -931,6 +931,7 @@ cdef _year_zero_defaults(calendar):
 # factory function without optional kwargs that can be used in datetime.__reduce__
 def _create_datetime(date_type, args, kwargs): return date_type(*args, **kwargs)
 # custorm warning for invalid CF dates.
+cfwarnmsg="this date/calendar/year zero convention is not supported by CF"
 class CFWarning(UserWarning):
     pass
 
@@ -1010,13 +1011,26 @@ The default format of the string produced by strftime is controlled by self.form
             calendar = calendar.lower()
         # set calendar-specific defaults for has_year_zero
         if has_year_zero is None:
-            has_year_zero = _year_zero_defaults(calendar)
+            if year == 0:
+                # assume if user sets year to zero, the calendar should
+                # include the year zero (issue #248)
+                # warn if calendar is being set to non-CF calendar
+                msg="year=0 was specified - this date/calendar/year zero convention is not supported by CF"
+                if calendar is not None and not _year_zero_defaults(calendar):
+                    warnings.warn(msg,category=CFWarning)
+                has_year_zero=True
+            else:
+                has_year_zero = _year_zero_defaults(calendar)
+        # raise exception if year zero requested but has_year_zero set
+        # to False (issue #248).
+        if year == 0 and has_year_zero==False:
+            msg='year zero requested, but has_year_zero=False'
+            raise ValueError(msg)
         if not has_year_zero and calendar in _idealized_calendars:
             warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
         #if (calendar in ['julian','gregorian','standard'] and year <= 0) or\
         #   (calendar == 'proleptic_gregorian' and not has_year_zero and year < 1):
-        #    msg="this date/calendar/year zero convention is not supported by CF"
-        #    warnings.warn(msg,category=CFWarning)
+        #    warnings.warn(cfwarnmsg,category=CFWarning)
         self.has_year_zero = has_year_zero
         if calendar == 'gregorian' or calendar == 'standard':
             # dates after 1582-10-15 can be converted to and compared to
@@ -1127,6 +1141,7 @@ The default format of the string produced by strftime is controlled by self.form
                 "minute": self.minute,
                 "second": self.second,
                 "microsecond": self.microsecond,
+                "has_year_zero": self.has_year_zero,
                 "calendar": self.calendar}
 
         if 'dayofyr' in kwargs or 'dayofwk' in kwargs:
@@ -1136,6 +1151,12 @@ The default format of the string produced by strftime is controlled by self.form
         if 'calendar' in kwargs:
             raise ValueError('Replacing the calendar of a datetime is '
                              'not supported.')
+
+        # if attempting to set year to zero, also set has_year_zero=True
+        # (issue #248)
+        if 'year' in kwargs:
+            if kwargs['year']==0 and 'has_year_zero' not in kwargs:
+                kwargs['has_year_zero']=True
 
         for name, value in kwargs.items():
             args[name] = value

@@ -900,6 +900,25 @@ class cftimeTestCase(unittest.TestCase):
                     assert(d.toordinal() == jdref)
                     d2 = cftime.datetime.fromordinal(jd,calendar=calendar,has_year_zero=has_year_zero)
                     assert(d2 == d)
+        # issue #248.  Set has_year_zero=True if year zero requested
+        # on instance creation, or by using replace method.
+        d=cftime.datetime(0, 0, 0, calendar=None)
+        assert(d.has_year_zero==True)
+        d=cftime.datetime(1, 0, 0, calendar=None)
+        assert(d.has_year_zero==False)
+        d = d.replace(year=0)
+        assert(d.has_year_zero==True)
+        # this should raise a warning, since the default has_year_zero
+        # is changed if year specified as zero. (issue #248, PR #249)
+        self.assertWarns(UserWarning, cftime.datetime, 0, 1, 1,\
+                calendar='standard')
+        # check that for idealized calendars has_year_zero is always True
+        d=cftime.datetime(0, 1, 1, calendar='360_day')
+        assert(d.has_year_zero==True)
+        d=cftime.datetime(1, 1, 1, calendar='360_day')
+        assert(d.has_year_zero==True)
+        d = d.replace(year=0)
+        assert(d.has_year_zero==True)
 
 
 class TestDate2index(unittest.TestCase):
@@ -1326,7 +1345,7 @@ class DateTime(unittest.TestCase):
         def invalid_year():
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore",category=cftime.CFWarning)
-                DatetimeGregorian(0, 1, 1) + self.delta
+                DatetimeGregorian(0, 1, 1, has_year_zero=False) + self.delta
 
         def invalid_month():
             DatetimeGregorian(1, 13, 1) + self.delta
@@ -1541,8 +1560,10 @@ def test_zero_year(date_type):
         if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day]: 
             date_type(0, 1, 1)
         else:
+            d=date_type(0,1,1) # has_year_zero=True set if year 0 specified
+            assert(d.has_year_zero) # (issue #248) 
             with pytest.raises(ValueError):
-                date_type(0, 1, 1)
+                date_type(0, 1, 1, has_year_zero=False)
 
 
 def test_invalid_month(date_type):

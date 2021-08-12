@@ -2,8 +2,15 @@ version 1.5.1 (not yet released)
 ======================================
  * added support for "common_year" and "common_years" units for "noleap" 
    and "365_day" calendars (issue #5, PR #246)
+ * check consistency of year arg and has_year_zero kwarg in cftime.datetime
+   (issue #248).  Also assume if has_year_zero not specified it should be True
+   if year=0. Allow replace method to change has_year_zero. Issue UserWarning
+   if year set to zero and calendar default is changed from False to True
+   (so that user is aware the resulting instance will not be CF compliant).
+ * '360_day' was missing from list of 'idealized' calendars.
  * fixed a bug that led to subclasses losing their type identity upon
    pickling (issue #251, PR #252).
+
 
 version 1.5.0 (release tag v1.5.0.rel)
 ======================================
