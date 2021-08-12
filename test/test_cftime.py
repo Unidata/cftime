@@ -167,7 +167,7 @@ class cftimeTestCase(unittest.TestCase):
         # check num2date method.
         d2 = self.cdftime_mixed.num2date(t1)
         self.assertTrue(str(d) == str(d2))
-        # this is a non-existant date, should raise ValueError.
+        # this is a non-existent date, should raise ValueError.
         d = datetime(1582, 10, 5, 0)
         self.assertRaises(ValueError, self.cdftime_mixed.date2num, d)
         # check date2num/num2date with date after switch.
@@ -210,7 +210,7 @@ class cftimeTestCase(unittest.TestCase):
         ndayr = d.timetuple()[7]
         self.assertTrue(ndayr == 125)
         # check noleap calendar.
-        # this is a non-existant date, should raise ValueError.
+        # this is a non-existent date, should raise ValueError.
         self.assertRaises(
             ValueError, utime, 'days since 1600-02-29 00:00:00', calendar='noleap')
         self.assertTrue(self.cdftime_noleap.units == 'days')
@@ -236,7 +236,7 @@ class cftimeTestCase(unittest.TestCase):
         # check day of year.
         ndayr = d2.timetuple()[7]
         self.assertTrue(ndayr == 59)
-        # non-existant date, should raise ValueError.
+        # non-existent date, should raise ValueError.
         date = datetime(2000, 2, 29)
         self.assertRaises(ValueError, self.cdftime_noleap.date2num, date)
         # check all_leap calendar.
@@ -407,7 +407,7 @@ class cftimeTestCase(unittest.TestCase):
         units = 'hours since 2013-12-12T12:00:00'
         assert(1.0 == date2num(num2date(1.0, units), units))
 
-        # test rountrip accuracy
+        # test roundtrip accuracy
         # also tests error found in issue #349
         dateref = datetime(2015,2,28,12)
         verbose = True # print out max error diagnostics
@@ -575,7 +575,7 @@ class cftimeTestCase(unittest.TestCase):
         except ValueError:
             pass
         # test fix for issue #596 - julian day calculations wrong for negative years,
-        # caused incorrect rountrip num2date(date2num(date)) roundtrip for dates with year
+        # caused incorrect roundtrip num2date(date2num(date)) roundtrip for dates with year
         # < 0.
         u = utime("seconds since 1-1-1",calendar='julian')
         with warnings.catch_warnings():
@@ -900,6 +900,25 @@ class cftimeTestCase(unittest.TestCase):
                     assert(d.toordinal() == jdref)
                     d2 = cftime.datetime.fromordinal(jd,calendar=calendar,has_year_zero=has_year_zero)
                     assert(d2 == d)
+        # issue #248.  Set has_year_zero=True if year zero requested
+        # on instance creation, or by using replace method.
+        d=cftime.datetime(0, 0, 0, calendar=None)
+        assert(d.has_year_zero==True)
+        d=cftime.datetime(1, 0, 0, calendar=None)
+        assert(d.has_year_zero==False)
+        d = d.replace(year=0)
+        assert(d.has_year_zero==True)
+        # this should raise a warning, since the default has_year_zero
+        # is changed if year specified as zero. (issue #248, PR #249)
+        self.assertWarns(UserWarning, cftime.datetime, 0, 1, 1,\
+                calendar='standard')
+        # check that for idealized calendars has_year_zero is always True
+        d=cftime.datetime(0, 1, 1, calendar='360_day')
+        assert(d.has_year_zero==True)
+        d=cftime.datetime(1, 1, 1, calendar='360_day')
+        assert(d.has_year_zero==True)
+        d = d.replace(year=0)
+        assert(d.has_year_zero==True)
 
 
 class TestDate2index(unittest.TestCase):
@@ -921,7 +940,7 @@ class TestDate2index(unittest.TestCase):
             self.calendar = calendar
             t0 = date2num(start, units, calendar)
             self._data = (t0 + np.arange(n) * step).astype('float')
-            self.dtype = np.float
+            self.dtype = float
 
         def __getitem__(self, item):
             return self._data[item]
@@ -1305,8 +1324,15 @@ class DateTime(unittest.TestCase):
         import pickle
 
         date = Datetime360Day(year=1, month=2, day=3, hour=4, minute=5, second=6, microsecond=7)
-        self.assertEqual(date, pickle.loads(pickle.dumps(date)))
+        deserialized = pickle.loads(pickle.dumps(date))
+        self.assertEqual(date, deserialized)
+        self.assertEqual(type(date), type(deserialized))
 
+        date = datetimex(1, 2, 3, 4, 5, 6, 7, calendar="360_day")
+        deserialized = pickle.loads(pickle.dumps(date))
+        self.assertEqual(date, deserialized)
+        self.assertEqual(type(date), type(deserialized))
+        
     def test_misc(self):
         "Miscellaneous tests."
         # make sure repr succeeds
@@ -1319,7 +1345,7 @@ class DateTime(unittest.TestCase):
         def invalid_year():
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore",category=cftime.CFWarning)
-                DatetimeGregorian(0, 1, 1) + self.delta
+                DatetimeGregorian(0, 1, 1, has_year_zero=False) + self.delta
 
         def invalid_month():
             DatetimeGregorian(1, 13, 1) + self.delta
@@ -1533,8 +1559,10 @@ def test_zero_year(date_type):
                 DatetimeProlepticGregorian]:
             date_type(0, 1, 1)
         else:
+            d=date_type(0,1,1) # has_year_zero=True set if year 0 specified
+            assert(d.has_year_zero) # (issue #248) 
             with pytest.raises(ValueError):
-                date_type(0, 1, 1)
+                date_type(0, 1, 1, has_year_zero=False)
 
 
 def test_invalid_month(date_type):
@@ -1754,6 +1782,7 @@ _MINUTE_UNITS = ["minutes", "minute", "min", "mins"]
 _HOUR_UNITS = ["hours", "hour", "hr", "hrs", "h"]
 _DAY_UNITS = ["day", "days", "d"]
 _MONTH_UNITS = ["month", "months"]
+_YEAR_UNITS = ["common_years", "common_year"]
 _DTYPES = [np.dtype("int64"), np.dtype("float64")]
 _STANDARD_CALENDARS = [
     "standard",
@@ -1873,6 +1902,23 @@ def test_num2date_month_units(calendar, unit, shape, dtype):
     units = "{} since 2000-01-01".format(unit)
 
     if calendar != "360_day":
+        with pytest.raises(ValueError):
+            num2date(numeric_times, units=units, calendar=calendar)
+    else:
+        result = num2date(numeric_times, units=units, calendar=calendar)
+        np.testing.assert_equal(result, expected)
+
+@pytest.mark.parametrize("unit", _YEAR_UNITS)
+def test_num2date_year_units(calendar, unit, shape, dtype):
+    date_type = _EXPECTED_DATE_TYPES[calendar]
+    expected = np.array([date_type(2001, 1, 1, 0, 0, 0, 0),
+                         date_type(2002, 1, 1, 0, 0, 0, 0),
+                         date_type(2003, 1, 1, 0, 0, 0, 0),
+                         date_type(2004, 1, 1, 0, 0, 0, 0)]).reshape(shape)
+    numeric_times = np.array([1, 2, 3, 4]).reshape(shape).astype(dtype)
+    units = "{} since 2000-01-01".format(unit)
+
+    if calendar not in {"365_day", "noleap"}:
         with pytest.raises(ValueError):
             num2date(numeric_times, units=units, calendar=calendar)
     else:
