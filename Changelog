@@ -1,13 +1,28 @@
-version 1.5.0 (not yet released)     
-=====================================
+version 1.5.1 (not yet released)
+======================================
+ * added support for "common_year" and "common_years" units for "noleap" 
+   and "365_day" calendars (issue #5, PR #246)
+ * check consistency of year arg and has_year_zero kwarg in cftime.datetime
+   (issue #248).  Also assume if has_year_zero not specified it should be True
+   if year=0. Allow replace method to change has_year_zero. Issue UserWarning
+   if year set to zero and calendar default is changed from False to True
+   (so that user is aware the resulting instance will not be CF compliant).
+ * '360_day' was missing from list of 'idealized' calendars.
+ * fixed a bug that led to subclasses losing their type identity upon
+   pickling (issue #251, PR #252).
+ * Change default behavior of proleptic_gregorian to has_year_zero=T to
+   conform to upcoming changes in CF v1.9 (PR #238).
+
+
+version 1.5.0 (release tag v1.5.0.rel)
+======================================
  * clean-up deprecated calendar specific subclasses (PR #231).
  * added string formatting support to `cftime.datetime` objects
    (via `cftime.datetime.__format__`) PR #232.
  * add support for astronomical year numbering (including year zero) for
    real-world calendars using 'has_year_zero' cftime.datetime kwarg (PR #234).
-   Default is False for 'real-world' calendars and True 
-   for idealized calendars.
-   Ignored for idealized calendars like '360_day'
+   Default is False for 'real-world' calendars ('julian', 'gregorian'/'standard', 
+   'proleptic_gregorian'). Ignored for idealized calendars like '360_day
    (they always have year zero).
  * add "change_calendar" cftime.datetime method to switch to another 
    'real-world' calendar. Enable comparison of cftime.datetime instances
@@ -15,10 +30,7 @@ version 1.5.0 (not yet released)
  * remove legacy `utime` class, and legacy `JulianDayFromDate` and 
    `DateFromJulianDay` functions (replaced by `cftime.datetime.toordinal`
    and `cftime.datetime.fromordinal`).  PR #235.
- * Change ValueError to TypeError in __sub__ (issue #236, PR #237).
- * Change default behavior of proleptic_gregorian to has_year_zero=T to
-   conform to upcoming changes in CF v1.9.  Enable warning if calendar used
-   does not conform to CF v1.9.  PR #238.
+ * Change ValueError to TypeError in __sub__ (issue #236, PR #236).
 
 version 1.4.1 (release tag v1.4.1.rel)
 ======================================
@@ -56,7 +68,7 @@ version 1.3.1 (release tag v1.3.1rel)
 version 1.3.0 (release tag v1.3.0rel)
 =====================================
  * zero pad years in strtime (issue #194)
- * have cftime.datetime constuctor create 'calendar-aware' instances (default is
+ * have cftime.datetime constructor create 'calendar-aware' instances (default is
    'standard' calendar, if calendar='' or None the instance is not calendar aware and some
    methods, like dayofwk, dayofyr, __add__ and __sub__, will not work). Fixes issue #198.
    The calendar specific sub-classes are now deprecated, but remain for now
