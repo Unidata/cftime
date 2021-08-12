@@ -22,6 +22,7 @@ min_units =      ['minute', 'minutes', 'min', 'mins']
 hr_units =       ['hour', 'hours', 'hr', 'hrs', 'h']
 day_units =      ['day', 'days', 'd']
 month_units =    ['month', 'months'] # only allowed for 360_day calendar
+year_units =     ['common_year', 'common_years'] # only allowed for 365_day and noleap calendars
 _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 # supported calendars. Includes synonyms ('standard'=='gregorian',
 # '366_day'=='all_leap','365_day'=='noleap')
@@ -29,7 +30,7 @@ _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 # for definitions.
 _calendars = ['standard', 'gregorian', 'proleptic_gregorian',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
-_idealized_calendars= ['all_leap','noleap','366_day','365_day']
+_idealized_calendars= ['all_leap','noleap','366_day','365_day','360_day']
 # Following are number of days per month
 cdef int[12] _dayspermonth      = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 cdef int[12] _dayspermonth_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
@@ -37,7 +38,7 @@ cdef int[12] _dayspermonth_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 3
 cdef int[13] _cumdayspermonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
 cdef int[13] _cumdayspermonth_leap = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
 
-__version__ = '1.5.0'
+__version__ = '1.5.1'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
@@ -46,7 +47,7 @@ ISO8601_REGEX = re.compile(r"(?P<year>[+-]?[0-9]+)(-(?P<month>[0-9]{1,2})(-(?P<d
                            r"(((?P<separator1>.)(?P<hour>[0-9]{1,2}):(?P<minute>[0-9]{1,2})(:(?P<second>[0-9]{1,2})(\.(?P<fraction>[0-9]+))?)?)?"
                            r"((?P<separator2>.?)(?P<timezone>Z|(([-+])([0-9]{2})((:([0-9]{2}))|([0-9]{2}))?)))?)?)?)?"
                            )
-# Note: The re module apparently does not support branch reset groups that allow redifinition of the same group name in alternative branches as PCRE does.
+# Note: The re module apparently does not support branch reset groups that allow redefinition of the same group name in alternative branches as PCRE does.
 #       Using two different group names is also somewhat ugly, but other solutions might hugely inflate the expression. feel free to contribute a better solution.
 TIMEZONE_REGEX = re.compile(
     "(?P<prefix>[+-])(?P<hours>[0-9]{2})(?:(?::(?P<minutes1>[0-9]{2}))|(?P<minutes2>[0-9]{2}))?")
@@ -93,9 +94,11 @@ def _dateparse(timestr,calendar,has_year_zero=None):
     if has_year_zero is None:
         has_year_zero = _year_zero_defaults(calendar)
     (units, isostring) = _datesplit(timestr)
-    if not ((units in month_units and calendar=='360_day') or units in _units):
+    if not ((units in month_units and calendar=='360_day') or (units in year_units and calendar in {'365_day', 'noleap'}) or units in _units):
         if units in month_units and calendar != '360_day':
             raise ValueError("'months since' units only allowed for '360_day' calendar")
+        if units in year_units and calendar not in {'365_day', 'noleap'}:    
+            raise ValueError("'%s' units only allowed for '365_day' and 'noleap' calendars" % units) 
         else:
             raise ValueError(
             "units must be one of 'seconds', 'minutes', 'hours' or 'days' (or singular version of these), got '%s'" % units)
@@ -142,7 +145,8 @@ def date2num(dates,units,calendar=None,has_year_zero=None):
     **units**: a string of the form **<time units> since <reference time>**
     describing the time units. **<time units>** can be days, hours, minutes,
     seconds, milliseconds or microseconds. **<reference time>** is the time
-    origin. **months_since** is allowed *only* for the **360_day** calendar.
+    origin. **months since** is allowed *only* for the **360_day** calendar
+    and **common_years since** is allowed *only* for the **365_day** calendar.
 
     **calendar**: describes the calendar to be used in the time calculations.
     All the values currently defined in the
@@ -322,7 +326,10 @@ UNIT_CONVERSION_FACTORS = {
     "days": 86400 * 1000000,
     "d": 86400 * 1000000,
     "month": 30 * 86400 * 1000000,  # Only allowed for 360_day calendar
-    "months": 30 * 86400 * 1000000
+    "months": 30 * 86400 * 1000000,
+    "common_year": 365 * 86400 * 1000000, # Only allowed for 365_day and no_leap calendars
+    "common_years": 365 * 86400 * 1000000 # Only allowed for 365_day and no_leap calendars
+    
 }
 
 DATE_TYPES = {
@@ -435,7 +442,8 @@ def num2date(
     **units**: a string of the form **<time units> since <reference time>**
     describing the time units. **<time units>** can be days, hours, minutes,
     seconds, milliseconds or microseconds. **<reference time>** is the time
-    origin. **months_since** is allowed *only* for the **360_day** calendar.
+    origin. **months since** is allowed *only* for the **360_day** calendar
+    and **common_years since** is allowed *only* for the **365_day** calendar.
 
     **calendar**: describes the calendar used in the time calculations.
     All the values currently defined in the
@@ -503,7 +511,7 @@ def num2date(
 
     use_python_datetime = False
     if only_use_python_datetimes and not only_use_cftime_datetimes:
-        # only_use_cftime_datetimes takes precendence
+        # only_use_cftime_datetimes takes precedence
         use_python_datetime = True
     if not only_use_python_datetimes and not only_use_cftime_datetimes and can_use_python_datetime:
         # if only_use_cftimes_datetimes and only_use_python_datetimes are False
@@ -928,8 +936,9 @@ cdef _year_zero_defaults(calendar):
        return False
 
 # factory function without optional kwargs that can be used in datetime.__reduce__
-def _create_datetime(args, kwargs): return datetime(*args, **kwargs)
+def _create_datetime(date_type, args, kwargs): return date_type(*args, **kwargs)
 # custorm warning for invalid CF dates.
+cfwarnmsg="this date/calendar/year zero convention is not supported by CF"
 class CFWarning(UserWarning):
     pass
 
@@ -1011,13 +1020,23 @@ The default format of the string produced by strftime is controlled by self.form
             calendar = calendar.lower()
         # set calendar-specific defaults for has_year_zero
         if has_year_zero is None:
-            has_year_zero = _year_zero_defaults(calendar)
+            if year == 0:
+                # assume if user sets year to zero, the calendar should
+                # include the year zero (issue #248)
+                # warn if calendar is being set to non-CF calendar
+                msg="year=0 was specified - this date/calendar/year zero convention is not supported by CF"
+                if calendar is not None and not _year_zero_defaults(calendar):
+                    warnings.warn(msg,category=CFWarning)
+                has_year_zero=True
+            else:
+                has_year_zero = _year_zero_defaults(calendar)
+        # raise exception if year zero requested but has_year_zero set
+        # to False (issue #248).
+        if year == 0 and has_year_zero==False:
+            msg='year zero requested, but has_year_zero=False'
+            raise ValueError(msg)
         if not has_year_zero and calendar in _idealized_calendars:
             warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
-        if (calendar in ['julian','gregorian','standard'] and year <= 0) or\
-           (calendar == 'proleptic_gregorian' and not has_year_zero and year < 1):
-            msg="this date/calendar/year zero convention is not supported by CF"
-            warnings.warn(msg,category=CFWarning)
         self.has_year_zero = has_year_zero
         if calendar == 'gregorian' or calendar == 'standard':
             # dates after 1582-10-15 can be converted to and compared to
@@ -1128,6 +1147,7 @@ The default format of the string produced by strftime is controlled by self.form
                 "minute": self.minute,
                 "second": self.second,
                 "microsecond": self.microsecond,
+                "has_year_zero": self.has_year_zero,
                 "calendar": self.calendar}
 
         if 'dayofyr' in kwargs or 'dayofwk' in kwargs:
@@ -1137,6 +1157,12 @@ The default format of the string produced by strftime is controlled by self.form
         if 'calendar' in kwargs:
             raise ValueError('Replacing the calendar of a datetime is '
                              'not supported.')
+
+        # if attempting to set year to zero, also set has_year_zero=True
+        # (issue #248)
+        if 'year' in kwargs:
+            if kwargs['year']==0 and 'has_year_zero' not in kwargs:
+                kwargs['has_year_zero']=True
 
         for name, value in kwargs.items():
             args[name] = value
@@ -1256,7 +1282,8 @@ The default format of the string produced by strftime is controlled by self.form
     def __reduce__(self):
         """special method that allows instance to be pickled"""
         args, kwargs = self._getstate()
-        return (_create_datetime, (args, kwargs))
+        date_type = type(self)
+        return (_create_datetime, (date_type, args, kwargs))
 
     cdef _add_timedelta(self, other):
         return NotImplemented
@@ -1296,7 +1323,7 @@ The default format of the string produced by strftime is controlled by self.form
 
         Day 0 starts at noon January 1 of the year -4713 for the
         julian, gregorian and standard calendars (year -4712 if year
-        zero allowd).
+        zero allowed).
 
         Day 0 starts at noon on November 24 of the year -4714 for the
         proleptic gregorian calendar (year -4713 if year zero allowed).
@@ -1344,7 +1371,7 @@ The default format of the string produced by strftime is controlled by self.form
             delta = self
         else:
             return NotImplemented
-        # return calendar-specific subclasses for backward compatbility,
+        # return calendar-specific subclasses for backward compatibility,
         # even though after 1.3.0 this is no longer necessary.
         if calendar == '360_day':
             #return dt.__class__(*add_timedelta_360_day(dt, delta),calendar=calendar)
@@ -1400,7 +1427,7 @@ datetime object."""
                 return dt._to_real_datetime() - other
             elif isinstance(other, timedelta):
                 # datetime - timedelta
-                # return calendar-specific subclasses for backward compatbility,
+                # return calendar-specific subclasses for backward compatibility,
                 # even though after 1.3.0 this is no longer necessary.
                 has_year_zero=self.has_year_zero
                 if self.calendar == '360_day':

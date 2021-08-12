@@ -12,6 +12,16 @@ Time-handling functionality from netcdf4-python
 ## News
 For details on the latest updates, see the [Changelog](https://github.com/Unidata/cftime/blob/master/Changelog).
 
+5/20/2021:  Version 1.5.0 released.  Includes support for astronomical year numbering
+(including the year zero) for real-world calendars ('julian', 'gregorian'/'standard',
+and 'proleptic_gregorian') using 'has_year_zero' `cftime.datetime` kwarg.
+Added a 'change_calendar' `cftime.datetime` method to switch to another 
+'real-world' calendar to enable comparison of instances with different calendars.
+Some legacy classes and functions removed (`utime`, `JulianDayFromDate` and
+`DateFromJulianDay`). The functionality of `JulianDayFromDate` and 
+`DateFromJulianDay` is now available from the methods `cftime.datetime.toordinal`
+and `cftime.datetime.fromordinal`.
+
 2/2/2021:  Version 1.4.1 released. Restore use of calendar-specific subclasses
 in `cftime.num2date`, `cftime.datetime.__add__`, and `cftime.datetime.__sub__`.
 The use of this will be removed in a later release.
