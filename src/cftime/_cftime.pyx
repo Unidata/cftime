@@ -105,10 +105,9 @@ def _dateparse(timestr,calendar,has_year_zero=None):
     # parse the date string.
     year, month, day, hour, minute, second, microsecond, utc_offset =\
         _parse_date( isostring.strip() )
-    if calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
-        if year == 0:
-            msg='zero not allowed as a reference year, does not exist in Julian or Gregorian calendars'
-            raise ValueError(msg)
+    if year == 0 and not has_year_zero and calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
+        msg='zero not allowed as a reference year when has_year_zero=False'
+        raise ValueError(msg)
     if calendar in ['noleap', '365_day'] and month == 2 and day == 29:
         raise ValueError(
             'cannot specify a leap day as the reference time with the noleap calendar')
@@ -1030,6 +1029,10 @@ The default format of the string produced by strftime is controlled by self.form
                 has_year_zero=True
             else:
                 has_year_zero = _year_zero_defaults(calendar)
+        # warn if requested date not allowed by CF.
+        if (calendar in ['julian','gregorian','standard'] and year <= 0) or\
+           (calendar == 'proleptic_gregorian' and not has_year_zero and year < 1):
+            warnings.warn(cfwarnmsg,category=CFWarning)
         # raise exception if year zero requested but has_year_zero set
         # to False (issue #248).
         if year == 0 and has_year_zero==False:
@@ -1315,7 +1318,7 @@ The default format of the string produced by strftime is controlled by self.form
         # suppress warning about invalid CF date (year <= 0)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore",category=CFWarning)
-        jd = num2date(jday,units=units,calendar=calendar,has_year_zero=has_year_zero)
+            jd = num2date(jday,units=units,calendar=calendar,has_year_zero=has_year_zero)
         return jd
 
     def toordinal(self,fractional=False):
