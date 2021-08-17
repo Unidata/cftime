@@ -11,7 +11,8 @@ version 1.5.1 (not yet released)
  * fixed a bug that led to subclasses losing their type identity upon
    pickling (issue #251, PR #252).
  * Change default behavior of proleptic_gregorian to has_year_zero=T to
-   conform to upcoming changes in CF v1.9 (PR #238).
+   conform to upcoming changes in CF v1.9 (PR #238). Issue warning when trying
+   to create a cftime.datetime instance that is not allowed in CF.
 
 
 version 1.5.0 (release tag v1.5.0.rel)
