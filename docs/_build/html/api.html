@@ -43,7 +43,7 @@ The datetime objects should not include a time-zone offset.</p>
 <strong>units</strong> attribute.</p>
 <p><strong>calendar</strong>: describes the calendar to be used in the time calculations.
 All the values currently defined in the
-<a class="reference external" href="http://cfconventions.org">CF metadata convention</a> are supported.
+<a class="reference external" href="http://cfconventions.org/cf-conventions/cf-conventions#calendar">CF metadata convention</a> are supported.
 Valid calendars <strong>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
 ‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</strong>.
 Default is <cite>None</cite> which means the calendar associated with the first
@@ -58,8 +58,10 @@ correspond to the closest dates.</p>
 is used and the year zero exists.  If set to False for real-world
 calendars, then historical year numbering is used and the year 1 is
 preceded by year -1 and no year zero exists.
-The defaults are False for real-world calendars
-and True for idealized calendars.
+The defaults are set to conform with
+CF version 1.9 conventions (False for ‘julian’, ‘gregorian’/’standard’, True
+for ‘proleptic_gregorian’ (ISO 8601) and True for the idealized
+calendars ‘noleap’/’365_day’, ‘360_day’, 366_day’/’all_leap’)
 The defaults can only be over-ridden for the real-world calendars,
 for the the idealized calendars the year zero 
 always exists and the has_year_zero kwarg is ignored.
@@ -88,7 +90,7 @@ seconds, milliseconds or microseconds. <strong>&lt;reference time&gt;</strong> i
 origin. <strong>months_since</strong> is allowed <em>only</em> for the <strong>360_day</strong> calendar.</p>
 <p><strong>calendar</strong>: describes the calendar to be used in the time calculations.
 All the values currently defined in the
-<a class="reference external" href="http://cfconventions.org">CF metadata convention</a> are supported.
+<a class="reference external" href="http://cfconventions.org/cf-conventions/cf-conventions#calendar">CF metadata convention</a> are supported.
 Valid calendars <strong>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
 ‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</strong>.
 Default is <cite>None</cite> which means the calendar associated with the first
@@ -97,8 +99,10 @@ input datetime instance will be used.</p>
 is used and the year zero exists.  If set to False for real-world
 calendars, then historical year numbering is used and the year 1 is
 preceded by year -1 and no year zero exists.
-The defaults are False for real-world calendars
-and True for idealized calendars.
+The defaults are set to conform with
+CF version 1.9 conventions (False for ‘julian’, ‘gregorian’/’standard’, True
+for ‘proleptic_gregorian’ (ISO 8601) and True for the idealized
+calendars ‘noleap’/’365_day’, ‘360_day’, 366_day’/’all_leap’)
 The defaults can only be over-ridden for the real-world calendars,
 for the the idealized calendars the year zero 
 always exists and the has_year_zero kwarg is ignored.
@@ -120,7 +124,7 @@ comparisons with other instances using the same calendar.</p>
 for cftime.datetime instances using
 ‘gregorian’ and ‘proleptic_gregorian’ calendars.</p>
 <p>All the calendars currently defined in the
-<a class="reference external" href="http://cfconventions.org">CF metadata convention</a> are supported.
+<a class="reference external" href="http://cfconventions.org/cf-conventions/cf-conventions#calendar">CF metadata convention</a> are supported.
 Valid calendars are ‘standard’, ‘gregorian’, ‘proleptic_gregorian’
 ‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’.
 Default is ‘standard’, which is a mixed Julian/Gregorian calendar.
@@ -132,8 +136,10 @@ instance will not be calendar-aware and some methods will not work.</p>
 is used and the year zero exists.  If set to False for real-world
 calendars, then historical year numbering is used and the year 1 is
 preceded by year -1 and no year zero exists.
-The defaults are False for real-world calendars
-and True for idealized calendars.
+The defaults are set to conform with
+CF version 1.9 conventions (False for ‘julian’, ‘gregorian’/’standard’, True
+for ‘proleptic_gregorian’ (ISO 8601) and True for the idealized
+calendars ‘noleap’/’365_day’, ‘360_day’, 366_day’/’all_leap’)
 The defaults can only be over-ridden for the real-world calendars,
 for the the idealized calendars the year zero 
 always exists and the has_year_zero kwarg is ignored.
@@ -222,7 +228,7 @@ seconds, milliseconds or microseconds. <strong>&lt;reference time&gt;</strong> i
 origin. <strong>months_since</strong> is allowed <em>only</em> for the <strong>360_day</strong> calendar.</p>
 <p><strong>calendar</strong>: describes the calendar used in the time calculations.
 All the values currently defined in the
-<a class="reference external" href="http://cfconventions.org">CF metadata convention</a> are supported.
+<a class="reference external" href="http://cfconventions.org/cf-conventions/cf-conventions#calendar">CF metadata convention</a> are supported.
 Valid calendars <strong>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
 ‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</strong>.
 Default is <strong>‘standard’</strong>, which is a mixed Julian/Gregorian calendar.</p>
@@ -236,8 +242,10 @@ objects and raise an error if this is not possible. Ignored unless
 is used and the year zero exists.  If set to False for real-world
 calendars, then historical year numbering is used and the year 1 is
 preceded by year -1 and no year zero exists.
-The defaults are False for real-world calendars
-and True for idealized calendars.
+The defaults are set to conform with
+CF version 1.9 conventions (False for ‘julian’, ‘gregorian’/’standard’, True
+for ‘proleptic_gregorian’ (ISO 8601) and True for the idealized
+calendars ‘noleap’/’365_day’, ‘360_day’, 366_day’/’all_leap’)
 The defaults can only be over-ridden for the real-world calendars,
 for the the idealized calendars the year zero 
 always exists and the has_year_zero kwarg is ignored.

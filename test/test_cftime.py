@@ -1555,9 +1555,8 @@ def test_zero_year(date_type):
     # Proleptic Gregorian calendars by default.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore",category=cftime.CFWarning)
-        #if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day,
-        #        DatetimeProlepticGregorian]:
-        if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day]: 
+        if date_type in [DatetimeNoLeap, DatetimeAllLeap, Datetime360Day,
+                DatetimeProlepticGregorian]:
             date_type(0, 1, 1)
         else:
             d=date_type(0,1,1) # has_year_zero=True set if year 0 specified
@@ -1796,6 +1795,11 @@ _REAL_WORLD_CALENDARS = [
     "gregorian",
     "proleptic_gregorian"
 ]
+_NO_YEAR_ZERO_CALENDARS = [
+    "julian",
+    "standard",
+    "gregorian",
+]
 _ARTIFICIAL_CALENDARS = ["noleap", "all_leap", "360_day"]
 
 
@@ -1987,7 +1991,7 @@ def test_num2date_only_use_python_datetimes_invalid_basedate(
         )
 
 
-@pytest.mark.parametrize("real_world_calendar", _REAL_WORLD_CALENDARS)
+@pytest.mark.parametrize("real_world_calendar", _NO_YEAR_ZERO_CALENDARS)
 def test_num2date_invalid_zero_reference_year(real_world_calendar):
     units = "days since 0000-01-01"
     numeric_times = np.array([1, 2, 3, 4])
