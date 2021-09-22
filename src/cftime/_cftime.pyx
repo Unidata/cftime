@@ -1029,9 +1029,12 @@ The default format of the string produced by strftime is controlled by self.form
                 has_year_zero=True
             else:
                 has_year_zero = _year_zero_defaults(calendar)
-        # warn if requested date not allowed by CF.
-        if (calendar in ['julian','gregorian','standard'] and year <= 0) or\
-           (calendar == 'proleptic_gregorian' and not has_year_zero and year < 1):
+        # warn if requested date not allowed by CF
+        # (no years < 1 in mixed Julian/Gregorian calendar).
+        # CF version 1.9 does not specify whether a year zero should exist
+        # for the proleptic_gregorian calendar. IS0 8601 uses proleptic_gregorian
+        # and has a year zero, so for now this is the default in cftime.
+        if calendar in ['julian','gregorian','standard'] and year <= 0:
             warnings.warn(cfwarnmsg,category=CFWarning)
         # raise exception if year zero requested but has_year_zero set
         # to False (issue #248).
