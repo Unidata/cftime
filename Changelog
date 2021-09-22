@@ -11,7 +11,8 @@ version 1.5.1 (not yet released)
  * fixed a bug that led to subclasses losing their type identity upon
    pickling (issue #251, PR #252).
  * Change default behavior of proleptic_gregorian to has_year_zero=T
-   (consistent with ISO 8601) and issue warning when trying to
+   (to be consistent with ISO-8601 since CF does not specify the year zero convention
+   for this calendar). Issue warning when trying to
    to create a cftime.datetime instance that is not allowed in CF (PR #238).
 
 
