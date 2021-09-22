@@ -163,6 +163,9 @@ def date2num(dates,units,calendar=None,has_year_zero=None):
     CF version 1.9 conventions (False for 'julian', 'gregorian'/'standard', True
     for 'proleptic_gregorian' (ISO 8601) and True for the idealized
     calendars 'noleap'/'365_day', '360_day', 366_day'/'all_leap')
+    Note that CF v1.9 does not specifically mention whether year zero
+    is allowed in the proleptic_gregorian calendar, but ISO-8601 has
+    a year zero so we have adopted this as the default.
     The defaults can only be over-ridden for the real-world calendars,
     for the the idealized calendars the year zero 
     always exists and the has_year_zero kwarg is ignored.
