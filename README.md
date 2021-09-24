@@ -12,6 +12,14 @@ Time-handling functionality from netcdf4-python
 ## News
 For details on the latest updates, see the [Changelog](https://github.com/Unidata/cftime/blob/master/Changelog).
 
+10/1/2021:  Version 1.5.1 released. Changed default behavior of ``proleptic_gregorian``
+to has_year_zero=T (since it is allowed in ISO-8601 and CF does not specify the
+year zero convention for this calendar). Raise warning message when trying
+to create a calendar that is not supported by CF version 1.9 (no years < 1
+allowed for 'standard'/'gregorian' or 'julian'  calendars).
+Added support for "common_year" and "common_years" units for "noleap" 
+and "365_day" calendars.
+ 
 5/20/2021:  Version 1.5.0 released.  Includes support for astronomical year numbering
 (including the year zero) for real-world calendars ('julian', 'gregorian'/'standard',
 and 'proleptic_gregorian') using 'has_year_zero' `cftime.datetime` kwarg.

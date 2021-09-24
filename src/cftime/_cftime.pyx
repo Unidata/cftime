@@ -163,6 +163,9 @@ def date2num(dates,units,calendar=None,has_year_zero=None):
     CF version 1.9 conventions (False for 'julian', 'gregorian'/'standard', True
     for 'proleptic_gregorian' (ISO 8601) and True for the idealized
     calendars 'noleap'/'365_day', '360_day', 366_day'/'all_leap')
+    Note that CF v1.9 does not specifically mention whether year zero
+    is allowed in the proleptic_gregorian calendar, but ISO-8601 has
+    a year zero so we have adopted this as the default.
     The defaults can only be over-ridden for the real-world calendars,
     for the the idealized calendars the year zero 
     always exists and the has_year_zero kwarg is ignored.
@@ -1029,9 +1032,12 @@ The default format of the string produced by strftime is controlled by self.form
                 has_year_zero=True
             else:
                 has_year_zero = _year_zero_defaults(calendar)
-        # warn if requested date not allowed by CF.
-        if (calendar in ['julian','gregorian','standard'] and year <= 0) or\
-           (calendar == 'proleptic_gregorian' and not has_year_zero and year < 1):
+        # warn if requested date not allowed by CF
+        # (no years < 1 in mixed Julian/Gregorian calendar).
+        # CF version 1.9 does not specify whether a year zero should exist
+        # for the proleptic_gregorian calendar. IS0 8601 uses proleptic_gregorian
+        # and has a year zero, so for now this is the default in cftime.
+        if calendar in ['julian','gregorian','standard'] and year <= 0:
             warnings.warn(cfwarnmsg,category=CFWarning)
         # raise exception if year zero requested but has_year_zero set
         # to False (issue #248).

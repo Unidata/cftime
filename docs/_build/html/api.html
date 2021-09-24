@@ -4,7 +4,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>API &#8212; cftime 1.0 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
@@ -31,7 +32,7 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-cftime">
+  <section id="module-cftime">
 <span id="api"></span><h1>API<a class="headerlink" href="#module-cftime" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt id="cftime.date2index">
@@ -87,7 +88,8 @@ the proleptic gregorian calendar) or cftime.datetime instances.</p>
 <p><strong>units</strong>: a string of the form <strong>&lt;time units&gt; since &lt;reference time&gt;</strong>
 describing the time units. <strong>&lt;time units&gt;</strong> can be days, hours, minutes,
 seconds, milliseconds or microseconds. <strong>&lt;reference time&gt;</strong> is the time
-origin. <strong>months_since</strong> is allowed <em>only</em> for the <strong>360_day</strong> calendar.</p>
+origin. <strong>months since</strong> is allowed <em>only</em> for the <strong>360_day</strong> calendar
+and <strong>common_years since</strong> is allowed <em>only</em> for the <strong>365_day</strong> calendar.</p>
 <p><strong>calendar</strong>: describes the calendar to be used in the time calculations.
 All the values currently defined in the
 <a class="reference external" href="http://cfconventions.org/cf-conventions/cf-conventions#calendar">CF metadata convention</a> are supported.
@@ -103,6 +105,9 @@ The defaults are set to conform with
 CF version 1.9 conventions (False for ‘julian’, ‘gregorian’/’standard’, True
 for ‘proleptic_gregorian’ (ISO 8601) and True for the idealized
 calendars ‘noleap’/’365_day’, ‘360_day’, 366_day’/’all_leap’)
+Note that CF v1.9 does not specifically mention whether year zero
+is allowed in the proleptic_gregorian calendar, but ISO-8601 has
+a year zero so we have adopted this as the default.
 The defaults can only be over-ridden for the real-world calendars,
 for the the idealized calendars the year zero 
 always exists and the has_year_zero kwarg is ignored.
@@ -202,7 +207,7 @@ day number within the current year starting with 1 for January 1st.</p>
 <dd><p>Return (integer) julian day ordinal.</p>
 <p>Day 0 starts at noon January 1 of the year -4713 for the
 julian, gregorian and standard calendars (year -4712 if year
-zero allowd).</p>
+zero allowed).</p>
 <p>Day 0 starts at noon on November 24 of the year -4714 for the
 proleptic gregorian calendar (year -4713 if year zero allowed).</p>
 <p>Day 0 starts at noon on January 1 of the year zero is for the
@@ -225,7 +230,8 @@ UTC with no time-zone offset, even if the specified
 <p><strong>units</strong>: a string of the form <strong>&lt;time units&gt; since &lt;reference time&gt;</strong>
 describing the time units. <strong>&lt;time units&gt;</strong> can be days, hours, minutes,
 seconds, milliseconds or microseconds. <strong>&lt;reference time&gt;</strong> is the time
-origin. <strong>months_since</strong> is allowed <em>only</em> for the <strong>360_day</strong> calendar.</p>
+origin. <strong>months since</strong> is allowed <em>only</em> for the <strong>360_day</strong> calendar
+and <strong>common_years since</strong> is allowed <em>only</em> for the <strong>365_day</strong> calendar.</p>
 <p><strong>calendar</strong>: describes the calendar used in the time calculations.
 All the values currently defined in the
 <a class="reference external" href="http://cfconventions.org/cf-conventions/cf-conventions#calendar">CF metadata convention</a> are supported.
@@ -297,7 +303,7 @@ an exact match cannot be found. <cite>nearest</cite> will return the indices tha
 correspond to the closest times.</p>
 </dd></dl>
 
-</div>
+</section>
 
 
           </div>
