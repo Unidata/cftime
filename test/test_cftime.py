@@ -1,5 +1,10 @@
-from __future__ import print_function
-
+import cftime
+from cftime import datetime as datetimex
+from cftime import real_datetime
+from cftime import (Datetime360Day, DatetimeAllLeap,
+                    DatetimeGregorian, DatetimeJulian, DatetimeNoLeap,
+                    DatetimeProlepticGregorian, _parse_date,
+                    date2index, date2num, num2date,  UNIT_CONVERSION_FACTORS)
 import copy
 import operator
 import sys
@@ -11,14 +16,6 @@ from datetime import datetime, timedelta, MINYEAR
 import numpy as np
 import pytest
 from numpy.testing import assert_almost_equal, assert_equal
-
-import cftime
-from cftime import datetime as datetimex
-from cftime import real_datetime
-from cftime import (Datetime360Day, DatetimeAllLeap,
-                    DatetimeGregorian, DatetimeJulian, DatetimeNoLeap,
-                    DatetimeProlepticGregorian, _parse_date,
-                    date2index, date2num, num2date,  UNIT_CONVERSION_FACTORS)
 
 try:
     from datetime import timezone

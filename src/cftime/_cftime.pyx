@@ -38,7 +38,7 @@ cdef int[12] _dayspermonth_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 3
 cdef int[13] _cumdayspermonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
 cdef int[13] _cumdayspermonth_leap = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
 
-__version__ = '1.5.1'
+__version__ = '1.5.1.1'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
