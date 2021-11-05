@@ -7,5 +7,5 @@ from ._cftime import (microsec_units, millisec_units,
 from ._cftime import __version__, CFWarning
 # these will be removed in a future release
 from ._cftime import (DatetimeNoLeap, DatetimeAllLeap, Datetime360Day,
-                     Datetime360Day, DatetimeJulian, 
+                     Datetime360Day, DatetimeJulian, DatetimeStandard,
                      DatetimeGregorian, DatetimeProlepticGregorian)

@@ -336,7 +336,7 @@ UNIT_CONVERSION_FACTORS = {
 
 DATE_TYPES = {
      "proleptic_gregorian": DatetimeProlepticGregorian,
-     "standard": DatetimeGregorian,
+     "standard": DatetimeStandard,
      "noleap": DatetimeNoLeap,
      "365_day": DatetimeNoLeap,
      "all_leap": DatetimeAllLeap,
@@ -1050,7 +1050,10 @@ The default format of the string produced by strftime is controlled by self.form
         if calendar == 'gregorian' or calendar == 'standard':
             # dates after 1582-10-15 can be converted to and compared to
             # proleptic Gregorian dates
-            self.calendar = 'gregorian'
+            if calendar == 'gregorian':
+                msg="calendar name 'gregorian' deprecated in CF v1.9 (use 'standard' instead)"
+                warnings.warn(msg,category=DeprecationWarning)
+            self.calendar = 'standard'
             if self.to_tuple() >= (1582, 10, 15, 0, 0, 0, 0):
                 self.datetime_compatible = True
             else:
@@ -1394,9 +1397,9 @@ The default format of the string produced by strftime is controlled by self.form
         elif calendar == 'julian':
             #return dt.__class__(*add_timedelta(dt, delta, is_leap_julian, False, has_year_zero),calendar=calendar,has_year_zero=has_year_zero)
             return DatetimeJulian(*add_timedelta(dt, delta, is_leap_julian, False, has_year_zero),has_year_zero=has_year_zero)
-        elif calendar == 'gregorian':
+        elif calendar == 'standard':
             #return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, True, has_year_zero),calendar=calendar,has_year_zero=has_year_zero)
-            return DatetimeGregorian(*add_timedelta(dt, delta, is_leap_gregorian, True, has_year_zero),has_year_zero=has_year_zero)
+            return DatetimeStandard(*add_timedelta(dt, delta, is_leap_gregorian, True, has_year_zero),has_year_zero=has_year_zero)
         elif calendar == 'proleptic_gregorian':
             #return dt.__class__(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, has_year_zero),calendar=calendar,has_year_zero=has_year_zero)
             return DatetimeProlepticGregorian(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, has_year_zero),has_year_zero=has_year_zero)
@@ -1452,10 +1455,10 @@ datetime object."""
                     #return self.__class__(*add_timedelta(self, -other, 
                     #     is_leap_julian, False, has_year_zero),calendar=self.calendar,has_year_zero=self.has_year_zero)
                     return DatetimeJulian(*add_timedelta(self, -other, is_leap_julian, False, has_year_zero),has_year_zero=self.has_year_zero)
-                elif self.calendar == 'gregorian':
+                elif self.calendar == 'standard':
                     #return self.__class__(*add_timedelta(self, -other, 
                     #     is_leap_gregorian, True, has_year_zero),calendar=self.calendar,has_year_zero=self.has_year_zero)
-                    return DatetimeGregorian(*add_timedelta(self, -other, is_leap_gregorian, True, has_year_zero),has_year_zero=self.has_year_zero)
+                    return DatetimeStandard(*add_timedelta(self, -other, is_leap_gregorian, True, has_year_zero),has_year_zero=self.has_year_zero)
                 elif self.calendar == 'proleptic_gregorian':
                     #return self.__class__(*add_timedelta(self, -other,
                     #    is_leap_proleptic_gregorian, False, has_year_zero),calendar=self.calendar,has_year_zero=self.has_year_zero)
@@ -1764,7 +1767,9 @@ cdef _check_calendar(calendar):
         raise ValueError('unsupported calendar')
     calout = calendar
     # remove 'gregorian','noleap','all_leap'
-    if calendar in 'gregorian':
+    if calendar == 'gregorian':
+        msg="calendar name 'gregorian' deprecated in CF v1.9 (use 'standard' instead)"
+        warnings.warn(msg,category=DeprecationWarning)
         calout = 'standard'
     if calendar == 'noleap':
         calout = '365_day'
@@ -1919,14 +1924,18 @@ but uses the "julian" calendar.
         super().__init__(*args, **kwargs)
 
 @cython.embedsignature(True)
-cdef class DatetimeGregorian(datetime):
+cdef class DatetimeStandard(datetime):
     """
 Phony datetime object which mimics the python datetime object,
-but uses the mixed Julian-Gregorian ("standard", "gregorian") calendar.
+but uses the mixed Julian-Gregorian ("standard") calendar.
     """
     def __init__(self, *args, **kwargs):
-        kwargs['calendar']='gregorian'
+        kwargs['calendar']='standard'
         super().__init__(*args, **kwargs)
+
+# for backwards compatibility (until 'gregorian' calendar removed)
+cdef class DatetimeGregorian(DatetimeStandard):
+    pass
 
 @cython.embedsignature(True)
 cdef class DatetimeProlepticGregorian(datetime):
