@@ -74,7 +74,7 @@ jobs:
         twine check dist/* ;
  
     - name: Docs
-      if: startsWith(matrix.os,'ubuntu')
+      if: startsWith(matrix.os,'ubuntu') && matrix.python-version == '3.9'
       shell: bash -l {0}
       run: |
         source activate TEST
