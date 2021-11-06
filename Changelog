@@ -1,7 +1,8 @@
 version 1.5.2 (not yet released)
 ================================
- * raise DeprecationWarning for calendar='gregorian', add DatetimeStandard as a replacement for DatetimeGregorian
-   (issue #256)..
+ * silently change calendar='gregorian' to 'standard' internally, 
+   and add DatetimeStandard as a replacement for DatetimeGregorian
+   since 'gregorian' deprecated in CF v1.9 (issue #256).
    
 version 1.5.1.1
 ===============
