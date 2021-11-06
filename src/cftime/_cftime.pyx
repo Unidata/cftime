@@ -1050,9 +1050,9 @@ The default format of the string produced by strftime is controlled by self.form
         if calendar == 'gregorian' or calendar == 'standard':
             # dates after 1582-10-15 can be converted to and compared to
             # proleptic Gregorian dates
-            if calendar == 'gregorian':
-                msg="calendar name 'gregorian' deprecated in CF v1.9 (use 'standard' instead)"
-                warnings.warn(msg,category=DeprecationWarning)
+            #if calendar == 'gregorian':
+            #    msg="calendar name 'gregorian' deprecated in CF v1.9 (use 'standard' instead)"
+            #    warnings.warn(msg,category=DeprecationWarning)
             self.calendar = 'standard'
             if self.to_tuple() >= (1582, 10, 15, 0, 0, 0, 0):
                 self.datetime_compatible = True
@@ -1768,8 +1768,8 @@ cdef _check_calendar(calendar):
     calout = calendar
     # remove 'gregorian','noleap','all_leap'
     if calendar == 'gregorian':
-        msg="calendar name 'gregorian' deprecated in CF v1.9 (use 'standard' instead)"
-        warnings.warn(msg,category=DeprecationWarning)
+        #msg="calendar name 'gregorian' deprecated in CF v1.9 (use 'standard' instead)"
+        #warnings.warn(msg,category=DeprecationWarning)
         calout = 'standard'
     if calendar == 'noleap':
         calout = '365_day'
