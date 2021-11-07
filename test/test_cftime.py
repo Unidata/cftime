@@ -67,7 +67,7 @@ est = timezone(timedelta(hours=-5), 'UTC')
 dtime = namedtuple('dtime', ('values', 'units', 'calendar'))
 dateformat =  '%Y-%m-%d %H:%M:%S'
 
-calendars=['gregorian', 'standard', 'proleptic_gregorian', 'noleap', 'julian',\
+calendars=['standard', 'gregorian', 'proleptic_gregorian', 'noleap', 'julian',\
            'all_leap', '365_day', '366_day', '360_day']
 def adjust_calendar(calendar):
     # check for and remove calendar synonyms.
