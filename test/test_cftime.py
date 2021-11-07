@@ -648,6 +648,13 @@ class cftimeTestCase(unittest.TestCase):
         # cftime issue #52
         with warnings.catch_warnings():
             warnings.simplefilter("ignore",category=cftime.CFWarning)
+            d = cftime.datetime.fromordinal(1684958.5,calendar='gregorian')
+            assert (d.year == -100)
+            assert (d.month == 3)
+            assert (d.day == 2)
+            assert (d.hour == 0)
+            assert (d.minute == 0)
+            assert (d.second == 0)
             d = cftime.datetime.fromordinal(1684958.5,calendar='standard')
             assert (d.year == -100)
             assert (d.month == 3)
@@ -1904,6 +1911,7 @@ def test_num2date_use_pydatetime_if_possible(calendar, shape, dtype):
 @pytest.mark.parametrize(
     ["standard_calendar", "breakpoint"],
     [("proleptic_gregorian", "{}-12-31T23:59:59.999999".format(MINYEAR - 1)),
+     ("gregorian", "1582-10-15"),
      ("standard", "1582-10-15")]
 )
 def test_num2date_only_use_python_datetimes_invalid_basedate(

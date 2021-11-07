@@ -28,7 +28,7 @@ _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 # '366_day'=='all_leap','365_day'=='noleap')
 # see http://cfconventions.org/cf-conventions/cf-conventions#calendar
 # for definitions.
-_calendars = ['standard', 'gregorian', 'proleptic_gregorian',
+_calendars = ['gregorian', 'standard', 'proleptic_gregorian',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
 _idealized_calendars= ['all_leap','noleap','366_day','365_day','360_day']
 # Following are number of days per month
@@ -1050,9 +1050,6 @@ The default format of the string produced by strftime is controlled by self.form
         if calendar == 'gregorian' or calendar == 'standard':
             # dates after 1582-10-15 can be converted to and compared to
             # proleptic Gregorian dates
-            #if calendar == 'gregorian':
-            #    msg="calendar name 'gregorian' deprecated in CF v1.9 (use 'standard' instead)"
-            #    warnings.warn(msg,category=DeprecationWarning)
             self.calendar = 'standard'
             if self.to_tuple() >= (1582, 10, 15, 0, 0, 0, 0):
                 self.datetime_compatible = True
@@ -1768,8 +1765,6 @@ cdef _check_calendar(calendar):
     calout = calendar
     # remove 'gregorian','noleap','all_leap'
     if calendar == 'gregorian':
-        #msg="calendar name 'gregorian' deprecated in CF v1.9 (use 'standard' instead)"
-        #warnings.warn(msg,category=DeprecationWarning)
         calout = 'standard'
     if calendar == 'noleap':
         calout = '365_day'
