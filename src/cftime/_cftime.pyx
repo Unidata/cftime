@@ -1399,7 +1399,7 @@ The default format of the string produced by strftime is controlled by self.form
             return DatetimeJulian(*add_timedelta(dt, delta, is_leap_julian, False, has_year_zero),has_year_zero=has_year_zero)
         elif calendar == 'standard':
             #return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, True, has_year_zero),calendar=calendar,has_year_zero=has_year_zero)
-            return DatetimeStandard(*add_timedelta(dt, delta, is_leap_gregorian, True, has_year_zero),has_year_zero=has_year_zero)
+            return DatetimeGregorian(*add_timedelta(dt, delta, is_leap_gregorian, True, has_year_zero),has_year_zero=has_year_zero)
         elif calendar == 'proleptic_gregorian':
             #return dt.__class__(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, has_year_zero),calendar=calendar,has_year_zero=has_year_zero)
             return DatetimeProlepticGregorian(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, has_year_zero),has_year_zero=has_year_zero)
@@ -1458,7 +1458,7 @@ datetime object."""
                 elif self.calendar == 'standard':
                     #return self.__class__(*add_timedelta(self, -other, 
                     #     is_leap_gregorian, True, has_year_zero),calendar=self.calendar,has_year_zero=self.has_year_zero)
-                    return DatetimeStandard(*add_timedelta(self, -other, is_leap_gregorian, True, has_year_zero),has_year_zero=self.has_year_zero)
+                    return DatetimeGregorian(*add_timedelta(self, -other, is_leap_gregorian, True, has_year_zero),has_year_zero=self.has_year_zero)
                 elif self.calendar == 'proleptic_gregorian':
                     #return self.__class__(*add_timedelta(self, -other,
                     #    is_leap_proleptic_gregorian, False, has_year_zero),calendar=self.calendar,has_year_zero=self.has_year_zero)

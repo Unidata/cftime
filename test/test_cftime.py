@@ -67,7 +67,7 @@ est = timezone(timedelta(hours=-5), 'UTC')
 dtime = namedtuple('dtime', ('values', 'units', 'calendar'))
 dateformat =  '%Y-%m-%d %H:%M:%S'
 
-calendars=['standard', 'proleptic_gregorian', 'noleap', 'julian',\
+calendars=['gregorian', 'standard', 'proleptic_gregorian', 'noleap', 'julian',\
            'all_leap', '365_day', '366_day', '360_day']
 def adjust_calendar(calendar):
     # check for and remove calendar synonyms.
@@ -769,7 +769,7 @@ class cftimeTestCase(unittest.TestCase):
         test = dates == np.ma.masked_array([datetime(1848, 1, 17, 6, 0, 0, 40), None],mask=[0,1])
         assert(test.all())
         dates = num2date(times, units=units, calendar='standard')
-        assert(str(dates)=="[cftime.DatetimeStandard(1848, 1, 17, 6, 0, 0, 40, has_year_zero=False) --]")
+        assert(str(dates)=="[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 0, 40, has_year_zero=False)\n --]")
 #  check that time range of 200,000 + years can be represented accurately
         calendar='standard'
         _MAX_INT64 = np.iinfo("int64").max
