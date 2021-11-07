@@ -28,7 +28,7 @@ _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 # '366_day'=='all_leap','365_day'=='noleap')
 # see http://cfconventions.org/cf-conventions/cf-conventions#calendar
 # for definitions.
-_calendars = ['gregorian', 'standard', 'proleptic_gregorian',
+_calendars = ['standard', 'gregorian', 'proleptic_gregorian',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
 _idealized_calendars= ['all_leap','noleap','366_day','365_day','360_day']
 # Following are number of days per month

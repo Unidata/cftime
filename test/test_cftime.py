@@ -307,9 +307,8 @@ class cftimeTestCase(unittest.TestCase):
         self.assertTrue(str(d) == str(date))
         # test julian day from date, date from julian day
         d = cftime.datetime(1858, 11, 17, calendar='standard')
-        #with warnings.catch_warnings():
-        #    warnings.simplefilter("ignore",category=DeprecationWarning)
         dg = cftime.datetime(1858, 11, 17, calendar='gregorian') # deprecated
+        assert(d == dg)
         assert_almost_equal(dg.toordinal(fractional=True), 2400000.5)
         # astronomical year numbering (with year zero)
         dz = cftime.datetime(1858, 11, 17, calendar='standard',has_year_zero=True)
@@ -1612,6 +1611,7 @@ _EXPECTED_DATE_TYPES = {'noleap': DatetimeNoLeap,
                         'julian': DatetimeJulian,
                         'all_leap': DatetimeAllLeap,
                         '366_day': DatetimeAllLeap,
+                        'gregorian': DatetimeGregorian,
                         'proleptic_gregorian': DatetimeProlepticGregorian,
                         'standard': DatetimeStandard}
 
