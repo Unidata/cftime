@@ -2,7 +2,6 @@ import cftime
 from cftime import datetime as datetimex
 from cftime import real_datetime
 from cftime import (Datetime360Day, DatetimeAllLeap,
-                    DatetimeJulian, DatetimeNoLeap,
                     DatetimeGregorian, DatetimeJulian, DatetimeNoLeap,
                     DatetimeProlepticGregorian, _parse_date,
                     date2index, date2num, num2date,  UNIT_CONVERSION_FACTORS)
