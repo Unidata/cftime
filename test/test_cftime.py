@@ -3,7 +3,8 @@ from cftime import datetime as datetimex
 from cftime import real_datetime
 from cftime import (Datetime360Day, DatetimeAllLeap,
                     DatetimeJulian, DatetimeNoLeap,
-                    DatetimeGregorian, DatetimeProlepticGregorian, _parse_date,
+                    DatetimeGregorian, DatetimeJulian, DatetimeNoLeap,
+                    DatetimeProlepticGregorian, _parse_date,
                     date2index, date2num, num2date,  UNIT_CONVERSION_FACTORS)
 import copy
 import operator
@@ -678,8 +679,6 @@ class cftimeTestCase(unittest.TestCase):
         # last day of Julian Calendar (Thursday)
         d1 = DatetimeJulian(1582, 10, 4, 12)
         d2 = DatetimeGregorian(1582, 10, 4, 12)
-        d2g = DatetimeGregorian(1582, 10, 4, 12) # deprecated
-        assert (d2 == d2g)
         assert (d1.dayofwk == d2.dayofwk == 3)
         assert (d1.dayofyr == d2.dayofyr == 277)
         # Monday in proleptic gregorian calendar
