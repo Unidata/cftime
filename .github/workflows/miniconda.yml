@@ -10,7 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [ "3.7", "3.8", "3.9"]
+        python-version: [ "3.7", "3.8", "3.9", "3.10"]
         os: [windows-latest, ubuntu-latest, macos-latest]
         platform: [x64, x32]
 #  debug on a single os/platform/python version
@@ -64,7 +64,7 @@ jobs:
 #       coveralls --service=github-actions
 
     - name: Tarball
-      if: startsWith(matrix.os,'ubuntu')
+      if: startsWith(matrix.os,'ubuntu') && matrix.python-version == '3.9'
       shell: bash -l {0}
       run: |
         source activate TEST
@@ -74,7 +74,7 @@ jobs:
         twine check dist/* ;
  
     - name: Docs
-      if: startsWith(matrix.os,'ubuntu')
+      if: startsWith(matrix.os,'ubuntu') && matrix.python-version == '3.9'
       shell: bash -l {0}
       run: |
         source activate TEST

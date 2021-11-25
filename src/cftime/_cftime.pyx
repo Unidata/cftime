@@ -38,7 +38,7 @@ cdef int[12] _dayspermonth_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 3
 cdef int[13] _cumdayspermonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
 cdef int[13] _cumdayspermonth_leap = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
 
-__version__ = '1.5.1.1'
+__version__ = '1.5.2'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
@@ -1050,7 +1050,7 @@ The default format of the string produced by strftime is controlled by self.form
         if calendar == 'gregorian' or calendar == 'standard':
             # dates after 1582-10-15 can be converted to and compared to
             # proleptic Gregorian dates
-            self.calendar = 'gregorian'
+            self.calendar = 'standard'
             if self.to_tuple() >= (1582, 10, 15, 0, 0, 0, 0):
                 self.datetime_compatible = True
             else:
@@ -1394,7 +1394,7 @@ The default format of the string produced by strftime is controlled by self.form
         elif calendar == 'julian':
             #return dt.__class__(*add_timedelta(dt, delta, is_leap_julian, False, has_year_zero),calendar=calendar,has_year_zero=has_year_zero)
             return DatetimeJulian(*add_timedelta(dt, delta, is_leap_julian, False, has_year_zero),has_year_zero=has_year_zero)
-        elif calendar == 'gregorian':
+        elif calendar == 'standard':
             #return dt.__class__(*add_timedelta(dt, delta, is_leap_gregorian, True, has_year_zero),calendar=calendar,has_year_zero=has_year_zero)
             return DatetimeGregorian(*add_timedelta(dt, delta, is_leap_gregorian, True, has_year_zero),has_year_zero=has_year_zero)
         elif calendar == 'proleptic_gregorian':
@@ -1452,7 +1452,7 @@ datetime object."""
                     #return self.__class__(*add_timedelta(self, -other, 
                     #     is_leap_julian, False, has_year_zero),calendar=self.calendar,has_year_zero=self.has_year_zero)
                     return DatetimeJulian(*add_timedelta(self, -other, is_leap_julian, False, has_year_zero),has_year_zero=self.has_year_zero)
-                elif self.calendar == 'gregorian':
+                elif self.calendar == 'standard':
                     #return self.__class__(*add_timedelta(self, -other, 
                     #     is_leap_gregorian, True, has_year_zero),calendar=self.calendar,has_year_zero=self.has_year_zero)
                     return DatetimeGregorian(*add_timedelta(self, -other, is_leap_gregorian, True, has_year_zero),has_year_zero=self.has_year_zero)
@@ -1764,7 +1764,7 @@ cdef _check_calendar(calendar):
         raise ValueError('unsupported calendar')
     calout = calendar
     # remove 'gregorian','noleap','all_leap'
-    if calendar in 'gregorian':
+    if calendar == 'gregorian':
         calout = 'standard'
     if calendar == 'noleap':
         calout = '365_day'
@@ -1922,10 +1922,10 @@ but uses the "julian" calendar.
 cdef class DatetimeGregorian(datetime):
     """
 Phony datetime object which mimics the python datetime object,
-but uses the mixed Julian-Gregorian ("standard", "gregorian") calendar.
+but uses the mixed Julian-Gregorian ("standard") calendar.
     """
     def __init__(self, *args, **kwargs):
-        kwargs['calendar']='gregorian'
+        kwargs['calendar']='standard'
         super().__init__(*args, **kwargs)
 
 @cython.embedsignature(True)

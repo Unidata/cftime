@@ -73,7 +73,7 @@ def adjust_calendar(calendar):
     # check for and remove calendar synonyms.
     calendar = calendar.lower()
     if calendar == 'gregorian' or calendar == 'standard':
-        return 'gregorian'
+        return 'standard'
     elif calendar == 'noleap' or calendar == '365_day':
         return 'noleap'
     elif calendar == 'all_leap' or calendar == '366_day':
@@ -506,7 +506,7 @@ class cftimeTestCase(unittest.TestCase):
         units = 'days since 0001-01-01'
         for cap_cal, low_cal in (('STANDARD', 'standard'),
                                  ('NoLeap', 'noleap'),
-                                 ('Gregorian', 'gregorian'),
+                                 ('Standard', 'standard'),
                                  ('ALL_LEAP', 'all_leap')):
             d1 = date2num(d, units, cap_cal)
             d2 = date2num(d, units, low_cal)
@@ -555,15 +555,13 @@ class cftimeTestCase(unittest.TestCase):
         # n should always be 0 as all units refer to the same point in time
         assert_almost_equal(n, 0)
 
-        # list around missing dates in Gregorian calendar
+        # list around missing dates in mixed Julian/Gregorian calendar
         # scalar
         units = 'days since 0001-01-01 12:00:00'
-        t1 = date2num(datetime(1582, 10, 4), units, calendar='gregorian')
-        t2 = date2num(datetime(1582, 10, 15), units, calendar='gregorian')
+        t1 = date2num(datetime(1582, 10, 4), units, calendar='standard')
+        t2 = date2num(datetime(1582, 10, 15), units, calendar='standard')
         self.assertEqual(t1+1, t2)
         # list
-        t1, t2 = date2num([datetime(1582, 10, 4), datetime(1582, 10, 15)], units, calendar='gregorian')
-        self.assertEqual(t1+1, t2)
         t1, t2 = date2num([datetime(1582, 10, 4), datetime(1582, 10, 15)], units, calendar='standard')
         self.assertEqual(t1+1, t2)
         # this should fail: days missing in Gregorian calendar
@@ -860,7 +858,7 @@ class cftimeTestCase(unittest.TestCase):
         jdref=2400000
         with warnings.catch_warnings():
             warnings.simplefilter("ignore",category=cftime.CFWarning)
-            for calendar in ['julian','gregorian','proleptic_gregorian']:
+            for calendar in ['julian','standard','proleptic_gregorian']:
                 has_year_zero=False
                 try:
                     # this should raise ValueError
@@ -1652,7 +1650,7 @@ def test_num2date_only_use_cftime_datetimes_post_gregorian(
 
 
 def test_repr():
-    expected = "cftime.datetime(2000, 1, 1, 0, 0, 0, 0, calendar='gregorian', has_year_zero=False)"
+    expected = "cftime.datetime(2000, 1, 1, 0, 0, 0, 0, calendar='standard', has_year_zero=False)"
     assert repr(datetimex(2000, 1, 1, calendar='standard')) == expected
     expected = "cftime.datetime(2000, 1, 1, 0, 0, 0, 0, calendar='', has_year_zero=False)"
     assert repr(datetimex(2000, 1, 1, calendar=None)) == expected
