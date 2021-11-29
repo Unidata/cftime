@@ -914,6 +914,13 @@ class cftimeTestCase(unittest.TestCase):
         assert(d.has_year_zero==True)
         d = d.replace(year=0)
         assert(d.has_year_zero==True)
+        # test leap year function
+        assert(cftime.is_leap_year(2000,calendar='standard'))
+        assert(cftime.is_leap_year(-1,calendar='standard'))
+        assert(cftime.is_leap_year(0,calendar='standard',has_year_zero=True))
+        assert(not cftime.is_leap_year(1,calendar='standard',has_year_zero=True))
+        assert(not cftime.is_leap_year(1,calendar='365_day'))
+        assert(cftime.is_leap_year(1,calendar='366_day'))
 
 
 class TestDate2index(unittest.TestCase):

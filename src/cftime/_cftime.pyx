@@ -287,8 +287,9 @@ def date2num(dates,units,calendar=None,has_year_zero=None):
         return np.reshape(np.array(times), shape)
 
 
+@cython.embedsignature(True)
 def num2pydate(times,units,calendar='standard'):
-    """num2pydate(times,units,calendar='standard')
+    """
     Always returns python datetime.datetime
     objects and raise an error if this is not possible.
 
@@ -1723,6 +1724,16 @@ cdef tuple add_timedelta_360_day(datetime dt, delta):
     month = (month - 1) % 12 + 1
 
     return (year, month, day, hour, minute, second, microsecond, -1, -1)
+
+@cython.embedsignature(True)
+def is_leap_year(year, calendar, has_year_zero=None):
+    """returns `True` if specified year in specified calendar is
+    a leap year. Optional kwarg `has_year_zero`
+    controls whether astronomical year numbering
+    is used and the year zero exists.  If not specified,
+    calendar-specific default is assumed."""
+    # public version of _is_leap (issue #259)
+    return _is_leap(year, calendar, has_year_zero=has_year_zero)
 
 cdef _is_leap(int year, calendar, has_year_zero=None):
     cdef int tyear

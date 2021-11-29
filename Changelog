@@ -2,6 +2,7 @@ version 1.5.2 (not yet released)
 ================================
  * silently change calendar='gregorian' to 'standard' internally, 
    since 'gregorian' deprecated in CF v1.9 (issue #256).
+ * add "is_leap_year" function (issue #259).
    
 version 1.5.1.1
 ===============
