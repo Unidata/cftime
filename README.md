@@ -12,6 +12,9 @@ Time-handling functionality from netcdf4-python
 ## News
 For details on the latest updates, see the [Changelog](https://github.com/Unidata/cftime/blob/master/Changelog).
 
+1/22/2022: Version 1.5.2 released (wheels for Apple M1 available on pypi for python 3.8,3.9 and 3.10). is_leap_year
+function added (issue #259).
+
 10/31/2021: Version 1.5.1.1 released (new binary wheels for python 3.10).
 
 10/1/2021:  Version 1.5.1 released. Changed default behavior of ``proleptic_gregorian``
