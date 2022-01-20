@@ -1,4 +1,4 @@
-version 1.5.2 (releast tag v1.5.2rel)
+version 1.5.2 (release tag v1.5.2rel)
 =====================================
  * silently change calendar='gregorian' to 'standard' internally, 
    since 'gregorian' deprecated in CF v1.9 (issue #256).
