@@ -120,7 +120,7 @@ with approximately 1 microsecond accuracy.</p>
 <dl class="py class">
 <dt id="cftime.datetime">
 <em class="property">class </em><code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">datetime</code><span class="sig-paren">(</span><em class="sig-param">int year</em>, <em class="sig-param">int month</em>, <em class="sig-param">int day</em>, <em class="sig-param">int hour=0</em>, <em class="sig-param">int minute=0</em>, <em class="sig-param">int second=0</em>, <em class="sig-param">int microsecond=0</em>, <em class="sig-param">int dayofwk=-1</em>, <em class="sig-param">int dayofyr=-1</em>, <em class="sig-param">calendar=u'standard'</em>, <em class="sig-param">has_year_zero=None</em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.datetime" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>This class mimics datetime.datetime but support calendars other than the proleptic
 Gregorian calendar.</p>
 <p>Supports timedelta operations by overloading +/-, and
@@ -216,6 +216,16 @@ proleptic gregorian calendar (year -4713 if year zero allowed).</p>
 False).</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py function">
+<dt id="cftime.is_leap_year">
+<code class="sig-prename descclassname">cftime.</code><code class="sig-name descname">is_leap_year</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">year</span></em>, <em class="sig-param"><span class="n">calendar</span></em>, <em class="sig-param"><span class="n">has_year_zero</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cftime.is_leap_year" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns <cite>True</cite> if specified year in specified calendar is
+a leap year. Optional kwarg <cite>has_year_zero</cite>
+controls whether astronomical year numbering
+is used and the year zero exists.  If not specified,
+calendar-specific default is assumed.</p>
 </dd></dl>
 
 <dl class="py function">

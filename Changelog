@@ -1,8 +1,9 @@
-version 1.5.2 (not yet released)
-================================
+version 1.5.2 (release tag v1.5.2rel)
+=====================================
  * silently change calendar='gregorian' to 'standard' internally, 
    since 'gregorian' deprecated in CF v1.9 (issue #256).
  * add "is_leap_year" function (issue #259).
+ * wheels that work on Apple M1 (arm64) available on pypi.
    
 version 1.5.1.1
 ===============
