@@ -2037,6 +2037,28 @@ def test_date2num_num2date_roundtrip(encoding_units, freq, calendar):
         meets_tolerance = np.abs(decoded - times) <= tolerance
         assert np.all(meets_tolerance)
 
+def test_date2num_missing_data():
+    # Masked array
+    a = [
+        cftime.DatetimeGregorian(2000, 12, 1),
+        cftime.DatetimeGregorian(2000, 12, 2),
+        cftime.DatetimeGregorian(2000, 12, 3),
+        cftime.DatetimeGregorian(2000, 12, 4),
+    ]
+    mask = [True, False, True, False]
+    array = np.ma.array(a, mask=mask)
+    out = date2num(array, units="days since 2000-12-01", calendar="standard")
+    assert ((out == np.ma.array([-99, 1, -99, 3] , mask=mask)).all())
+    assert ((out.mask == mask).all())
+
+    # Scalar masked array
+    a = cftime.DatetimeGregorian(2000, 12, 1)
+    mask = True
+    array = np.ma.array(a, mask=mask)
+    out = date2num(array, units="days since 2000-12-01", calendar="standard")
+    assert out is np.ma.masked
+
+    
 
 if __name__ == '__main__':
     unittest.main()

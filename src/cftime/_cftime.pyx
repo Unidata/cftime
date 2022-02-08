@@ -254,8 +254,12 @@ def date2num(dates,units,calendar=None,has_year_zero=None):
         use_python_datetime = False
         # convert basedate to specified calendar
         basedate =  to_calendar_specific_datetime(basedate, calendar, False, has_year_zero=has_year_zero)
-    times = []; n = 0
-    for date in dates.flat:
+    times = []
+    for n, date in enumerate(dates.flat):
+        if ismasked and mask.flat[n]:
+            times.append(None)
+            continue
+
         # use python datetime if possible.
         if use_python_datetime:
             # remove time zone offset
@@ -263,20 +267,18 @@ def date2num(dates,units,calendar=None,has_year_zero=None):
                 date = date.replace(tzinfo=None) - date.utcoffset()
         else: # convert date to same calendar specific cftime.datetime instance
             date = to_calendar_specific_datetime(date, calendar, False, has_year_zero=has_year_zero)
-        if ismasked and mask.flat[n]:
-            times.append(None)
+
+        td = date - basedate
+        if td % unit_timedelta == timedelta(0):
+            # Explicitly cast result to np.int64 for Windows compatibility
+            quotient = np.int64(td // unit_timedelta)
+            times.append(quotient)
         else:
-            td = date - basedate
-            if td % unit_timedelta == timedelta(0):
-                # Explicitly cast result to np.int64 for Windows compatibility
-                quotient = np.int64(td // unit_timedelta)
-                times.append(quotient)
-            else:
-                times.append(td / unit_timedelta)
-        n += 1
+            times.append(td / unit_timedelta)
+                
     if ismasked: # convert to masked array if input was masked array
-        times = np.array(times)
-        times = np.ma.masked_where(times==None,times)
+        times = np.array(times, dtype=float)  # None -> nan
+        times = np.ma.masked_invalid(times)
         if isscalar:
             return times[0]
         else:
