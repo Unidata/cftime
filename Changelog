@@ -1,3 +1,7 @@
+since version 1.5.2
+===================
+ * fix for masked array inputs (issue #267).
+
 version 1.5.2 (release tag v1.5.2rel)
 =====================================
  * silently change calendar='gregorian' to 'standard' internally, 
