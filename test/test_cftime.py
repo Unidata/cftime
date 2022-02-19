@@ -2058,7 +2058,32 @@ def test_date2num_missing_data():
     out = date2num(array, units="days since 2000-12-01", calendar="standard")
     assert out is np.ma.masked
 
-    
+
+def test_num2date_preserves_shape():
+    # The optimized num2date algorithm operates on a flattened array.  This
+    # check ensures that the original shape of the times is restored in the 
+    # result.
+    a = np.array([[0, 1, 2], [3, 4, 5]])
+    result = num2date(a, units="days since 2000-01-01", calendar="standard")
+    expected = np.array([cftime.DatetimeGregorian(2000, 1, i) for i in range(1, 7)]).reshape((2, 3))
+    np.testing.assert_equal(result, expected)
+
+
+def test_num2date_preserves_order():
+    # The optimized num2date algorithm sorts the encoded times before decoding them.
+    # This check ensures that the order of the times is restored in the result.
+    a = np.array([1, 0])
+    result = num2date(a, units="days since 2000-01-01", calendar="standard")
+    expected = np.array([cftime.DatetimeGregorian(2000, 1, i) for i in [2, 1]])
+    np.testing.assert_equal(result, expected)
+
+
+def test_num2date_empty_array():
+    a = np.array([[]])
+    result = num2date(a, units="days since 2000-01-01", calendar="standard")
+    expected = np.array([[]], dtype="O")
+    np.testing.assert_equal(result, expected)
+
 
 if __name__ == '__main__':
     unittest.main()

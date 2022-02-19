@@ -426,6 +426,52 @@ def scale_times(num, factor):
         else:
             return num * factor
 
+
+def decode_date_from_scalar(time_in_microseconds, basedate):
+    """Decode a date from a scalar input."""
+    delta = time_in_microseconds.astype("timedelta64[us]").astype(timedelta)
+    try:
+        return basedate + delta
+    except OverflowError:
+        raise ValueError("OverflowError in datetime, possibly because year < datetime.MINYEAR")
+
+
+def decode_dates_from_array(times_in_microseconds, basedate):
+    """Decode values encoded by an integer array in units of microseconds to dates.
+    
+    This is an optimized algorithm that operates by flattening and sorting the input
+    array of integers, decoding the first date using the original base date, and then
+    incrementally adding timedeltas to decode the rest of the dates in the array.  This
+    is an optimal approach, because it minimizes the length of the timedeltas used in
+    each addition operation required to decode the times (timedelta addition is the rate
+    limiting step in the process).  The original order of the elements and shape of the
+    array are restored at the end.  The sorting and unsorting steps add only a small
+    overhead.  See discussion and timing results in GitHub issue 269.
+    """
+    original_shape = times_in_microseconds.shape
+    times_in_microseconds = times_in_microseconds.ravel()
+
+    sort_indices = np.argsort(times_in_microseconds)
+    unsort_indices = np.argsort(sort_indices)
+    times_in_microseconds = times_in_microseconds[sort_indices]
+
+    # We first cast to the np.timedelta64[us] dtype out of convenience, but ultimately
+    # cast to datetime.timedelta objects for operations with cftime objects (we cannot
+    # cast from integers to datetime.timedelta objects directly).
+    deltas = times_in_microseconds.astype("timedelta64[us]")
+    differential_deltas = np.diff(deltas).astype(timedelta)
+
+    dates = np.empty(times_in_microseconds.shape, dtype="O")
+    try:
+        dates[0] = basedate + deltas[0].astype(timedelta)
+        for i in range(len(differential_deltas)):
+            dates[i + 1] = dates[i] + differential_deltas[i]
+    except OverflowError:
+        raise ValueError("OverflowError in datetime, possibly because year < datetime.MINYEAR")
+
+    return dates[unsort_indices].reshape(original_shape)
+
+
 @cython.embedsignature(True)
 def num2date(
     times,
@@ -537,14 +583,18 @@ def num2date(
     scaled_times = scale_times(times, factor)
     scaled_times = cast_to_int(scaled_times,units=unit)
 
-    # Through np.timedelta64, convert integers scaled to have units of
-    # microseconds to datetime.timedelta objects, the timedelta type compatible
-    # with all cftime.datetime objects.
-    deltas = scaled_times.astype("timedelta64[us]").astype(timedelta)
-    try:
-        return basedate + deltas
-    except OverflowError:
-        raise ValueError("OverflowError in datetime, possibly because year < datetime.MINYEAR")
+    if scaled_times.ndim == 0 or scaled_times.size == 0:
+        return decode_date_from_scalar(scaled_times, basedate)
+    else:
+        if isinstance(scaled_times, np.ma.MaskedArray):
+            # The algorithm requires data be present for all values. To handle this, we fill 
+            # masked values with 0 temporarily and then restore the mask at the end.
+            original_mask = np.ma.getmask(scaled_times)
+            scaled_times = scaled_times.filled(0)
+            dates = decode_dates_from_array(scaled_times, basedate)
+            return np.ma.MaskedArray(dates, mask=original_mask)
+        else:
+            return decode_dates_from_array(scaled_times, basedate)
 
 
 @cython.embedsignature(True)
