@@ -12,6 +12,8 @@ Time-handling functionality from netcdf4-python
 ## News
 For details on the latest updates, see the [Changelog](https://github.com/Unidata/cftime/blob/master/Changelog).
 
+3/4/2022:  Version 1.6.0 released.  Big speed-ups for num2date, date2index bugfix for select != 'exact' when select='exact' works, fix for date2num with masked array inputs.
+
 1/22/2022: Version 1.5.2 released (wheels for Apple M1 available on pypi for python 3.8,3.9 and 3.10). is_leap_year
 function added (issue #259).
 
