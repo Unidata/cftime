@@ -3,6 +3,8 @@ version 1.6.0 (not yet released)
  * fix for masked array inputs (issue #267).
  * improved performance of the num2date algorithm, in some cases providing
    an over 100x speedup (issue #269, PR#270).
+ * fix for date2index for select != 'exact' when select='exact' works (issue
+   #272, PR#273)
 
 version 1.5.2 (release tag v1.5.2rel)
 =====================================

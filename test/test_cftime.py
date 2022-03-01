@@ -961,6 +961,10 @@ class TestDate2index(unittest.TestCase):
         self.standardtime = self.TestTime(datetime(1950, 1, 1), 366, 24,
                                           'hours since 1900-01-01', 'standard')
 
+        self.issue272time = self.TestTime(datetime(1950, 1, 1), 5, 24,
+                                          'hours since 1900-01-01', 'standard')
+        self.issue272time._data=np.array([1053144, 1053150, 1053156, 1053157,
+            1053162],np.int32)
         self.time_vars = {}
         self.time_vars['time'] = CFTimeVariable(
             values=self.standardtime,
@@ -1116,6 +1120,18 @@ class TestDate2index(unittest.TestCase):
         index = date2index(query_time, self.time_vars['time3'],
                            select='nearest')
         assert(index == 11)
+
+    def test_issue272(self):
+        timeArray = self.issue272time
+        date = datetime(2020, 2, 22, 13)
+        assert(date2index(date, timeArray, calendar="gregorian",
+            select="exact")==3)
+        assert(date2index(date, timeArray, calendar="gregorian",
+            select="before")==2)
+        assert(date2index(date, timeArray, calendar="gregorian",
+            select="after")==4)
+        assert(date2index(date, timeArray, calendar="gregorian",
+            select="nearest")==3)
 
 
 class issue584TestCase(unittest.TestCase):

@@ -891,6 +891,20 @@ def time2index(times, nctime, calendar=None, select='exact'):
     if calendar == None:
         calendar = getattr(nctime, 'calendar', 'standard')
 
+    if select != 'exact':
+        # if select works, then 'nearest' == 'exact', 'before' == 'exact'-1 and
+        # 'after' == 'exact'+1
+        try:
+            index = time2index(times, nctime, calendar=calendar, select='exact')
+            if select == 'nearest':
+                return index
+            elif select == 'before':
+                return index-1
+            else:
+                return index+1
+        except ValueError:
+            pass
+
     num = np.atleast_1d(times)
     N = len(nctime)
 
