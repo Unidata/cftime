@@ -1,5 +1,5 @@
-version 1.6.0 (not yet released)
-================================
+version 1.6.0 (release tag v1.6.0rel)
+=====================================
  * fix for masked array inputs (issue #267).
  * improved performance of the num2date algorithm, in some cases providing
    an over 100x speedup (issue #269, PR#270).
