@@ -2101,5 +2101,52 @@ def test_num2date_empty_array():
     np.testing.assert_equal(result, expected)
 
 
+class ToTupleTestCase(unittest.TestCase):
+
+    def test_datetime_to_tuple(self):
+        iyear  = [1998, 1999, 2000, 2001]
+        imonth = [12, 11, 10, 9]
+        iday   = [1, 2, 3, 4]
+        idt = [ cftime.datetime(iyear[i], imonth[i], iday[i])
+                for i in range(len(iyear)) ]
+        iarrays = np.array([ dt.to_tuple() for dt in idt ])
+        oyear  = list(iarrays[:, 0])
+        omonth = list(iarrays[:, 1])
+        oday   = list(iarrays[:, 2])
+        self.assertEqual(oyear, iyear)
+        self.assertEqual(omonth, imonth)
+        self.assertEqual(oday, iday)
+
+    def test_real_datetime_to_tuple(self):
+        iyear  = [1998, 1999, 2000, 2001]
+        imonth = [12, 11, 10, 9]
+        iday   = [1, 2, 3, 4]
+        idt = [ cftime.real_datetime(iyear[i], imonth[i], iday[i])
+                for i in range(len(iyear)) ]
+        iarrays = np.array([ dt.to_tuple() for dt in idt ])
+        oyear  = list(iarrays[:, 0])
+        omonth = list(iarrays[:, 1])
+        oday   = list(iarrays[:, 2])
+        self.assertEqual(oyear, iyear)
+        self.assertEqual(omonth, imonth)
+        self.assertEqual(oday, iday)
+
+    def test_change_datetime_to_tuple(self):
+        iyear  = [1998, 1999, 2000, 2001]
+        imonth = [12, 11, 10, 9]
+        iday   = [1, 2, 3, 4]
+        idt1 = [ cftime.real_datetime(iyear[i], imonth[i], iday[i])
+                 for i in range(len(iyear)) ]
+        idt = [ cftime.datetime(*dt.to_tuple(), calendar='standard')
+                for dt in idt1 ]
+        iarrays = np.array([ dt.to_tuple() for dt in idt ])
+        oyear  = list(iarrays[:, 0])
+        omonth = list(iarrays[:, 1])
+        oday   = list(iarrays[:, 2])
+        self.assertEqual(oyear, iyear)
+        self.assertEqual(omonth, imonth)
+        self.assertEqual(oday, iday)
+
+
 if __name__ == '__main__':
     unittest.main()

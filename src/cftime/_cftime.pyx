@@ -67,6 +67,9 @@ class real_datetime(datetime_python):
             return _dayspermonth_leap[self.month-1]
         else:
             return _dayspermonth[self.month-1]
+    def to_tuple(self):
+        return (self.year, self.month, self.day, self.hour, self.minute,
+                self.second, self.microsecond)
     nanosecond = 0 # workaround for pandas bug (cftime issue #77)
 
 def _datesplit(timestr):
@@ -1307,7 +1310,7 @@ The default format of the string produced by strftime is controlled by self.form
             return hash(self.timetuple())
         return hash(d)
 
-    cdef to_tuple(self):
+    def to_tuple(self):
         return (self.year, self.month, self.day, self.hour, self.minute,
                 self.second, self.microsecond)
 
