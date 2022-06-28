@@ -987,7 +987,7 @@ cdef _toscalar(a):
     else:
         return a
 
-cdef to_tuple(dt):
+def to_tuple(dt):
     """Turn a datetime.datetime instance into a tuple of integers. Elements go
     in the order of decreasing significance, making it easy to compare
     datetime instances. Parts of the state that don't affect ordering
