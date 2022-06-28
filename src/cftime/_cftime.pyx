@@ -379,7 +379,8 @@ def cast_to_int(num, units=None):
     if num.dtype.kind in "iu":
         return num
     else:
-        if np.any(num < _MIN_INT64) or np.any(num > _MAX_INT64):
+        #if np.any(num < _MIN_INT64) or np.any(num > _MAX_INT64):
+        if np.any(np.less(num,_MIN_INT64,casting='same_kind')) or np.any(np.greater(num,_MAX_INT64,casting='same_kind')):
             raise OverflowError('time values outside range of 64 bit signed integers')
         if isinstance(num, np.ma.core.MaskedArray):
             int_num = np.ma.masked_array(np.rint(num), dtype=np.int64)
