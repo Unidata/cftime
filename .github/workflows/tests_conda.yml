@@ -1,0 +1,40 @@
+name: TESTS-CONDA-ENV
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  run:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.7", "3.8", "3.9", "3.10" ]
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        platform: [x64, x32]
+        exclude:
+          - os: macos-latest  
+            platform: x32
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Mamba
+      uses: mamba-org/provision-with-micromamba@main
+      with:
+        environment-file: false
+
+    - name: Setup micromamba Env
+      shell: bash -l {0}
+      run: |
+        micromamba create --name TEST python=${{ matrix.python-version }} --file requirements.txt --file requirements-dev.txt --channel conda-forge
+        micromamba activate TEST
+        pip install -v -e  . --no-deps --force-reinstall
+
+    - name: Run Tests
+      shell: bash -l {0}
+      run: |
+        micromamba activate TEST
+        pytest -vv test
