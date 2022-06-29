@@ -5,7 +5,7 @@ Required dependencies
 ---------------------
 
 - Python: >3.2
-- `numpy <http://www.numpy.org/>`__ (1.7 or later)
+- `numpy <https://numpy.org/>`__ (1.7 or later)
 
 
 Instructions
@@ -15,9 +15,9 @@ The easiest way to get everything installed is to use conda_ command line tool::
 
     $ conda install cftime
 
-.. _conda: http://conda.io/
+.. _conda: https://docs.conda.io/en/latest/
 
-We recommend using the community maintained `conda-forge <https://conda-forge.github.io/>`__ channel if you need difficult\-to\-build dependencies such as cartopy or pynio::
+We recommend using the community maintained `conda-forge <https://conda-forge.org/>`__ channel if you need difficult\-to\-build dependencies such as cartopy or pynio::
 
     $ conda install -c conda-forge cftime
 
@@ -35,7 +35,7 @@ Developing
 
 
 When developing we recommend cloning the GitHub repository,
-building the extension in-place with `cython <http://cython.org/>`__ 0.19 or later
+building the extension in-place with `cython <https://cython.org/>`__ 0.19 or later
 ``python setup.py build_ext --inplace``
 
 and running the test suite to check if the changes are passing the tests
