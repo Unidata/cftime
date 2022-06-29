@@ -1,5 +1,5 @@
-since version 1.6.0
-===================
+version 1.6.1 (release tag v1.6.1rel)
+=====================================
  * fix failing tests on windows with numpy 1.23.0 (issue #278)
  * expose to_tuple module function in public API.
 
