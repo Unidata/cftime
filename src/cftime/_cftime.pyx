@@ -38,7 +38,7 @@ cdef int[12] _dayspermonth_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 3
 cdef int[13] _cumdayspermonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
 cdef int[13] _cumdayspermonth_leap = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
 
-__version__ = '1.6.0'
+__version__ = '1.6.1'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
@@ -379,7 +379,9 @@ def cast_to_int(num, units=None):
     if num.dtype.kind in "iu":
         return num
     else:
-        if np.any(num < _MIN_INT64) or np.any(num > _MAX_INT64):
+        #if np.any(num < _MIN_INT64) or np.any(num > _MAX_INT64):
+        # use this instead to avoid test failures on windows with numpy 1.23.0 (issue #279)
+        if np.any(np.less(num,_MIN_INT64,casting='same_kind')) or np.any(np.greater(num,_MAX_INT64,casting='same_kind')):
             raise OverflowError('time values outside range of 64 bit signed integers')
         if isinstance(num, np.ma.core.MaskedArray):
             int_num = np.ma.masked_array(np.rint(num), dtype=np.int64)
@@ -985,7 +987,7 @@ cdef _toscalar(a):
     else:
         return a
 
-cdef to_tuple(dt):
+def to_tuple(dt):
     """Turn a datetime.datetime instance into a tuple of integers. Elements go
     in the order of decreasing significance, making it easy to compare
     datetime instances. Parts of the state that don't affect ordering

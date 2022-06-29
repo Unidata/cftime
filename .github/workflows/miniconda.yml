@@ -9,6 +9,7 @@ jobs:
   run:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         python-version: [ "3.7", "3.8", "3.9", "3.10" ]
         os: [windows-latest, ubuntu-latest, macos-latest]
@@ -52,7 +53,7 @@ jobs:
       shell: bash -l {0}
       run: |
         source activate TEST
-        py.test -vv test
+        pytest -vv test
 
 #   - name: Coveralls
 #     env:
