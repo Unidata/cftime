@@ -4,8 +4,8 @@ Installation
 Required dependencies
 ---------------------
 
-- Python: >3.2
-- `numpy <https://numpy.org/>`__ (1.7 or later)
+- Python: >=3.7
+- `numpy <https://numpy.org/>`__ (1.13.3 or later)
 
 
 Instructions
