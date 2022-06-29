@@ -9,6 +9,7 @@ jobs:
   run:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         python-version: [ "3.7", "3.8", "3.9", "3.10" ]
         os: [windows-latest, ubuntu-latest, macos-latest]
@@ -20,7 +21,6 @@ jobs:
         exclude:
           - os: macos-latest  
             platform: x32
-        fail-fast: false
 
     env:
       TRAVIS_BUILD_DIR: ${{ github.workspace }}
