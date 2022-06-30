@@ -131,7 +131,7 @@ def _can_use_python_datetime(date,calendar):
            (calendar in ['gregorian','standard'] and date > gregorian and date.year <= MAXYEAR))
 
 @cython.embedsignature(True)
-def date2num(dates,units,calendar=None,has_year_zero=None):
+def date2num(dates, units, calendar=None, has_year_zero=None, longdouble=False):
     """
     Return numeric time values given datetime objects. The units
     of the numeric time values are described by the **units** argument
@@ -175,6 +175,12 @@ def date2num(dates,units,calendar=None,has_year_zero=None):
     always exists and the has_year_zero kwarg is ignored.
     This kwarg is not needed to define calendar systems allowed by CF
     (the calendar-specific defaults do this).
+
+    **longdouble**: If set True, output is in the long double float type
+    (numpy.float128) instead of float (numpy.float64), allowing microsecond
+    accuracy when converting a time value to a date and back again. Otherwise
+    this is only possible if the discretization of the time variable is an
+    integer multiple of the units.
 
     returns a numeric time value, or an array of numeric time values
     with approximately 1 microsecond accuracy.
@@ -278,8 +284,25 @@ def date2num(dates,units,calendar=None,has_year_zero=None):
             quotient = np.int64(td // unit_timedelta)
             times.append(quotient)
         else:
-            times.append(td / unit_timedelta)
-                
+            if longdouble:
+                # Division of timedelta's is in float64 precision,
+                # i.e. losing microsecond precision.
+                # Conversion to float128 helps but can still lead to imprecision
+                # of +-1 microsecond in division:
+                #   quotient = (np.longdouble(td.total_seconds()) /
+                #               np.longdouble(unit_timedelta.total_seconds()))
+                # -> Convert to (64-bit) integers of microseconds
+                mtd = (td.days * 86400000000 +
+                       td.seconds * 1000000 +
+                       td.microseconds)
+                munit = (unit_timedelta.days * 86400000000 +
+                         unit_timedelta.seconds * 1000000 +
+                         unit_timedelta.microseconds)
+                quotient = np.longdouble(mtd) / np.longdouble(munit)
+            else:
+                quotient = td / unit_timedelta
+            times.append(quotient)
+
     if ismasked: # convert to masked array if input was masked array
         times = np.array(times, dtype=float)  # None -> nan
         times = np.ma.masked_invalid(times)
