@@ -1,4 +1,3 @@
-pip>22.1.2
 check-manifest
 coverage
 coveralls
