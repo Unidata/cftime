@@ -1,8 +1,10 @@
+pip>22.1.2
 check-manifest
 coverage
 coveralls
 cython>0.26.1
 pytest
+pytest-cov
 sphinx
 twine
 wheel
