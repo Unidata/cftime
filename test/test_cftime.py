@@ -2101,5 +2101,25 @@ def test_num2date_empty_array():
     np.testing.assert_equal(result, expected)
 
 
+DATEPARSE_ERROR_TESTS = [
+    ("foo", "In general, units must be"),
+    ("months", "'months since' units only allowed"),
+    ("common_years", "'common_years' units only allowed")
+]
+
+
+@pytest.mark.parametrize(("units", "match"), DATEPARSE_ERROR_TESTS)
+def test_num2date_unrecognized_units(units, match):
+    with pytest.raises(ValueError, match=match):
+        num2date(0.0, units=f"{units} since 2000-01-01", calendar="standard")
+
+
+@pytest.mark.parametrize(("units", "match"), DATEPARSE_ERROR_TESTS)
+def test_date2num_unrecognized_units(units, match):
+    date = cftime.datetime(2000, 1, 1, calendar="standard")
+    with pytest.raises(ValueError, match=match):
+        date2num(date, units=f"{units} since 2000-01-01", calendar="standard")
+
+
 if __name__ == '__main__':
     unittest.main()

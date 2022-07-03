@@ -101,7 +101,11 @@ def _dateparse(timestr,calendar,has_year_zero=None):
             raise ValueError("'%s' units only allowed for '365_day' and 'noleap' calendars" % units) 
         else:
             raise ValueError(
-            "units must be one of 'seconds', 'minutes', 'hours' or 'days' (or singular version of these), got '%s'" % units)
+            "In general, units must be one of 'microseconds', 'milliseconds', "
+            "'seconds', 'minutes', 'hours', or 'days' (or select abbreviated "
+            "versions of these).  For the '360_day' calendar, "
+            "'months' can also be used, or for the 'noleap' calendar 'common_years' "
+            "can also be used. Got '%s' instead, which are not recognized." % units)
     # parse the date string.
     year, month, day, hour, minute, second, microsecond, utc_offset =\
         _parse_date( isostring.strip() )
