@@ -751,7 +751,7 @@ class cftimeTestCase(unittest.TestCase):
         # issue #152 add isoformat()
         assert(d.isoformat()[0:24] == '2009-12-22T00:00:00.0156')
         assert(d.isoformat(sep=' ')[0:24] == '2009-12-22 00:00:00.0156')
-        assert(d.isoformat(sep=' ',timespec='milliseconds') == '2009-12-22 00:00:00.015')
+        assert(d.isoformat(sep=' ',timespec='milliseconds') == '2009-12-22 00:00:00.016')
         assert(d.isoformat(sep=' ',timespec='seconds') == '2009-12-22 00:00:00')
         assert(d.isoformat(sep=' ',timespec='minutes') == '2009-12-22 00:00')
         assert(d.isoformat(sep=' ',timespec='hours') == '2009-12-22 00')
@@ -1685,6 +1685,36 @@ def test_string_format():
     # check a given format string acts like strftime
     assert dt.strftime('%H%m%d') == '{0:%H%m%d}'.format(dt)
     assert 'the year is 2000' == 'the year is {dt:%Y}'.format(dt=dt)
+
+
+def test_string_format2():
+    dt = cftime.datetime(-4713, 1, 1, 12, 0, 0, 10)
+    # check a given format string acts like strftime
+    assert dt.strftime('%H%m%d') == '{0:%H%m%d}'.format(dt)
+    assert dt.strftime() == '-4713-01-01 12:00:00'
+    assert dt.strftime('%Y-%m-%d %H:%M:%S') == '-4713-01-01 12:00:00'
+    assert dt.strftime('%Y-%m-%d %H:%M:%S.%f') == '-4713-01-01 12:00:00.000010'
+    assert dt.strftime('%d.%m.%Y %H:%M:%S.%f') == '01.01.-4713 12:00:00.000010'
+    dt = cftime.datetime(-713, 1, 1, 12, 0, 0, 10)
+    assert dt.strftime('%H%m%d') == '{0:%H%m%d}'.format(dt)
+    assert dt.strftime() == '-0713-01-01 12:00:00'
+    assert dt.strftime('%Y-%m-%d %H:%M:%S') == '-0713-01-01 12:00:00'
+    assert dt.strftime('%Y-%m-%d %H:%M:%S.%f') == '-0713-01-01 12:00:00.000010'
+    assert dt.strftime('%d.%m.%Y %H:%M:%S.%f') == '01.01.-0713 12:00:00.000010'
+
+
+def test_string_isoformat():
+    dt = cftime.datetime(-4713, 1, 1, 12, 0, 0, 10)
+    assert dt.isoformat() == '-4713-01-01T12:00:00.000010'
+    assert dt.isoformat(' ', 'days') == '-4713-01-01'
+    assert dt.isoformat(' ', 'seconds') == '-4713-01-01 12:00:00'
+    assert dt.isoformat(' ', 'microseconds') == '-4713-01-01 12:00:00.000010'
+    dt = cftime.datetime(-713, 1, 1, 12, 0, 0, 10)
+    assert dt.isoformat() == '-0713-01-01T12:00:00.000010'
+    assert dt.isoformat(' ', 'days') == '-0713-01-01'
+    assert dt.isoformat(' ', 'seconds') == '-0713-01-01 12:00:00'
+    assert dt.isoformat(' ', 'microseconds') == '-0713-01-01 12:00:00.000010'
+
 
 def test_dayofyr_after_replace(date_type):
     date = date_type(1, 1, 1)

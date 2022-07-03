@@ -1284,25 +1284,43 @@ The default format of the string produced by strftime is controlled by self.form
     def __str__(self):
         return self.isoformat(' ')
 
-    def isoformat(self,sep='T',timespec='auto'):
-        second = ":%02i" %self.second
-        if (timespec == 'auto' and self.microsecond) or timespec == 'microseconds':
-            second += ".%06i" % self.microsecond
-        if timespec == 'milliseconds':
-            millisecs = self.microsecond/1000
-            second += ".%03i" % millisecs
-        if timespec in ['auto', 'microseconds', 'milliseconds']:
-            return "%04i-%02i-%02i%s%02i:%02i%s" %\
-            (self.year, self.month, self.day, sep, self.hour, self.minute, second)
-        elif timespec == 'seconds':
-            return "%04i-%02i-%02i%s%02i:%02i:%02i" %\
-            (self.year, self.month, self.day, sep, self.hour, self.minute, self.second)
-        elif timespec == 'minutes':
-            return "%04i-%02i-%02i%s%02i:%02i" %\
-            (self.year, self.month, self.day, sep, self.hour, self.minute)
+    def isoformat(self, sep='T', timespec='auto'):
+        """
+        ISO date representation
+
+        """
+        if self.year < 0:
+            form0 = '{:05d}-{:02d}-{:02d}'
+        else:
+            form0 = '{:04d}-{:02d}-{:02d}'
+        if timespec == 'days':
+            form = form0
+            return form.format(self.year, self.month, self.day)
         elif timespec == 'hours':
-            return "%04i-%02i-%02i%s%02i" %\
-            (self.year, self.month, self.day, sep, self.hour)
+            form = form0 + '{:s}{:02d}'
+            return form.format(self.year, self.month, self.day, sep,
+                               self.hour)
+        elif timespec == 'minutes':
+            form = form0 + '{:s}{:02d}:{:02d}'
+            return form.format(self.year, self.month, self.day, sep,
+                               self.hour, self.minute)
+        elif timespec == 'seconds':
+            form = form0 + '{:s}{:02d}:{:02d}:{:02d}'
+            return form.format(self.year, self.month, self.day, sep,
+                               self.hour, self.minute, self.second)
+        elif timespec in ['auto', 'microseconds', 'milliseconds']:
+            second = '{:02d}'.format(self.second)
+            if timespec == 'milliseconds':
+                millisecs = int(round(self.microsecond / 1000, 0))
+                second += '.{:03d}'.format(millisecs)
+            elif timespec == 'microseconds':
+                second += '.{:06d}'.format(self.microsecond)
+            else:
+                if self.microsecond > 0:
+                    second += '.{:06d}'.format(self.microsecond)
+            form = form0 + '{:s}{:02d}:{:02d}:{:s}'
+            return form.format(self.year, self.month, self.day, sep,
+                               self.hour, self.minute, second)
         else:
             raise ValueError('illegal timespec')
 
@@ -1569,14 +1587,24 @@ cdef _findall(text, substr):
 # Every 28 years the calendar repeats, except through century leap
 # years where it's 6 years.  But only if you're using the Gregorian
 # calendar.  ;)
-
-
+# Make also 4-digit negative years
+# Allow .%f for microseconds
 cdef _strftime(datetime dt, fmt):
     if _illegal_s.search(fmt):
         raise TypeError("This strftime implementation does not handle %s")
     # don't use strftime method at all.
     # if dt.year > 1900:
     #    return dt.strftime(fmt)
+    if '%f' in fmt:
+        if not fmt.endswith('.%f'):
+            raise TypeError('If %f is used for microseconds it must be the'
+                            ' at the end as .%f')
+        else:
+            ihavems = True
+            fmt1 = fmt[:-3]
+    else:
+        ihavems = False
+        fmt1 = fmt
 
     year = dt.year
     # For every non-leap year century, advance by
@@ -1588,10 +1616,10 @@ cdef _strftime(datetime dt, fmt):
     # Move to around the year 2000
     year = year + ((2000 - year) // 28) * 28
     timetuple = dt.timetuple()
-    s1 = time.strftime(fmt, (year,) + timetuple[1:])
+    s1 = time.strftime(fmt1, (year,) + timetuple[1:])
     sites1 = _findall(s1, str(year))
 
-    s2 = time.strftime(fmt, (year + 28,) + timetuple[1:])
+    s2 = time.strftime(fmt1, (year + 28,) + timetuple[1:])
     sites2 = _findall(s2, str(year + 28))
 
     sites = []
@@ -1600,9 +1628,14 @@ cdef _strftime(datetime dt, fmt):
             sites.append(site)
 
     s = s1
-    syear = "%04d" % (dt.year,)
+    if dt.year < 0:
+        syear = "%05d" % (dt.year,)
+    else:
+        syear = "%04d" % (dt.year,)
     for site in sites:
         s = s[:site] + syear + s[site + 4:]
+    if ihavems:
+        s = s + '.{:06d}'.format(dt.microsecond)
     return s
 
 cdef bint is_leap_julian(int year, bint has_year_zero):
