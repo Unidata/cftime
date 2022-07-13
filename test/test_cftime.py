@@ -732,7 +732,7 @@ class cftimeTestCase(unittest.TestCase):
         # issue #140 (fractional seconds in reference date)
         d = datetime.strptime('2018-01-23 09:27:10.950000',"%Y-%m-%d %H:%M:%S.%f")
         units = 'seconds since 2018-01-23 09:31:42.94'
-        assert(cftime.date2num(d, units) == -271.99)
+        assert(float(cftime.date2num(d, units)) == -271.99)
         # issue 143 - same answer for arrays vs scalars.
         units = 'seconds since 1970-01-01 00:00:00'
         times_in = [1261440000.0, 1261440001.0, 1261440002.0, 1261440003.0,
@@ -2078,10 +2078,15 @@ def test_date2num_num2date_roundtrip(encoding_units, freq, calendar):
         assert encoded.dtype == np.int64
         np.testing.assert_equal(decoded, times)
     else:
+        # if sys.platform.startswith("win"):
+        #     assert encoded.dtype == np.float64
+        # else:
+        #     assert encoded.dtype == np.float128
         assert encoded.dtype == np.float64
         tolerance = timedelta(microseconds=2000)
         meets_tolerance = np.abs(decoded - times) <= tolerance
         assert np.all(meets_tolerance)
+
 
 def test_date2num_missing_data():
     # Masked array
@@ -2094,7 +2099,7 @@ def test_date2num_missing_data():
     mask = [True, False, True, False]
     array = np.ma.array(a, mask=mask)
     out = date2num(array, units="days since 2000-12-01", calendar="standard")
-    assert ((out == np.ma.array([-99, 1, -99, 3] , mask=mask)).all())
+    assert ((out == np.ma.array([-99, 1, -99, 3], mask=mask)).all())
     assert ((out.mask == mask).all())
 
     # Scalar masked array
@@ -2149,6 +2154,39 @@ def test_date2num_unrecognized_units(units, match):
     date = cftime.datetime(2000, 1, 1, calendar="standard")
     with pytest.raises(ValueError, match=match):
         date2num(date, units=f"{units} since 2000-01-01", calendar="standard")
+
+
+def test_num2date_precision():
+    if sys.platform.startswith("win"):
+        pytest.skip("skipping tests that require float128 on windows")
+    testdates = [(1271, 3, 18, 19, 41, 33),
+                 (1271, 3, 18, 19, 41, 32, 999998)]
+    unitinc = ['microseconds', 'seconds', 'minutes', 'hours', 'days']
+    for cc in ['standard', 'gregorian', 'julian', 'proleptic_gregorian',
+               'noleap', 'all_leap', '365_day', '366_day', '360_day']:
+        for uinc in unitinc:
+            if cc in ['standard', 'gregorian', 'julian']:
+                units = uinc + ' since -4713-01-01 12:00:00'
+            elif cc in ['proleptic_gregorian']:
+                units = uinc + ' since -4714-01-01 12:00:00'
+            elif cc in ['noleap', 'all_leap', '365_day', '366_day', '360_day']:
+                units = uinc + ' since 0000-01-01 12:00:00'
+            # scalar
+            date = datetimex(*testdates[0], calendar=cc)
+            num = date2num(date, units, calendar=cc, longdouble=True)
+            date2 = num2date(num, units, calendar=cc)
+            assert date == date2
+            # array
+            date = [ datetimex(*dd, calendar=cc) for dd in testdates ]
+            num = date2num(date, units, calendar=cc, longdouble=True)
+            date2 = num2date(num, units, calendar=cc)
+            for i in range(len(date)):
+                assert date[i] == date2[i]
+            # masked array
+            num = np.ma.array(num, mask=(True, False))
+            date2 = num2date(num, units, calendar=cc)
+            assert np.ma.is_masked(date2[0])
+            assert date[1] == date2[1]
 
 
 if __name__ == '__main__':
