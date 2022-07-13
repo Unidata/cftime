@@ -1,10 +1,13 @@
+since version 1.6.1 release
+===========================
+ * longdouble keyword in date2num so that a roundtrip from a time to a date
+   and back again does not lose microsecond precision when the units require
+   the times be encoded as floating point values (PR #284)
+
 version 1.6.1 (release tag v1.6.1rel)
 =====================================
  * fix failing tests on windows with numpy 1.23.0 (issue #278)
  * expose to_tuple module function in public API.
- * longdouble keyword in date2num so that a roundtrip from a time to a date
-   and back again does not lose microsecond precision when the units require
-   the times be encoded as floating point values (PR #284)
 
 version 1.6.0 (release tag v1.6.0rel)
 =====================================
