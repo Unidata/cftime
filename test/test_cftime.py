@@ -921,6 +921,9 @@ class cftimeTestCase(unittest.TestCase):
         assert(not cftime.is_leap_year(1,calendar='standard',has_year_zero=True))
         assert(not cftime.is_leap_year(1,calendar='365_day'))
         assert(cftime.is_leap_year(1,calendar='366_day'))
+        # num2date should not fail on an empty int array (issue #287)
+        d = cftime.num2date(np.array([], dtype="int64"), "days since 1970-01-01",\
+            calendar="proleptic_gregorian", only_use_cftime_datetimes=True)
 
 
 class TestDate2index(unittest.TestCase):
