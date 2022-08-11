@@ -444,6 +444,8 @@ def scale_times(num, factor):
     if num.dtype.kind == "f":
         return factor * num
     else:
+        if num.size == 0: # empty array (issue #287)
+            return num
         # Python integers have arbitrary precision, so convert min and max
         # returned by NumPy functions through item, prior to multiplying by
         # factor.
