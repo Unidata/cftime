@@ -1,9 +1,10 @@
-since version 1.6.1 release
-===========================
+version 1.6.2 (not yet released)
+================================
  * num2date should not fail on an empty integer array (issue #287).
  * longdouble keyword in date2num so that a roundtrip from a time to a date
    and back again does not lose microsecond precision when the units require
    the times be encoded as floating point values (PR #284)
+ * added strptime method (issue #277).
 
 version 1.6.1 (release tag v1.6.1rel)
 =====================================
