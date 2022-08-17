@@ -225,7 +225,7 @@ def date2num(dates, units, calendar=None, has_year_zero=None, longdouble=False):
             has_year_zero = _year_zero_defaults(calendar)
 
     # if calendar is None or '', use calendar of first input cftime.datetime instances.
-    # if inputs are 'real' python datetime instances, use propleptic gregorian.
+    # if inputs are 'real' python datetime instances, use proleptic gregorian.
     if not calendar:
         if all_python_datetimes:
             calendar = 'proleptic_gregorian'
@@ -695,7 +695,7 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None)
             has_year_zero = _year_zero_defaults(calendar)
 
     # if calendar is None or '', use calendar of first input cftime.datetime instances.
-    # if inputs are 'real' python datetime instances, use propleptic gregorian.
+    # if inputs are 'real' python datetime instances, use proleptic gregorian.
     if not calendar:
         d0 = dates_test.item(0)
         if isinstance(d0,datetime_python):
@@ -1236,6 +1236,25 @@ The default format of the string produced by strftime is controlled by self.form
         if format is None:
             format = self.format
         return _strftime(self, format)
+
+    @staticmethod
+    def strptime(datestring, format, calendar='standard', has_year_zero=None):
+        """
+        Return a datetime corresponding to date_string, parsed according to format, 
+        with a specified calendar and year zero convention. 
+        For a complete list of formatting directives, see section
+        'strftime() and strptime() Behavior' in the base Python documentation.
+        """
+        # use python's datetime.strptime to get a python datetime instance
+        # (using proleptic_gregorian calendar)
+        pydatetime = datetime_python.strptime(datestring, format)
+        # remove time zone offset
+        if getattr(pydatetime, 'tzinfo',None) is not None:
+            pydatetime = pydatetime.replace(tzinfo=None) - pydatetime.utcoffset()
+        # convert the cftime datetime instance
+        return datetime(pydatetime.year, pydatetime.month, pydatetime.day,
+                        pydatetime.hour, pydatetime.minute, pydatetime.second,
+                        pydatetime.microsecond, calendar=calendar, has_year_zero=has_year_zero)
 
     def __format__(self, format):
         # the string format "{t_obj}".format(t_obj=t_obj)
