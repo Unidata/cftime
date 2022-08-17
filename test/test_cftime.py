@@ -1705,6 +1705,10 @@ def test_string_format2():
     assert dt.strftime('%Y-%m-%d %H:%M:%S.%f') == '-0713-01-01 12:00:00.000010'
     assert dt.strftime('%d.%m.%Y %H:%M:%S.%f') == '01.01.-0713 12:00:00.000010'
 
+def test_strptime():
+    d = cftime.datetime.strptime('24/Aug/2004:17:57:26 +0200', '%d/%b/%Y:%H:%M:%S %z',calendar='julian',has_year_zero=True)
+    assert(repr(d) == "cftime.datetime(2004, 8, 24, 15, 57, 26, 0, calendar='julian', has_year_zero=True)")
+
 
 def test_string_isoformat():
     dt = cftime.datetime(-4713, 1, 1, 12, 0, 0, 10)
