@@ -25,7 +25,6 @@ class TimeRE(dict):
             'm': r"(?P<m>1[0-2]|0[1-9]|[1-9])",
             'M': r"(?P<M>[0-5]\d|\d)",
             'S': r"(?P<S>6[0-1]|[0-5]\d|\d)",
-            'w': r"(?P<w>[0-6])",
             'y': r"(?P<y>\d\d)",
 #           'Y': r"(?P<Y>\d\d\d\d)",
             'Y': r"(?P<Y>[+-]?[0-9]+)", # handle neg and > 4 digits
@@ -116,8 +115,6 @@ def _strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
             year = int(found_dict['Y'])
         elif group_key == 'm':
             month = int(found_dict['m'])
-        elif group_key == 'b':
-            month = locale_time.a_month.index(found_dict['b'].lower())
         elif group_key == 'd':
             day = int(found_dict['d'])
         elif group_key == 'H':
