@@ -14,6 +14,7 @@ from datetime import datetime as datetime_python
 from datetime import timedelta, MINYEAR, MAXYEAR
 import time                     # strftime
 import warnings
+from ._strptime import _strptime
 
 microsec_units = ['microseconds','microsecond', 'microsec', 'microsecs']
 millisec_units = ['milliseconds', 'millisecond', 'millisec', 'millisecs', 'msec', 'msecs', 'ms']
@@ -1245,16 +1246,23 @@ The default format of the string produced by strftime is controlled by self.form
         For a complete list of formatting directives, see section
         'strftime() and strptime() Behavior' in the base Python documentation.
         """
-        # use python's datetime.strptime to get a python datetime instance
-        # (using proleptic_gregorian calendar)
-        pydatetime = datetime_python.strptime(datestring, format)
-        # remove time zone offset
-        if getattr(pydatetime, 'tzinfo',None) is not None:
-            pydatetime = pydatetime.replace(tzinfo=None) - pydatetime.utcoffset()
-        # convert the cftime datetime instance
-        return datetime(pydatetime.year, pydatetime.month, pydatetime.day,
-                        pydatetime.hour, pydatetime.minute, pydatetime.second,
-                        pydatetime.microsecond, calendar=calendar, has_year_zero=has_year_zero)
+        # if possible use python's datetime.strptime to get a python datetime instance
+        # (works for dates in proleptic_gregorian calendar)
+        try:
+            pydatetime = datetime_python.strptime(datestring, format)
+            # remove time zone offset
+            if getattr(pydatetime, 'tzinfo',None) is not None:
+                 pydatetime = pydatetime.replace(tzinfo=None) - pydatetime.utcoffset()
+            # convert the cftime datetime instance
+            return datetime(pydatetime.year, pydatetime.month, pydatetime.day,
+                            pydatetime.hour, pydatetime.minute, pydatetime.second,
+                            pydatetime.microsecond, calendar=calendar, has_year_zero=has_year_zero)
+        # otherwise use a stripped-down version of C-python's _strptime.py
+        # (doesn't understand all possible formats, including locales and time zones)
+        except ValueError:
+            year,month,day,hour,minute,second,microsecond = _strptime(datestring,format)
+            return datetime(year,month,day,hour,minute,second,microsecond,
+                            calendar=calendar,has_year_zero=has_year_zero)
 
     def __format__(self, format):
         # the string format "{t_obj}".format(t_obj=t_obj)
