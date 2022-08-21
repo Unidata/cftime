@@ -1708,6 +1708,12 @@ def test_string_format2():
 def test_strptime():
     d = cftime.datetime.strptime('24/Aug/2004:17:57:26 +0200', '%d/%b/%Y:%H:%M:%S %z',calendar='julian',has_year_zero=True)
     assert(repr(d) == "cftime.datetime(2004, 8, 24, 15, 57, 26, 0, calendar='julian', has_year_zero=True)")
+    d = cftime.datetime.strptime("0000-02-30",\
+             "%Y-%m-%d",calendar='360_day',has_year_zero=True)
+    assert(repr(d) == "cftime.datetime(0, 2, 30, 0, 0, 0, 0, calendar='360_day', has_year_zero=True)")
+    d = cftime.datetime.strptime('1911-02-29 10:18:32.926',\
+             '%Y-%m-%d %H:%M:%S.%f',calendar='366_day')
+    assert(repr(d) == "cftime.datetime(1911, 2, 29, 10, 18, 32, 926000, calendar='all_leap', has_year_zero=True)")
 
 
 def test_string_isoformat():
