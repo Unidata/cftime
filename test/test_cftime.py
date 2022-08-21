@@ -1714,6 +1714,10 @@ def test_strptime():
     d = cftime.datetime.strptime('-99999-02-29 10:18:32.926',\
              '%Y-%m-%d %H:%M:%S.%f',calendar='366_day')
     assert(repr(d) == "cftime.datetime(-99999, 2, 29, 10, 18, 32, 926000, calendar='all_leap', has_year_zero=True)")
+    d = cftime.datetime.strptime('24/Aug/-4712:17:57:26', '%d/%b/%Y:%H:%M:%S',calendar='julian')
+    assert(repr(d) == "cftime.datetime(-4712, 8, 24, 17, 57, 26, 0, calendar='julian', has_year_zero=False)")
+    d = cftime.datetime.strptime('24/August/-4712:17:57:26', '%d/%b/%Y:%H:%M:%S',calendar='julian')
+    assert(repr(d) == "cftime.datetime(-4712, 8, 24, 17, 57, 26, 0, calendar='julian', has_year_zero=False)")
 
 
 def test_string_isoformat():
