@@ -9,7 +9,7 @@ __all__ = []
 class TimeRE(dict):
     """Handle conversion from format directives to regexes."""
 
-    def __init__(self, locale_time=None):
+    def __init__(self):
         """Create keys/values.
 
         Order of execution is important for dependency reasons.
