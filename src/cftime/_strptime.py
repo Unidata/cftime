@@ -27,7 +27,8 @@ class TimeRE(dict):
             'S': r"(?P<S>6[0-1]|[0-5]\d|\d)",
             'w': r"(?P<w>[0-6])",
             'y': r"(?P<y>\d\d)",
-            'Y': r"(?P<Y>\d\d\d\d)",
+#           'Y': r"(?P<Y>\d\d\d\d)",
+            'Y': r"(?P<G>[+-]?[0-9]+)", # handle neg and > 4 digits
             '%': '%'})
 
     def pattern(self, format):
