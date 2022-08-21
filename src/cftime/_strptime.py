@@ -3,8 +3,13 @@ from re import compile as re_compile
 from re import IGNORECASE
 from re import escape as re_escape
 from _thread import allocate_lock as _thread_allocate_lock
+from calendar import month_name, month_abbr
 
 __all__ = []
+month_name = list(month_name)
+month_name = [m.lower() for m in month_name]
+month_abbr = list(month_abbr)
+month_abbr = [m.lower() for m in month_abbr]
 
 class TimeRE(dict):
     """Handle conversion from format directives to regexes."""
@@ -28,7 +33,28 @@ class TimeRE(dict):
             'y': r"(?P<y>\d\d)",
 #           'Y': r"(?P<Y>\d\d\d\d)",
             'Y': r"(?P<Y>[+-]?[0-9]+)", # handle neg and > 4 digits
+            'B': self.__seqToRE(month_name[1:], 'B'),
+            'b': self.__seqToRE(month_abbr[1:], 'b'),
             '%': '%'})
+
+    def __seqToRE(self, to_convert, directive):
+        """Convert a list to a regex string for matching a directive.
+
+        Want possible matching values to be from longest to shortest.  This
+        prevents the possibility of a match occurring for a value that also
+        a substring of a larger value that should have matched (e.g., 'abc'
+        matching when 'abcdef' should have been the match).
+
+        """
+        to_convert = sorted(to_convert, key=len, reverse=True)
+        for value in to_convert:
+            if value != '':
+                break
+        else:
+            return ''
+        regex = '|'.join(re_escape(stuff) for stuff in to_convert)
+        regex = '(?P<%s>%s' % (directive, regex)
+        return '%s)' % regex
 
     def pattern(self, format):
         """Return regex pattern for the format string.
@@ -115,6 +141,10 @@ def _strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
             year = int(found_dict['Y'])
         elif group_key == 'm':
             month = int(found_dict['m'])
+        elif group_key == 'B':
+            month = month_name.index(found_dict['B'].lower())
+        elif group_key == 'b':
+            month = month_abbr.index(found_dict['b'].lower())
         elif group_key == 'd':
             day = int(found_dict['d'])
         elif group_key == 'H':
