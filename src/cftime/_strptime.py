@@ -112,7 +112,7 @@ def _strptime(data_string, format):
                     bad_directive = "%"
                 del err
                 if bad_directive in ['I','a','A','w','j','u','U','V','W','G']:
-                    msg="'%s' directive not supported for dates not valid in python '%s' calendar'"
+                    msg="'%s' directive not supported for dates not valid in python %s calendar"
                     raise ValueError(msg %
                             (bad_directive,'proleptic_gregorian'))
                 else:
