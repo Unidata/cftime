@@ -8,11 +8,9 @@ from numpy cimport int64_t, int32_t
 import cython
 import numpy as np
 import re
-import sys
 import time
 from datetime import datetime as datetime_python
 from datetime import timedelta, MINYEAR, MAXYEAR
-import time                     # strftime
 import warnings
 from ._strptime import _strptime
 
