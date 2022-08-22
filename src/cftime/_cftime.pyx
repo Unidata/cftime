@@ -1250,11 +1250,21 @@ The default format of the string produced by strftime is controlled by self.form
         """
         # if possible use python's datetime.strptime to get a python datetime instance
         # (works for dates in proleptic_gregorian calendar)
+        fd = [d[0] for d in format.split('%') if d] # extract format descriptors
+        # calendar specific format descriptors that won't work will all calendars
+        special_fd = ['a', 'A', 'w', 'j', 'U', 'W', 'G', 'u', 'V']
         try:
             pydatetime = datetime_python.strptime(datestring, format)
             # remove time zone offset
             if getattr(pydatetime, 'tzinfo',None) is not None:
                  pydatetime = pydatetime.replace(tzinfo=None) - pydatetime.utcoffset()
+            compatible_date =\
+            calendar == 'proleptic_gregorian' or \
+            (calendar in ['gregorian','standard'] and (pydatetime.year > 1582 or \
+             (pydatetime.year == 1582 and pydatetime.month >= 10 and pydatetime.day >= 15)))
+            if not compatible_date and any(x in special_fd for x in fd):
+                msg='one of the supplied format directives may not be consistent with the chosen calendar'
+                raise KeyError(msg)
             # convert the cftime datetime instance
             return datetime(pydatetime.year, pydatetime.month, pydatetime.day,
                             pydatetime.hour, pydatetime.minute, pydatetime.second,

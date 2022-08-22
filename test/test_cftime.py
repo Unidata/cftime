@@ -1720,6 +1720,13 @@ def test_strptime():
     assert(repr(d) == "cftime.datetime(-4712, 8, 24, 17, 57, 26, 0, calendar='julian', has_year_zero=False)")
     d = cftime.datetime.strptime("-4712", "%Y", calendar="julian")
     assert(repr(d) == "cftime.datetime(-4712, 1, 1, 0, 0, 0, 0, calendar='julian', has_year_zero=False)")
+    # should fail with KeyError
+    try:
+        d=cftime.datetime.strptime("2000-45-3", "%G-%V-%u", calendar="noleap")
+    except KeyError:
+        pass
+    else:
+        raise AssertionError
 
 
 def test_string_isoformat():
