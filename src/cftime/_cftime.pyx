@@ -1239,9 +1239,13 @@ The default format of the string produced by strftime is controlled by self.form
     @staticmethod
     def strptime(datestring, format, calendar='standard', has_year_zero=None):
         """
-        Return a datetime corresponding to date_string, parsed according to format, 
-        with a specified calendar and year zero convention. 
-        For a complete list of formatting directives, see section
+        Return a datetime corresponding to date_string, parsed according to format,
+        with a specified calendar and year zero convention.
+        The format directives 'y','Y','m','B','b','d','H','M','S' and 'f'
+        are supported for all calendars and dates.  If the date is valid
+        in the python 'proleptic_gregorian' calendar, then python's
+        datetime.strptime is used. For a complete list of formatting directives
+        supported in python's datetime.strptime, see section
         'strftime() and strptime() Behavior' in the base Python documentation.
         """
         # if possible use python's datetime.strptime to get a python datetime instance
@@ -1256,7 +1260,8 @@ The default format of the string produced by strftime is controlled by self.form
                             pydatetime.hour, pydatetime.minute, pydatetime.second,
                             pydatetime.microsecond, calendar=calendar, has_year_zero=has_year_zero)
         # otherwise use a stripped-down version of C-python's _strptime.py
-        # (doesn't understand all possible formats, including locales and time zones)
+        # (doesn't understand all possible formats, just
+        # 'y','Y','m','B','b','d','H','M','S' and 'f')
         except ValueError:
             year,month,day,hour,minute,second,microsecond = _strptime(datestring,format)
             return datetime(year,month,day,hour,minute,second,microsecond,

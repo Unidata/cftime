@@ -26,7 +26,6 @@ class TimeRE(dict):
             'd': r"(?P<d>3[0-1]|[1-2]\d|0[1-9]|[1-9]| [1-9])",
             'f': r"(?P<f>[0-9]{1,6})",
             'H': r"(?P<H>2[0-3]|[0-1]\d|\d)",
-            'I': r"(?P<I>1[0-2]|0[1-9]|[1-9])",
             'm': r"(?P<m>1[0-2]|0[1-9]|[1-9])",
             'M': r"(?P<M>[0-5]\d|\d)",
             'S': r"(?P<S>6[0-1]|[0-5]\d|\d)",
@@ -88,10 +87,9 @@ _TimeRE_cache = TimeRE()
 _CACHE_MAX_SIZE = 5 # Max number of regexes stored in _regex_cache
 _regex_cache = {}
 
-def _strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
-    """Return a 2-tuple consisting of a time struct and an int containing
-    the number of microseconds based on the input string and the
-    format string."""
+def _strptime(data_string, format):
+    """Return a 7-tuple consisting of the data required to construct a
+    datetime based on the input string and the format string."""
 
     for index, arg in enumerate([data_string, format]):
         if not isinstance(arg, str):
@@ -113,7 +111,12 @@ def _strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
                 if bad_directive == "\\":
                     bad_directive = "%"
                 del err
-                raise ValueError("'%s' is a bad directive in format '%s'" %
+                if bad_directive in ['I','a','A','w','j','u','U','V','W','G']:
+                    msg="'%s' directive not supported for dates not valid in python '%s' calendar'"
+                    raise ValueError(msg %
+                            (bad_directive,'proleptic_gregorian'))
+                else:
+                    raise ValueError("'%s' is a bad directive in format '%s'" %
                                     (bad_directive, format)) from None
             # IndexError only occurs when the format string is "%"
             except IndexError:
@@ -149,9 +152,6 @@ def _strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
             day = int(found_dict['d'])
         elif group_key == 'H':
             hour = int(found_dict['H'])
-        elif group_key == 'I':
-            hour = int(found_dict['I'])
-            ampm = found_dict.get('p', '').lower()
         elif group_key == 'M':
             minute = int(found_dict['M'])
         elif group_key == 'S':
