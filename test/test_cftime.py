@@ -1705,6 +1705,29 @@ def test_string_format2():
     assert dt.strftime('%Y-%m-%d %H:%M:%S.%f') == '-0713-01-01 12:00:00.000010'
     assert dt.strftime('%d.%m.%Y %H:%M:%S.%f') == '01.01.-0713 12:00:00.000010'
 
+def test_strptime():
+    d = cftime.datetime.strptime('24/Aug/2004:17:57:26 +0200', '%d/%b/%Y:%H:%M:%S %z',calendar='julian',has_year_zero=True)
+    assert(repr(d) == "cftime.datetime(2004, 8, 24, 15, 57, 26, 0, calendar='julian', has_year_zero=True)")
+    d = cftime.datetime.strptime("0000-02-30",\
+             "%Y-%m-%d",calendar='360_day',has_year_zero=True)
+    assert(repr(d) == "cftime.datetime(0, 2, 30, 0, 0, 0, 0, calendar='360_day', has_year_zero=True)")
+    d = cftime.datetime.strptime('-99999-02-29 10:18:32.926',\
+             '%Y-%m-%d %H:%M:%S.%f',calendar='366_day')
+    assert(repr(d) == "cftime.datetime(-99999, 2, 29, 10, 18, 32, 926000, calendar='all_leap', has_year_zero=True)")
+    d = cftime.datetime.strptime('24/Aug/-4712:17:57:26', '%d/%b/%Y:%H:%M:%S',calendar='julian')
+    assert(repr(d) == "cftime.datetime(-4712, 8, 24, 17, 57, 26, 0, calendar='julian', has_year_zero=False)")
+    d = cftime.datetime.strptime('24/August/-4712:17:57:26', '%d/%B/%Y:%H:%M:%S',calendar='julian')
+    assert(repr(d) == "cftime.datetime(-4712, 8, 24, 17, 57, 26, 0, calendar='julian', has_year_zero=False)")
+    d = cftime.datetime.strptime("-4712", "%Y", calendar="julian")
+    assert(repr(d) == "cftime.datetime(-4712, 1, 1, 0, 0, 0, 0, calendar='julian', has_year_zero=False)")
+    # should fail with KeyError
+    try:
+        d=cftime.datetime.strptime("2000-45-3", "%G-%V-%u", calendar="noleap")
+    except KeyError:
+        pass
+    else:
+        raise AssertionError
+
 
 def test_string_isoformat():
     dt = cftime.datetime(-4713, 1, 1, 12, 0, 0, 10)

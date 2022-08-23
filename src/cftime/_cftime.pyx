@@ -8,12 +8,11 @@ from numpy cimport int64_t, int32_t
 import cython
 import numpy as np
 import re
-import sys
 import time
 from datetime import datetime as datetime_python
 from datetime import timedelta, MINYEAR, MAXYEAR
-import time                     # strftime
 import warnings
+from ._strptime import _strptime
 
 microsec_units = ['microseconds','microsecond', 'microsec', 'microsecs']
 millisec_units = ['milliseconds', 'millisecond', 'millisec', 'millisecs', 'msec', 'msecs', 'ms']
@@ -38,7 +37,7 @@ cdef int[12] _dayspermonth_leap = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 3
 cdef int[13] _cumdayspermonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
 cdef int[13] _cumdayspermonth_leap = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366]
 
-__version__ = '1.6.1'
+__version__ = '1.6.2'
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 # Note: This regex ensures that all ISO8601 timezone formats are accepted - but, due to legacy support for other timestrings, not all incorrect formats can be rejected.
@@ -126,9 +125,12 @@ def _dateparse(timestr,calendar,has_year_zero=None):
     return basedate
 
 def _can_use_python_datetime(date,calendar):
-    gregorian = datetime(1582,10,15,calendar=calendar,has_year_zero=date.has_year_zero)
-    return ((calendar == 'proleptic_gregorian' and date.year >= MINYEAR and date.year <= MAXYEAR) or \
-           (calendar in ['gregorian','standard'] and date > gregorian and date.year <= MAXYEAR))
+    #gregorian = datetime(1582,10,15,calendar=calendar,has_year_zero=date.has_year_zero)
+    #return ((calendar == 'proleptic_gregorian' and date.year >= MINYEAR and date.year <= MAXYEAR) or \
+    #       (calendar in ['gregorian','standard'] and date > gregorian and date.year <= MAXYEAR))
+    return  (calendar == 'proleptic_gregorian' and date.year >= MINYEAR and date.year <= MAXYEAR) or \
+            ((calendar in ['gregorian','standard'] and date.year <= MAXYEAR) and (date.year > 1582 or \
+            (date.year == 1582 and date.month >= 10 and date.day > 15)))
 
 @cython.embedsignature(True)
 def date2num(dates, units, calendar=None, has_year_zero=None, longdouble=False):
@@ -225,7 +227,7 @@ def date2num(dates, units, calendar=None, has_year_zero=None, longdouble=False):
             has_year_zero = _year_zero_defaults(calendar)
 
     # if calendar is None or '', use calendar of first input cftime.datetime instances.
-    # if inputs are 'real' python datetime instances, use propleptic gregorian.
+    # if inputs are 'real' python datetime instances, use proleptic gregorian.
     if not calendar:
         if all_python_datetimes:
             calendar = 'proleptic_gregorian'
@@ -695,7 +697,7 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None)
             has_year_zero = _year_zero_defaults(calendar)
 
     # if calendar is None or '', use calendar of first input cftime.datetime instances.
-    # if inputs are 'real' python datetime instances, use propleptic gregorian.
+    # if inputs are 'real' python datetime instances, use proleptic gregorian.
     if not calendar:
         d0 = dates_test.item(0)
         if isinstance(d0,datetime_python):
@@ -1236,6 +1238,48 @@ The default format of the string produced by strftime is controlled by self.form
         if format is None:
             format = self.format
         return _strftime(self, format)
+
+    @staticmethod
+    def strptime(datestring, format, calendar='standard', has_year_zero=None):
+        """
+        Return a datetime corresponding to date_string, parsed according to format,
+        with a specified calendar and year zero convention.
+        The format directives 'y','Y','m','B','b','d','H','M','S' and 'f'
+        are supported for all calendars and dates.  If the date is valid
+        in the python 'proleptic_gregorian' calendar, then python's
+        datetime.strptime is used. For a complete list of formatting directives
+        supported in python's datetime.strptime, see section
+        'strftime() and strptime() Behavior' in the base Python documentation.
+        """
+        # if possible use python's datetime.strptime to get a python datetime instance
+        # (works for dates in proleptic_gregorian calendar)
+        fd = [d[0] for d in format.split('%') if d] # extract format descriptors
+        # calendar specific format descriptors that won't work will all calendars
+        special_fd = ['a', 'A', 'w', 'j', 'U', 'W', 'G', 'u', 'V']
+        try:
+            pydatetime = datetime_python.strptime(datestring, format)
+            # remove time zone offset
+            if getattr(pydatetime, 'tzinfo',None) is not None:
+                 pydatetime = pydatetime.replace(tzinfo=None) - pydatetime.utcoffset()
+            compatible_date =\
+            calendar == 'proleptic_gregorian' or \
+            (calendar in ['gregorian','standard'] and (pydatetime.year > 1582 or \
+             (pydatetime.year == 1582 and pydatetime.month > 10) or \
+             (pydatetime.year == 1582 and pydatetime.month == 10 and pydatetime.day > 15)))
+            if not compatible_date and any(x in special_fd for x in fd):
+                msg='one of the supplied format directives may not be consistent with the chosen calendar'
+                raise KeyError(msg)
+            # convert the cftime datetime instance
+            return datetime(pydatetime.year, pydatetime.month, pydatetime.day,
+                            pydatetime.hour, pydatetime.minute, pydatetime.second,
+                            pydatetime.microsecond, calendar=calendar, has_year_zero=has_year_zero)
+        # otherwise use a stripped-down version of C-python's _strptime.py
+        # (doesn't understand all possible formats, just
+        # 'y','Y','m','B','b','d','H','M','S' and 'f')
+        except ValueError:
+            year,month,day,hour,minute,second,microsecond = _strptime(datestring,format)
+            return datetime(year,month,day,hour,minute,second,microsecond,
+                            calendar=calendar,has_year_zero=has_year_zero)
 
     def __format__(self, format):
         # the string format "{t_obj}".format(t_obj=t_obj)
