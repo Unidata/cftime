@@ -125,9 +125,12 @@ def _dateparse(timestr,calendar,has_year_zero=None):
     return basedate
 
 def _can_use_python_datetime(date,calendar):
-    gregorian = datetime(1582,10,15,calendar=calendar,has_year_zero=date.has_year_zero)
-    return ((calendar == 'proleptic_gregorian' and date.year >= MINYEAR and date.year <= MAXYEAR) or \
-           (calendar in ['gregorian','standard'] and date > gregorian and date.year <= MAXYEAR))
+    #gregorian = datetime(1582,10,15,calendar=calendar,has_year_zero=date.has_year_zero)
+    #return ((calendar == 'proleptic_gregorian' and date.year >= MINYEAR and date.year <= MAXYEAR) or \
+    #       (calendar in ['gregorian','standard'] and date > gregorian and date.year <= MAXYEAR))
+    return  (calendar == 'proleptic_gregorian' and date.year >= MINYEAR and date.year <= MAXYEAR) or \
+            ((calendar in ['gregorian','standard'] and date.year <= MAXYEAR) and (date.year > 1582 or \
+            (date.year == 1582 and date.month >= 10 and date.day > 15)))
 
 @cython.embedsignature(True)
 def date2num(dates, units, calendar=None, has_year_zero=None, longdouble=False):
@@ -1261,7 +1264,7 @@ The default format of the string produced by strftime is controlled by self.form
             compatible_date =\
             calendar == 'proleptic_gregorian' or \
             (calendar in ['gregorian','standard'] and (pydatetime.year > 1582 or \
-             (pydatetime.year == 1582 and pydatetime.month >= 10 and pydatetime.day >= 15)))
+             (pydatetime.year == 1582 and pydatetime.month >= 10 and pydatetime.day > 15)))
             if not compatible_date and any(x in special_fd for x in fd):
                 msg='one of the supplied format directives may not be consistent with the chosen calendar'
                 raise KeyError(msg)
