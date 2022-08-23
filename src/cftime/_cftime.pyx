@@ -1261,7 +1261,8 @@ The default format of the string produced by strftime is controlled by self.form
             compatible_date =\
             calendar == 'proleptic_gregorian' or \
             (calendar in ['gregorian','standard'] and (pydatetime.year > 1582 or \
-             (pydatetime.year == 1582 and pydatetime.month >= 10 and pydatetime.day >= 15)))
+             (pydatetime.year == 1582 and pydatetime.month > 10) or \
+             (pydatetime.year == 1582 and pydatetime.month == 10 and pydatetime.day > 15)))
             if not compatible_date and any(x in special_fd for x in fd):
                 msg='one of the supplied format directives may not be consistent with the chosen calendar'
                 raise KeyError(msg)
