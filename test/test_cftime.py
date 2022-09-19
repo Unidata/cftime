@@ -2183,8 +2183,8 @@ def test_date2num_unrecognized_units(units, match):
 
 
 def test_num2date_precision():
-    if sys.platform.startswith("win"):
-        pytest.skip("skipping tests that require float128 on windows")
+    if np.finfo(np.longdouble).precision < 18:
+        pytest.skip("skipping tests that require extended precision longdouble type")
     testdates = [(1271, 3, 18, 19, 41, 33),
                  (1271, 3, 18, 19, 41, 32, 999998)]
     unitinc = ['microseconds', 'seconds', 'minutes', 'hours', 'days']
