@@ -1051,7 +1051,7 @@ This class mimics datetime.datetime but support calendars other than the prolept
 Gregorian calendar.
 
 Supports timedelta operations by overloading +/-, and
-comparisons with other instances using the same calendar.
+comparisons with other instances (even if they use different calendars).
 
 Comparison with native python datetime instances is possible
 for cftime.datetime instances using
