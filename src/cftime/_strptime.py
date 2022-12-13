@@ -30,8 +30,9 @@ class TimeRE(dict):
             'M': r"(?P<M>[0-5]\d|\d)",
             'S': r"(?P<S>6[0-1]|[0-5]\d|\d)",
             'y': r"(?P<y>\d\d)",
-#           'Y': r"(?P<Y>\d\d\d\d)",
-            'Y': r"(?P<Y>[+-]?[0-9]+)", # handle neg and > 4 digits
+            'Y': r"(?P<Y>[+-]?\d\d\d\d)"
+# the next one allows for > 4 digit years, but doesn't work without separators ('%Y%m%d%H', issue #301)
+#           'Y': r"(?P<Y>[+-]?[0-9]+)", # handle neg and > 4 digits
             'B': self.__seqToRE(month_name[1:], 'B'),
             'b': self.__seqToRE(month_abbr[1:], 'b'),
             '%': '%'})
