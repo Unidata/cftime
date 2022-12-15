@@ -1,3 +1,8 @@
+since version 1.6.2 release
+===========================
+ * add support for formats without separators in strptime (e.g. '20200229', issue #301).
+   This required removing support for > 4 digit years.
+
 version 1.6.2 (release tag v1.6.2rel)
 =====================================
  * num2date should not fail on an empty integer array (issue #287).

@@ -1108,7 +1108,7 @@ class TestDate2index(unittest.TestCase):
         units = 'microseconds since 1776-07-04 00:00:00-12:00'
         dates = [datetime(1962, 10, 27, 6, 1, 30, 9001),
                  datetime(1993, 11, 21, 12, 5, 25, 999),
-                 datetime(1995, 11, 25, 18, 7, 59, 999999)]
+                 datetime(1995, 11, 25, 18, 7, 59, 9999)]
         times2 = date2num(dates, units)
         dates2 = num2date(times2, units)
         datediff = abs(dates-dates2)
@@ -1711,9 +1711,11 @@ def test_strptime():
     d = cftime.datetime.strptime("0000-02-30",\
              "%Y-%m-%d",calendar='360_day',has_year_zero=True)
     assert(repr(d) == "cftime.datetime(0, 2, 30, 0, 0, 0, 0, calendar='360_day', has_year_zero=True)")
-    d = cftime.datetime.strptime('-99999-02-29 10:18:32.926',\
+    d = cftime.datetime.strptime('-9999-02-29 10:18:32.926',\
              '%Y-%m-%d %H:%M:%S.%f',calendar='366_day')
-    assert(repr(d) == "cftime.datetime(-99999, 2, 29, 10, 18, 32, 926000, calendar='all_leap', has_year_zero=True)")
+    assert(repr(d) == "cftime.datetime(-9999, 2, 29, 10, 18, 32, 926000, calendar='all_leap', has_year_zero=True)")
+    d = cftime.datetime.strptime("20200230", "%Y%m%d", "360_day") # no separator, issue #301
+    assert(repr(d) == "cftime.datetime(2020, 2, 30, 0, 0, 0, 0, calendar='360_day', has_year_zero=True)")
     d = cftime.datetime.strptime('24/Aug/-4712:17:57:26', '%d/%b/%Y:%H:%M:%S',calendar='julian')
     assert(repr(d) == "cftime.datetime(-4712, 8, 24, 17, 57, 26, 0, calendar='julian', has_year_zero=False)")
     d = cftime.datetime.strptime('24/August/-4712:17:57:26', '%d/%B/%Y:%H:%M:%S',calendar='julian')
