@@ -16,7 +16,14 @@ except ImportError:
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 SRCDIR = os.path.join(BASEDIR,'src')
 CMDS_NOCYTHONIZE = ['clean','clean_cython','sdist']
-COMPILER_DIRECTIVES = {}
+COMPILER_DIRECTIVES = {
+    # Cython 3.0.0 changes the default of the c_api_binop_methods directive to
+    # False, resulting in errors in datetime and timedelta arithmetic:
+    # https://github.com/Unidata/cftime/issues/271.  We explicitly set it to
+    # True to retain Cython 0.x behavior for future Cython versions.  This
+    # directive was added in Cython version 0.29.20.
+    "c_api_binop_methods": True
+}
 DEFINE_MACROS = [("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")] 
 FLAG_COVERAGE = '--cython-coverage'  # custom flag enabling Cython line tracing
 NAME = 'cftime'
