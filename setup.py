@@ -24,6 +24,12 @@ COMPILER_DIRECTIVES = {
     # directive was added in Cython version 0.29.20.
     "c_api_binop_methods": True
 }
+COVERAGE_COMPILER_DIRECTIVES = {
+    "linetrace": True,
+    "warn.maybe_uninitialized": False,
+    "warn.unreachable": False,
+    "warn.unused": False,
+}
 DEFINE_MACROS = [("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")] 
 FLAG_COVERAGE = '--cython-coverage'  # custom flag enabling Cython line tracing
 NAME = 'cftime'
@@ -81,10 +87,9 @@ def description():
 
 if ((FLAG_COVERAGE in sys.argv or os.environ.get('CYTHON_COVERAGE', None))
     and cythonize):
-    COMPILER_DIRECTIVES = {'linetrace': True,
-                           'warn.maybe_uninitialized': False,
-                           'warn.unreachable': False,
-                           'warn.unused': False}
+    COMPILER_DIRECTIVES = {
+        **COMPILER_DIRECTIVES, **COVERAGE_COMPILER_DIRECTIVES
+    }
     DEFINE_MACROS += [('CYTHON_TRACE', '1'),
                      ('CYTHON_TRACE_NOGIL', '1')]
     if FLAG_COVERAGE in sys.argv:
