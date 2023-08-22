@@ -5,5 +5,5 @@ cython>=0.29.20
 pytest
 pytest-cov
 sphinx
-twine
+twine; python_version<'3.12.0.rc1'
 wheel
