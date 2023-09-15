@@ -21,20 +21,23 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup Mamba
-      uses: mamba-org/provision-with-micromamba@main
-      with:
-        environment-file: false
-
     - name: Setup micromamba Env
+      uses: mamba-org/setup-micromamba@v1
+      with:
+        environment-name: TEST
+        create-args: >-
+          python=${{ matrix.python-version }}
+          numpy>1.13.3
+          cython>=0.29.20
+          pytest
+          pytest-cov
+
+    - name: Install cftime
       shell: bash -l {0}
       run: |
-        micromamba create --name TEST python=${{ matrix.python-version }} --file requirements.txt --file requirements-dev.txt --channel conda-forge
-        micromamba activate TEST
         pip install -v -e  . --no-deps --force-reinstall
 
     - name: Run Tests
       shell: bash -l {0}
       run: |
-        micromamba activate TEST
         pytest -vv test
