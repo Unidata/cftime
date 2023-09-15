@@ -32,7 +32,7 @@ jobs:
     - name: Get the version
       shell: bash -l {0}
       id: get_version
-      run: echo ::set-output name=VERSION::$(python setup.py --version)
+      run: echo "name=VERSION::$(python setup.py --version)" >> $GITHUB_OUTPUT
 
     - name: Build documentation
       shell: bash -l {0}
