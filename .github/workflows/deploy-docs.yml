@@ -11,31 +11,33 @@ jobs:
 
     steps:
     - name: checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
     - name: Setup Mamba
-      uses: mamba-org/provision-with-micromamba@main
+      uses: mamba-org/setup-micromamba@v1
       with:
-        environment-file: false
+        environment-name: TEST
+        create-args: >-
+          python=3
+          numpy>1.13.3
+          sphinx
 
     - name: Build environment
       shell: bash -l {0}
       run: |
-        micromamba create --name TEST python=3 --file requirements.txt --file requirements-dev.txt --channel conda-forge
-        micromamba activate TEST
         python -m pip install -e . --no-deps --force-reinstall
 
     - name: Get the version
+      shell: bash -l {0}
       id: get_version
-      run: echo ::set-output name=VERSION::$(python setup.py --version)
+      run: echo "name=VERSION::$(python setup.py --version)" >> $GITHUB_OUTPUT
 
     - name: Build documentation
       shell: bash -l {0}
       run: |
         set -e
-        micromamba activate TEST
         pushd docs
         make html linkcheck O=-W
         popd
