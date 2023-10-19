@@ -1,9 +1,10 @@
-since version 1.6.2 release
-===========================
+version 1.6.3 (release tag v1.6.3rel)
+=====================================
  * add support for formats without separators in strptime (e.g. '20200229', issue #301).
    This required removing support for > 4 digit years.
  * set the c_api_binop_methods compiler directive to True to retain Cython 0.x
    behavior for arithmetic operators for Cython >= 3.0.0 (issue #271).
+ * support for python 3.12.
 
 version 1.6.2 (release tag v1.6.2rel)
 =====================================
