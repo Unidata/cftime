@@ -11,6 +11,8 @@ Time-handling functionality from netcdf4-python
 
 ## News
 For details on the latest updates, see the [Changelog](https://github.com/Unidata/cftime/blob/master/Changelog).
+
+10/20/2023:  Version 1.6.3 released.  Support for python 3.12, cython 3.0, strptime formats without separators.
  
 9/18/2022:  Version 1.6.2 released.  strptime method added, fix for num2date failure on
 empty integer array, date2num 'longdouble' keyword added. New wheel building workflow.
