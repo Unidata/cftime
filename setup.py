@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import os
 import sys
 import numpy
@@ -125,7 +123,7 @@ setup(
     install_requires=load('requirements.txt'),
     tests_require=load('requirements-dev.txt'),
     license='License :: OSI Approved :: MIT License',
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Operating System :: MacOS :: MacOS X',
@@ -133,10 +131,11 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         'Topic :: Scientific/Engineering',
         'License :: OSI Approved :: MIT License'],
     )
