@@ -54,8 +54,23 @@ jobs:
         path: ${{ github.workspace }}/wheelhouse/*.whl
 
 
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build sdist
+        run: >
+          pip install build
+          && python -m build --sdist . --outdir dist
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: dist/*.tar.gz
+
   show-artifacts:
-    needs: [build_bdist]
+    needs: [build_bdist, build_sdist]
     name: "Show artifacts"
     runs-on: ubuntu-latest
     steps:
@@ -70,7 +85,7 @@ jobs:
 
 
   publish-artifacts-pypi:
-    needs: [build_bdist]
+    needs: [build_bdist, build_sdist]
     name: "Publish to PyPI"
     runs-on: ubuntu-latest
     # upload to PyPI for every tag starting with 'v'
