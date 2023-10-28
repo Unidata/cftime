@@ -1,6 +1,6 @@
-since version 1.6.4 release
+since version 1.6.3 release
 ===========================
-* build musllinux wheels (issue #307).
+ * build musllinux wheels (issue #307).
 
 version 1.6.3 (release tag v1.6.3rel)
 =====================================
