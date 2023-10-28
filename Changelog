@@ -1,3 +1,7 @@
+since version 1.6.3 release
+===========================
+ * build musllinux wheels (issue #307).
+
 version 1.6.3 (release tag v1.6.3rel)
 =====================================
  * add support for formats without separators in strptime (e.g. '20200229', issue #301).
