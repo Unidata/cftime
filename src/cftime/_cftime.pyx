@@ -193,7 +193,11 @@ def date2num(dates, units, calendar=None, has_year_zero=None, longdouble=False):
     try:
         dates[0]
     except:
-        isscalar = True
+        if not dates:
+            # if empty list or array input, return empty array (issue #315)
+            return np.array([],dtype=float)
+        else:
+            isscalar = True
 
     # masked array input?
     ismasked = False

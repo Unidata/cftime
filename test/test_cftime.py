@@ -698,7 +698,7 @@ class cftimeTestCase(unittest.TestCase):
         d1 = datetimex(2020, 5, 20, dayofwk=8, dayofyr=9, calendar='')
         assert (d1.dayofwk == 8)
         assert (d1.dayofyr == 9)
-        
+
         # issue 71: negative reference years
         # https://coastwatch.pfeg.noaa.gov/erddap/convert/time.html
         # gives 2446433 (365 days more - is it counting year 0?)
@@ -924,6 +924,9 @@ class cftimeTestCase(unittest.TestCase):
         # num2date should not fail on an empty int array (issue #287)
         d = cftime.num2date(np.array([], dtype="int64"), "days since 1970-01-01",\
             calendar="proleptic_gregorian", only_use_cftime_datetimes=True)
+        # date2num should return an empty array if given one (isse #315)
+        d = cftime.date2num([], 'seconds since 2000-01-01 12:00:00')
+        assert(d.size==0)
 
 
 class TestDate2index(unittest.TestCase):
@@ -1353,7 +1356,7 @@ class DateTime(unittest.TestCase):
         deserialized = pickle.loads(pickle.dumps(date))
         self.assertEqual(date, deserialized)
         self.assertEqual(type(date), type(deserialized))
-        
+
     def test_misc(self):
         "Miscellaneous tests."
         # make sure repr succeeds
@@ -1511,7 +1514,7 @@ def days_per_month_leap_year(date_type, month):
 
 
 def test_zero_year(date_type):
-    # Year 0 is valid in the 360,365 and 366 day and 
+    # Year 0 is valid in the 360,365 and 366 day and
     # Proleptic Gregorian calendars by default.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore",category=cftime.CFWarning)
@@ -1520,7 +1523,7 @@ def test_zero_year(date_type):
             date_type(0, 1, 1)
         else:
             d=date_type(0,1,1) # has_year_zero=True set if year 0 specified
-            assert(d.has_year_zero) # (issue #248) 
+            assert(d.has_year_zero) # (issue #248)
             with pytest.raises(ValueError):
                 date_type(0, 1, 1, has_year_zero=False)
 
@@ -2072,19 +2075,19 @@ def test_num2date_integer_upcast_required():
 
 
 @pytest.mark.parametrize(
-    "encoding_units", 
+    "encoding_units",
     ["microseconds", "milliseconds", "seconds", "minutes", "hours", "days"]
 )
 @pytest.mark.parametrize(
     "freq",
     [
         timedelta(microseconds=1),
-        timedelta(microseconds=1000), 
-        timedelta(seconds=1), 
-        timedelta(minutes=1), 
-        timedelta(hours=1), 
+        timedelta(microseconds=1000),
+        timedelta(seconds=1),
+        timedelta(minutes=1),
+        timedelta(hours=1),
         timedelta(days=1)
-    ], 
+    ],
     ids=lambda x: f"{x!r}"
 )
 def test_date2num_num2date_roundtrip(encoding_units, freq, calendar):
@@ -2092,8 +2095,8 @@ def test_date2num_num2date_roundtrip(encoding_units, freq, calendar):
     lengthy_timedelta = timedelta(days=291000 * 360)
     times = np.array(
         [
-            date_type(1, 1, 1), 
-            date_type(1, 1, 1) + lengthy_timedelta, 
+            date_type(1, 1, 1),
+            date_type(1, 1, 1) + lengthy_timedelta,
             date_type(1, 1, 1) + lengthy_timedelta + freq
         ]
     )
@@ -2140,7 +2143,7 @@ def test_date2num_missing_data():
 
 def test_num2date_preserves_shape():
     # The optimized num2date algorithm operates on a flattened array.  This
-    # check ensures that the original shape of the times is restored in the 
+    # check ensures that the original shape of the times is restored in the
     # result.
     a = np.array([[0, 1, 2], [3, 4, 5]])
     result = num2date(a, units="days since 2000-01-01", calendar="standard")

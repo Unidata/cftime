@@ -1,6 +1,7 @@
 since version 1.6.3 release
 ===========================
  * build musllinux wheels (issue #307).
+ * return empty array if one provided to date2num (issue #315).
 
 version 1.6.3 (release tag v1.6.3rel)
 =====================================
