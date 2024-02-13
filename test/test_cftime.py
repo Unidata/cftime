@@ -6,8 +6,6 @@ from cftime import (Datetime360Day, DatetimeAllLeap,
                     DatetimeProlepticGregorian, _parse_date,
                     date2index, date2num, num2date,  UNIT_CONVERSION_FACTORS)
 import copy
-import operator
-import sys
 import unittest
 import warnings
 from collections import namedtuple
@@ -330,17 +328,17 @@ class cftimeTestCase(unittest.TestCase):
         for t in (733498.999, 733498.9999, 733498.99999, 733498.999999, 733498.9999999):
             d = num2date(t, units='days since 0001-01-01 00:00:00')
             t2 = date2num(d, units='days since 0001-01-01 00:00:00')
-            assert(abs(t2 - t) < 1e-5)  # values should be less than second
+            assert abs(t2 - t) < 1e-5  # values should be less than second
         # Check equality testing
         d1 = datetimex(1979, 6, 21, 9, 23, 12, calendar='standard')
         d2 = datetime(1979, 6, 21, 9, 23, 12)
-        assert(d1 == d2)
+        assert d1 == d2
         # check timezone offset
         d = datetime(2012, 2, 29, 15)
         # mixed_tz is -6 hours from UTC, mixed is UTC so
         # difference in elapsed time is -6 hours.
-        assert(self.cdftime_mixed_tz.date2num(
-            d) - self.cdftime_mixed.date2num(d) == -6)
+        assert self.cdftime_mixed_tz.date2num(
+            d) - self.cdftime_mixed.date2num(d) == -6
 
         # Check comparisons with Python datetime types
 
@@ -402,7 +400,7 @@ class cftimeTestCase(unittest.TestCase):
 
         #issue 344
         units = 'hours since 2013-12-12T12:00:00'
-        assert(1.0 == date2num(num2date(1.0, units), units))
+        assert 1.0 == date2num(num2date(1.0, units), units)
 
         # test roundtrip accuracy
         # also tests error found in issue #349
@@ -416,43 +414,49 @@ class cftimeTestCase(unittest.TestCase):
             times2 = date2num(dates1,units,calendar=calendar)
             dates2 = num2date(times2,units,calendar=calendar)
             err = np.abs(times1 - times2)
-            assert(np.all(err<eps))
+            assert np.all(err<eps)
             dates1 = [date.strftime(dateformat) for date in dates1]
             dates2 = [date.strftime(dateformat) for date in dates2]
-            assert(dates1==dates2)
+            assert dates1==dates2
             return err.max()
         for calendar in calendars:
-            eps = 1.; delta = 1.
+            eps = 1.
+            delta = 1.
             units = 'microseconds since 2000-01-30 01:01:01'
             maxerr = roundtrip(eps,delta,units)
             if verbose:
                 print('calendar = %s max abs err (microsecs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 0.001; delta = 0.001
+            eps = 0.001
+            delta = 0.001
             units = 'milliseconds since 2000-01-30 01:01:01'
             maxerr = roundtrip(eps,delta,units)
             if verbose:
                 print('calendar = %s max abs err (millisecs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 1.e-5; delta = 0.1
+            eps = 1.e-5
+            delta = 0.1
             units = 'seconds since 0001-01-30 01:01:01'
             maxerr = roundtrip(eps,delta,units)
             if verbose:
                 print('calendar = %s max abs err (secs) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 1.e-6; delta = 0.01
+            eps = 1.e-6
+            delta = 0.01
             units = 'minutes since 0001-01-30 01:01:01'
             maxerr = roundtrip(eps,delta,units)
             if verbose:
                 print('calendar = %s max abs err (mins) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 1.e-8; delta = 0.001
+            eps = 1.e-8
+            delta = 0.001
             units = 'hours since 0001-01-30 01:01:01'
             maxerr = roundtrip(eps,delta,units)
             if verbose:
                 print('calendar = %s max abs err (hours) = %s eps = %s' % \
                      (calendar,maxerr,eps))
-            eps = 1.e-9; delta = 0.00001
+            eps = 1.e-9
+            delta = 0.00001
             units = 'days since 0001-01-30 01:01:01'
             maxerr = roundtrip(eps,delta,units)
             if verbose:
@@ -460,20 +464,19 @@ class cftimeTestCase(unittest.TestCase):
                      (calendar,maxerr,eps))
 
         # issue 353
-        assert (num2date(0, 'hours since 2000-01-01 0') ==
-                datetime(2000,1,1,0))
+        assert num2date(0, 'hours since 2000-01-01 0') == datetime(2000,1,1,0)
 
         # issue 354
         num1 = np.array([[0, 1], [2, 3]])
         num2 = np.array([[0, 1], [2, 3]])
         dates1 = num2date(num1, 'days since 0001-01-01')
         dates2 = num2date(num2, 'days since 2001-01-01')
-        assert( dates1.shape == (2,2) )
-        assert( dates2.shape == (2,2) )
+        assert  dates1.shape == (2,2)
+        assert  dates2.shape == (2,2)
         num1b = date2num(dates1, 'days since 0001-01-01')
         num2b = date2num(dates2, 'days since 2001-01-01')
-        assert( num1b.shape == (2,2) )
-        assert( num2b.shape == (2,2) )
+        assert  num1b.shape == (2,2)
+        assert  num2b.shape == (2,2)
         assert_almost_equal(num1,num1b)
         assert_almost_equal(num2,num2b)
 
@@ -484,8 +487,8 @@ class cftimeTestCase(unittest.TestCase):
         date = datetime(1682,10,15) # assumed UTC
         num = date2num(date,units)
         # UTC is 7 hours ahead of units, so num should be -7
-        assert (num == -7)
-        assert (num2date(num, units) == date)
+        assert num == -7
+        assert num2date(num, units) == date
         units = 'hours since 1482-10-15 -07:00 UTC'
         # date before gregorian switch, cftime datetime used
         date = datetime(1482,10,15)
@@ -541,7 +544,7 @@ class cftimeTestCase(unittest.TestCase):
             d = num2date(0, units, calendar="standard")
             #self.assertEqual(d, utc_date)
             # tolerance of 1.e-3 secs
-            assert(np.abs((d-utc_date).total_seconds()) < 1.e-3)
+            assert np.abs((d-utc_date).total_seconds()) < 1.e-3
             # also test with negative values to cover 2nd code path
             d = num2date(-1, units, calendar="standard")
             self.assertEqual(d, utc_date - timedelta(hours=1))
@@ -608,7 +611,7 @@ class cftimeTestCase(unittest.TestCase):
         # cftime issue #134
         d = num2date(-657071, units, calendar='proleptic_gregorian',
                      only_use_cftime_datetimes=False,only_use_python_datetimes=True)
-        assert(d==datetime(1,1,1,0))
+        assert d==datetime(1,1,1,0)
         self.assertRaises(ValueError, num2date, \
         -657072, units, calendar='proleptic_gregorian',
                      only_use_cftime_datetimes=False,only_use_python_datetimes=True)
@@ -619,11 +622,11 @@ class cftimeTestCase(unittest.TestCase):
         utc_date = datetime(2000,1,1,18,30)
         for units in ("hours since 2000-01-01 22:30+04:00", "hours since 2000-01-01 11:30-07:00", "hours since 2000-01-01 15:00-03:30"):
             d = num2date(0, units, calendar="standard")
-            assert(np.abs((d-utc_date).total_seconds()) < 1.e-3)
+            assert np.abs((d-utc_date).total_seconds()) < 1.e-3
             # also test with negative values to cover 2nd code path
             d = num2date(-1, units, calendar="standard")
-            assert(np.abs((d - \
-                (utc_date-timedelta(hours=1))).total_seconds()) < 1.e-3)
+            assert np.abs((d - \
+                (utc_date-timedelta(hours=1))).total_seconds()) < 1.e-3
 
             n = date2num(utc_date, units, calendar="standard")
             # n should always be 0 as all units refer to the same point in time
@@ -722,17 +725,17 @@ class cftimeTestCase(unittest.TestCase):
         self.assertRaises(ValueError, utime, \
             'months since 01-01-01', calendar='standard')
         # issue #78 - extra digits due to roundoff
-        assert(cftime.date2num(cftime.datetime(1, 12, 1, 0, 0, 0, 0, -1, 1), units='days since 01-01-01',calendar='noleap')  == 334.0)
-        assert(cftime.date2num(cftime.num2date(1.0,units='days since 01-01-01',calendar='noleap'),units='days since 01-01-01',calendar='noleap') == 1.0)
-        assert(cftime.date2num(cftime.DatetimeNoLeap(1980, 1, 1, 0, 0, 0, 0, 6, 1),'days since 1970-01-01','noleap') == 3650.0)
+        assert cftime.date2num(cftime.datetime(1, 12, 1, 0, 0, 0, 0, -1, 1), units='days since 01-01-01',calendar='noleap')  == 334.0
+        assert cftime.date2num(cftime.num2date(1.0,units='days since 01-01-01',calendar='noleap'),units='days since 01-01-01',calendar='noleap') == 1.0
+        assert cftime.date2num(cftime.DatetimeNoLeap(1980, 1, 1, 0, 0, 0, 0, 6, 1),'days since 1970-01-01','noleap') == 3650.0
         # issue #126
         d = cftime.DatetimeProlepticGregorian(1, 1, 1)
-        assert(cftime.date2num(d, 'days since 0001-01-01',\
-            'proleptic_gregorian') == 0.0)
+        assert cftime.date2num(d, 'days since 0001-01-01',\
+            'proleptic_gregorian') == 0.0
         # issue #140 (fractional seconds in reference date)
         d = datetime.strptime('2018-01-23 09:27:10.950000',"%Y-%m-%d %H:%M:%S.%f")
         units = 'seconds since 2018-01-23 09:31:42.94'
-        assert(float(cftime.date2num(d, units)) == -271.99)
+        assert float(cftime.date2num(d, units)) == -271.99
         # issue 143 - same answer for arrays vs scalars.
         units = 'seconds since 1970-01-01 00:00:00'
         times_in = [1261440000.0, 1261440001.0, 1261440002.0, 1261440003.0,
@@ -743,34 +746,34 @@ class cftimeTestCase(unittest.TestCase):
             times_out2.append(cftime.num2date(time_in, units))
         dates1 = [str(d) for d in times_out1]
         dates2 = [str(d) for d in times_out2]
-        assert(dates1 == dates2)
+        assert dates1 == dates2
         # issue #143 formatting of microseconds
         d = cftime.num2date(1261440000.015625,units)
         # on windows only 100 ms precision
-        assert(str(d)[0:24] == '2009-12-22 00:00:00.0156')
+        assert str(d)[0:24] == '2009-12-22 00:00:00.0156'
         # issue #152 add isoformat()
-        assert(d.isoformat()[0:24] == '2009-12-22T00:00:00.0156')
-        assert(d.isoformat(sep=' ')[0:24] == '2009-12-22 00:00:00.0156')
-        assert(d.isoformat(sep=' ',timespec='milliseconds') == '2009-12-22 00:00:00.016')
-        assert(d.isoformat(sep=' ',timespec='seconds') == '2009-12-22 00:00:00')
-        assert(d.isoformat(sep=' ',timespec='minutes') == '2009-12-22 00:00')
-        assert(d.isoformat(sep=' ',timespec='hours') == '2009-12-22 00')
+        assert d.isoformat()[0:24] == '2009-12-22T00:00:00.0156'
+        assert d.isoformat(sep=' ')[0:24] == '2009-12-22 00:00:00.0156'
+        assert d.isoformat(sep=' ',timespec='milliseconds') == '2009-12-22 00:00:00.016'
+        assert d.isoformat(sep=' ',timespec='seconds') == '2009-12-22 00:00:00'
+        assert d.isoformat(sep=' ',timespec='minutes') == '2009-12-22 00:00'
+        assert d.isoformat(sep=' ',timespec='hours') == '2009-12-22 00'
         # issue #165: make sure python datetime returned
         d=num2date(0,units="seconds since 2000-01-01 00:00:00",only_use_cftime_datetimes=False)
         assert isinstance(d, datetime)
         # issue #169: cftime.datetime has no calendar attribute, causing dayofwk,dayofyr methods
         # to fail.
         c = cftime.datetime(*cftime._parse_date('7480-01-01 00:00:00'),calendar='standard')
-        assert(c.strftime() == '7480-01-01 00:00:00')
+        assert c.strftime() == '7480-01-01 00:00:00'
         # issue #175: masked values not treated properly in num2date
         times = np.ma.masked_array([-3956.7499999995343,-999999999999],mask=[False,True])
         units='days since 1858-11-17 00:00:00'
         dates = num2date(times, units=units, calendar='standard',\
         only_use_cftime_datetimes=False, only_use_python_datetimes=True)
         test = dates == np.ma.masked_array([datetime(1848, 1, 17, 6, 0, 0, 40), None],mask=[0,1])
-        assert(test.all())
+        assert test.all()
         dates = num2date(times, units=units, calendar='standard')
-        assert(str(dates)=="[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 0, 40, has_year_zero=False)\n --]")
+        assert str(dates)=="[cftime.DatetimeGregorian(1848, 1, 17, 6, 0, 0, 40, has_year_zero=False)\n --]"
 #  check that time range of 200,000 + years can be represented accurately
         calendar='standard'
         _MAX_INT64 = np.iinfo("int64").max
@@ -779,13 +782,13 @@ class cftimeTestCase(unittest.TestCase):
             units = '%s since 01-01-01' % unit
             time = 292471*365*86400*(1000000//int(UNIT_CONVERSION_FACTORS[unit])) + 1000000//int(UNIT_CONVERSION_FACTORS[unit])
             date = num2date(time,units,calendar=calendar)
-            assert(date == refdate)
+            assert date == refdate
             # check round-trip
             time2 = date2num(date,units,calendar=calendar)
             date2 = num2date(time2,units,calendar=calendar)
             # windows doesn't have a longdouble type (it defaults to float64)
             if np.finfo(np.longdouble).precision == 18:
-                assert(date2 == refdate)
+                assert date2 == refdate
 # microsecond roundtrip accuracy preserved over time ranges of 286 years
 # (float64 can only represent integers exactly up to 2**53-1)
         refdate=DatetimeGregorian(286,6,3,23,47,34,740992)
@@ -793,11 +796,11 @@ class cftimeTestCase(unittest.TestCase):
             units = '%s since 01-01-01' % unit
             time = (2**53 - 1)*(1/UNIT_CONVERSION_FACTORS[unit]) + 1/UNIT_CONVERSION_FACTORS[unit]
             date = num2date(time,units,calendar=calendar)
-            assert(date == refdate)
+            assert date == refdate
             # check round-trip
             time2 = date2num(date,units,calendar=calendar)
             date2 = num2date(time2,units,calendar=calendar)
-            assert(date2 == refdate)
+            assert date2 == refdate
 # issue #185: date2num should work the numpy scalar array of dates (1.2.0 regression)
         dates = np.array(datetime(2010, 2, 2, 0, 0))
         assert (date2num(dates, units="hours since 2010-02-01 00:00:00") == 24.)
@@ -808,7 +811,7 @@ class cftimeTestCase(unittest.TestCase):
             units = 'days since -4713-01-01 12:00'
             dt2 = num2date(date2num(dt1, units), units, calendar='proleptic_gregorian')
             dt2 = num2date(date2num(dt1, units, calendar='standard'), units)
-            assert(dt1 == dt2)
+            assert dt1 == dt2
 # issue #189 - leap years calculated incorrectly for negative years in proleptic_gregorian calendar
         dt1 = datetime(2020, 4, 24, 16, 15, 10) # python datetime
         units = 'days since -4713-01-01 12:00'
@@ -817,32 +820,32 @@ class cftimeTestCase(unittest.TestCase):
             warnings.simplefilter("ignore",category=cftime.CFWarning)
             dt2 = num2date(date2num(dt1, units, cal, has_year_zero=False), units,
                                     cal, has_year_zero=False)
-        assert(dt1 == dt2)
+        assert dt1 == dt2
 # issue #198 - cftime.datetime creates calendar specific datetimes that
 # support addition/subtraction of timedeltas.
         for cal in calendars:
             dt = cftime.datetime(2020, 1, 1, calendar=cal)
             dt += timedelta(hours=1)
-            assert(str(dt) == '2020-01-01 01:00:00')
+            assert str(dt) == '2020-01-01 01:00:00'
 # issue #193 - years with more than four digits in reference date
-        assert(cftime.date2num(cftime.datetime(18000, 12, 1, 0, 0), 'days since 18000-1-1', '360_day') == 330.0)
+        assert cftime.date2num(cftime.datetime(18000, 12, 1, 0, 0), 'days since 18000-1-1', '360_day') == 330.0
         # julian day not including year zero
         d = cftime.datetime(2020, 12, 1, 12, calendar='julian')
         with warnings.catch_warnings():
             warnings.simplefilter("ignore",category=cftime.CFWarning)
             units = 'days since -4713-1-1 12:00'
             jd = cftime.date2num(d,units,calendar='julian')
-            assert(jd == 2459198.0)
+            assert jd == 2459198.0
             # if calendar=None, use input date to determine calendar
             jd = cftime.date2num(d,units,calendar=None)
-            assert(jd == 2459198.0)
+            assert jd == 2459198.0
             # if no calendar specified, use calendar associated with datetime
             # instance.
             jd = cftime.date2num(d,units)
-            assert(jd == 2459198.0)
+            assert jd == 2459198.0
             # use 'standard' calendar
             jd = cftime.date2num(d,units,calendar='standard')
-            assert(jd == 2459185.0)
+            assert jd == 2459185.0
 
         # issue #211
         # (masked array handling in date2num - AttributeError:
@@ -850,7 +853,7 @@ class cftimeTestCase(unittest.TestCase):
         m = np.ma.asarray(
             [cftime.DatetimeGregorian(2014, 8, 1, 12, 0, 0, 0)]
             )
-        assert(
+        assert (
              cftime.date2num(m, units="seconds since 2000-1-1")==[4.602096e+08]
               )
 
@@ -869,11 +872,11 @@ class cftimeTestCase(unittest.TestCase):
                 else:
                     raise AssertionError # fail if ValueError not raised
                 d2 = cftime.datetime(1,1,1,0,has_year_zero=has_year_zero,calendar=calendar)
-                assert((d2-d).days==366) # 1-1-1 is 366 days after -1-1-1 if no year zero.
+                assert (d2-d).days==366 # 1-1-1 is 366 days after -1-1-1 if no year zero.
                 has_year_zero=True
                 d = cftime.datetime(0,1,1,0,has_year_zero=has_year_zero,calendar=calendar)
                 d2 = cftime.datetime(1,1,1,0,has_year_zero=has_year_zero,calendar=calendar)
-                assert((d2-d).days==366) # 1-1-1 is 366 days after 0-1-1 if year zero allowed.
+                assert (d2-d).days==366 # 1-1-1 is 366 days after 0-1-1 if year zero allowed.
                 for has_year_zero in [True,False]:
                     if calendar == 'julian':
                         d = cftime.datetime(1858,11, 4,12,has_year_zero=has_year_zero,calendar=calendar)
@@ -890,43 +893,43 @@ class cftimeTestCase(unittest.TestCase):
                         else:
                             d0 = cftime.datetime(-4713, 1, 1,12,has_year_zero=has_year_zero,calendar=calendar)
                     jd = d.toordinal()
-                    assert((d-d0).days == jdref)
-                    assert(jd == jdref)
-                    assert(d.toordinal() == jdref)
+                    assert (d-d0).days == jdref
+                    assert jd == jdref
+                    assert d.toordinal() == jdref
                     d2 = cftime.datetime.fromordinal(jd,calendar=calendar,has_year_zero=has_year_zero)
-                    assert(d2 == d)
+                    assert d2 == d
         # issue #248.  Set has_year_zero=True if year zero requested
         # on instance creation, or by using replace method.
         d=cftime.datetime(0, 0, 0, calendar=None)
-        assert(d.has_year_zero==True)
+        assert d.has_year_zero is True
         d=cftime.datetime(1, 0, 0, calendar=None)
-        assert(d.has_year_zero==False)
+        assert d.has_year_zero is False
         d = d.replace(year=0)
-        assert(d.has_year_zero==True)
+        assert d.has_year_zero is True
         # this should raise a warning, since the default has_year_zero
         # is changed if year specified as zero. (issue #248, PR #249)
         self.assertWarns(UserWarning, cftime.datetime, 0, 1, 1,\
                 calendar='standard')
         # check that for idealized calendars has_year_zero is always True
         d=cftime.datetime(0, 1, 1, calendar='360_day')
-        assert(d.has_year_zero==True)
+        assert d.has_year_zero is True
         d=cftime.datetime(1, 1, 1, calendar='360_day')
-        assert(d.has_year_zero==True)
+        assert d.has_year_zero is True
         d = d.replace(year=0)
-        assert(d.has_year_zero==True)
+        assert d.has_year_zero is True
         # test leap year function
-        assert(cftime.is_leap_year(2000,calendar='standard'))
-        assert(cftime.is_leap_year(-1,calendar='standard'))
-        assert(cftime.is_leap_year(0,calendar='standard',has_year_zero=True))
-        assert(not cftime.is_leap_year(1,calendar='standard',has_year_zero=True))
-        assert(not cftime.is_leap_year(1,calendar='365_day'))
-        assert(cftime.is_leap_year(1,calendar='366_day'))
+        assert cftime.is_leap_year(2000,calendar='standard')
+        assert cftime.is_leap_year(-1,calendar='standard')
+        assert cftime.is_leap_year(0,calendar='standard',has_year_zero=True)
+        assert not cftime.is_leap_year(1,calendar='standard',has_year_zero=True)
+        assert not cftime.is_leap_year(1,calendar='365_day')
+        assert cftime.is_leap_year(1,calendar='366_day')
         # num2date should not fail on an empty int array (issue #287)
         d = cftime.num2date(np.array([], dtype="int64"), "days since 1970-01-01",\
             calendar="proleptic_gregorian", only_use_cftime_datetimes=True)
         # date2num should return an empty array if given one (issue #315)
         d = cftime.date2num([], 'seconds since 2000-01-01 12:00:00')
-        assert(d.size==0)
+        assert d.size==0
 
 
 class TestDate2index(unittest.TestCase):
@@ -1037,7 +1040,7 @@ class TestDate2index(unittest.TestCase):
         nutime = self.TestTime(datetime(1950, 1, 1), 366, 24,
                                'hours since 1900-01-01', 'standard')
         try:
-            t = date2index(datetime(1949, 2, 1), nutime)
+            _t = date2index(datetime(1949, 2, 1), nutime)
         except ValueError:
             pass
         else:
@@ -1116,7 +1119,7 @@ class TestDate2index(unittest.TestCase):
         dates2 = num2date(times2, units)
         datediff = abs(dates-dates2)
         for diff in datediff:
-            assert(diff.microseconds < 100) # tolerance of 100 ms
+            assert diff.microseconds < 100 # tolerance of 100 ms
 
     def test_issue444(self):
         # make sure integer overflow not causing error in
@@ -1125,19 +1128,19 @@ class TestDate2index(unittest.TestCase):
         query_time = datetime(2037, 1, 3, 21, 12)
         index = date2index(query_time, self.time_vars['time3'],
                            select='nearest')
-        assert(index == 11)
+        assert index == 11
 
     def test_issue272(self):
         timeArray = self.issue272time
         date = datetime(2020, 2, 22, 13)
-        assert(date2index(date, timeArray, calendar="gregorian",
-            select="exact")==3)
-        assert(date2index(date, timeArray, calendar="gregorian",
-            select="before")==2)
-        assert(date2index(date, timeArray, calendar="gregorian",
-            select="after")==4)
-        assert(date2index(date, timeArray, calendar="gregorian",
-            select="nearest")==3)
+        assert date2index(date, timeArray, calendar="gregorian",
+            select="exact")==3
+        assert date2index(date, timeArray, calendar="gregorian",
+            select="before")==2
+        assert date2index(date, timeArray, calendar="gregorian",
+            select="after")==4
+        assert date2index(date, timeArray, calendar="gregorian",
+            select="nearest")==3
 
 
 class issue584TestCase(unittest.TestCase):
@@ -1523,7 +1526,7 @@ def test_zero_year(date_type):
             date_type(0, 1, 1)
         else:
             d=date_type(0,1,1) # has_year_zero=True set if year 0 specified
-            assert(d.has_year_zero) # (issue #248)
+            assert d.has_year_zero # (issue #248)
             with pytest.raises(ValueError):
                 date_type(0, 1, 1, has_year_zero=False)
 
@@ -1710,21 +1713,21 @@ def test_string_format2():
 
 def test_strptime():
     d = cftime.datetime.strptime('24/Aug/2004:17:57:26 +0200', '%d/%b/%Y:%H:%M:%S %z',calendar='julian',has_year_zero=True)
-    assert(repr(d) == "cftime.datetime(2004, 8, 24, 15, 57, 26, 0, calendar='julian', has_year_zero=True)")
+    assert repr(d) == "cftime.datetime(2004, 8, 24, 15, 57, 26, 0, calendar='julian', has_year_zero=True)"
     d = cftime.datetime.strptime("0000-02-30",\
              "%Y-%m-%d",calendar='360_day',has_year_zero=True)
-    assert(repr(d) == "cftime.datetime(0, 2, 30, 0, 0, 0, 0, calendar='360_day', has_year_zero=True)")
+    assert repr(d) == "cftime.datetime(0, 2, 30, 0, 0, 0, 0, calendar='360_day', has_year_zero=True)"
     d = cftime.datetime.strptime('-9999-02-29 10:18:32.926',\
              '%Y-%m-%d %H:%M:%S.%f',calendar='366_day')
-    assert(repr(d) == "cftime.datetime(-9999, 2, 29, 10, 18, 32, 926000, calendar='all_leap', has_year_zero=True)")
+    assert repr(d) == "cftime.datetime(-9999, 2, 29, 10, 18, 32, 926000, calendar='all_leap', has_year_zero=True)"
     d = cftime.datetime.strptime("20200230", "%Y%m%d", "360_day") # no separator, issue #301
-    assert(repr(d) == "cftime.datetime(2020, 2, 30, 0, 0, 0, 0, calendar='360_day', has_year_zero=True)")
+    assert repr(d) == "cftime.datetime(2020, 2, 30, 0, 0, 0, 0, calendar='360_day', has_year_zero=True)"
     d = cftime.datetime.strptime('24/Aug/-4712:17:57:26', '%d/%b/%Y:%H:%M:%S',calendar='julian')
-    assert(repr(d) == "cftime.datetime(-4712, 8, 24, 17, 57, 26, 0, calendar='julian', has_year_zero=False)")
+    assert repr(d) == "cftime.datetime(-4712, 8, 24, 17, 57, 26, 0, calendar='julian', has_year_zero=False)"
     d = cftime.datetime.strptime('24/August/-4712:17:57:26', '%d/%B/%Y:%H:%M:%S',calendar='julian')
-    assert(repr(d) == "cftime.datetime(-4712, 8, 24, 17, 57, 26, 0, calendar='julian', has_year_zero=False)")
+    assert repr(d) == "cftime.datetime(-4712, 8, 24, 17, 57, 26, 0, calendar='julian', has_year_zero=False)"
     d = cftime.datetime.strptime("-4712", "%Y", calendar="julian")
-    assert(repr(d) == "cftime.datetime(-4712, 1, 1, 0, 0, 0, 0, calendar='julian', has_year_zero=False)")
+    assert repr(d) == "cftime.datetime(-4712, 1, 1, 0, 0, 0, 0, calendar='julian', has_year_zero=False)"
     # should fail with KeyError
     try:
         d=cftime.datetime.strptime("2000-45-3", "%G-%V-%u", calendar="noleap")
