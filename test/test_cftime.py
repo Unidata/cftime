@@ -924,7 +924,7 @@ class cftimeTestCase(unittest.TestCase):
         # num2date should not fail on an empty int array (issue #287)
         d = cftime.num2date(np.array([], dtype="int64"), "days since 1970-01-01",\
             calendar="proleptic_gregorian", only_use_cftime_datetimes=True)
-        # date2num should return an empty array if given one (isse #315)
+        # date2num should return an empty array if given one (issue #315)
         d = cftime.date2num([], 'seconds since 2000-01-01 12:00:00')
         assert(d.size==0)
 
