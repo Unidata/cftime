@@ -37,7 +37,6 @@ jobs:
           cython>=0.29.20
           pytest
           pytest-cov
-          -
     - name: Install unstable dependencies
       if: matrix.experimental == true
       shell: bash -l {0}
