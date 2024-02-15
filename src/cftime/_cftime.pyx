@@ -7,12 +7,15 @@ from cpython.object cimport (PyObject_RichCompare, Py_LT, Py_LE, Py_EQ,
 from numpy cimport int64_t, int32_t
 import cython
 import numpy as np
+cimport numpy as np
 import re
 import time
 from datetime import datetime as datetime_python
 from datetime import timedelta, MINYEAR, MAXYEAR
 import warnings
 from ._strptime import _strptime
+
+np.import_array()
 
 microsec_units = ['microseconds','microsecond', 'microsec', 'microsecs']
 millisec_units = ['milliseconds', 'millisecond', 'millisec', 'millisecs', 'msec', 'msecs', 'ms']
