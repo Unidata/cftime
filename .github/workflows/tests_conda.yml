@@ -46,11 +46,13 @@ jobs:
         --trusted-host pypi.anaconda.org \
         --no-deps --pre --upgrade \
         numpy;
+        python -m pip install -v -e  . --no-deps --no-build-isolation --force-reinstall
 
     - name: Install cftime
+      if: matrix.experimental != true
       shell: bash -l {0}
       run: |
-        pip install -v -e  . --no-deps --force-reinstall
+        python -m pip install -v -e  . --no-deps --force-reinstall
 
     - name: Run Tests
       shell: bash -l {0}
