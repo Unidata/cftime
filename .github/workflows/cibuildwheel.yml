@@ -39,7 +39,6 @@ jobs:
         # Skips pypy py36,37
         CIBW_SKIP: "pp* cp36-* cp37-*"
         CIBW_ARCHS: ${{ matrix.arch }}
-        CIBW_BUILD_FRONTEND: build
         CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
         CIBW_TEST_SKIP: "*_arm64"
         CIBW_TEST_REQUIRES: pytest
@@ -47,6 +46,9 @@ jobs:
           python -c "import cftime; print(f'cftime v{cftime.__version__}')" &&
           python -m pip install -r {package}/requirements-dev.txt &&
           python -m pytest -vv {package}/test
+        # below only for building against unstable numpy
+        CIBW_BUILD_FRONTEND: "build; args: --no-isolation"
+        CIBW_BEFORE_BUILD: "pip install --pre --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy cython setuptools versioneer"
 
     - uses: actions/upload-artifact@v3
       with:
