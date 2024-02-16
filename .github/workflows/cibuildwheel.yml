@@ -37,7 +37,7 @@ jobs:
       uses: pypa/cibuildwheel@v2.16.5
       env:
         # Skips pypy py36,37
-        CIBW_SKIP: "pp* cp36-* cp37-* cp38-*"
+        CIBW_SKIP: "pp* cp36-* cp37-*"
         CIBW_ARCHS: ${{ matrix.arch }}
         CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
         CIBW_TEST_SKIP: "*_arm64"
