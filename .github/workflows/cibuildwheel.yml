@@ -44,7 +44,7 @@ jobs:
         CIBW_TEST_REQUIRES: pytest
         CIBW_TEST_COMMAND: >
           python -c "import cftime; print(f'cftime v{cftime.__version__}')" &&
-          python -m pip install check-manifest cython pytest &&
+          python -m pip install check-manifest cython pytest pytest-cov &&
           python -m pytest -vv {package}/test
 
     - uses: actions/upload-artifact@v3
