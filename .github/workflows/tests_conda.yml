@@ -8,15 +8,21 @@ on:
 jobs:
   run:
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
         python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
         os: [windows-latest, ubuntu-latest, macos-latest]
         platform: [x64, x32]
+        experimental: [false]
         exclude:
           - os: macos-latest  
             platform: x32
+        include:
+          - python-version: "3.12"
+            os: "ubuntu-latest"
+            experimental: true
 
     steps:
     - uses: actions/checkout@v4
@@ -31,11 +37,22 @@ jobs:
           cython>=0.29.20
           pytest
           pytest-cov
-
-    - name: Install cftime
+    - name: Install unstable dependencies
+      if: matrix.experimental == true
       shell: bash -l {0}
       run: |
-        pip install -v -e  . --no-deps --force-reinstall
+        python -m pip install \
+        --index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/ \
+        --trusted-host pypi.anaconda.org \
+        --no-deps --pre --upgrade \
+        numpy;
+        python -m pip install -v -e  . --no-deps --no-build-isolation --force-reinstall
+
+    - name: Install cftime
+      if: matrix.experimental != true
+      shell: bash -l {0}
+      run: |
+        python -m pip install -v -e  . --no-deps --force-reinstall
 
     - name: Run Tests
       shell: bash -l {0}
