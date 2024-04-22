@@ -14,18 +14,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
+        os: ["ubuntu-22.04", "windows-2022", "macos-14"]
         arch: ["x86_64", "arm64", "AMD64"]
         exclude:
-        - os: ubuntu-latest
+        - os: ubuntu-22.04
           arch: arm64
-        - os: ubuntu-latest
+        - os: ubuntu-22.04
           arch: AMD64
-        - os: windows-latest
+        - os: windows-2022
           arch: arm64
-        - os: windows-latest
+        - os: windows-2022
           arch: x86_64
-        - os: macos-latest
+        - os: macos-14
           arch: AMD64
 
     steps:
@@ -34,7 +34,7 @@ jobs:
         fetch-depth: 0
 
     - name: "Building ${{ matrix.os }} (${{ matrix.arch }}) wheels"
-      uses: pypa/cibuildwheel@v2.16.5
+      uses: pypa/cibuildwheel@v2.17.0
       env:
         # Skips pypy py36,37
         CIBW_SKIP: "pp* cp36-* cp37-*"
@@ -47,9 +47,9 @@ jobs:
           python -m pip install check-manifest cython pytest pytest-cov &&
           python -m pytest -vv {package}/test
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: pypi-artifacts
+        name: pypi-artifacts-${{ matrix.os }}-${{ matrix.arch }}
         path: ${{ github.workspace }}/wheelhouse/*.whl
 
 
@@ -71,12 +71,13 @@ jobs:
   show-artifacts:
     needs: [build_bdist, build_sdist]
     name: "Show artifacts"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
-        name: pypi-artifacts
+        pattern: pypi-artifacts*
         path: ${{ github.workspace }}/dist
+        merge-multiple: true
 
     - shell: bash
       run: |
@@ -86,14 +87,15 @@ jobs:
   publish-artifacts-pypi:
     needs: [build_bdist, build_sdist]
     name: "Publish to PyPI"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     # upload to PyPI for every tag starting with 'v'
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
-        name: pypi-artifacts
+        pattern: pypi-artifacts*
         path: ${{ github.workspace }}/dist
+        merge-multiple: true
 
     - uses: pypa/gh-action-pypi-publish@release/v1
       with:
