@@ -46,6 +46,7 @@ jobs:
           python -c "import cftime; print(f'cftime v{cftime.__version__}')" &&
           python -m pip install check-manifest cython pytest pytest-cov &&
           python -m pytest -vv {package}/test
+        CIBW_BUILD_FRONTEND: 'pip; args: --pre --extra-index-url "https://pypi.anaconda.org/scientific-python-nightly-wheels/simple"'
 
     - uses: actions/upload-artifact@v3
       with:

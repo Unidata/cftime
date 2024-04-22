@@ -17,7 +17,7 @@ jobs:
         platform: [x64, x32]
         experimental: [false]
         exclude:
-          - os: macos-latest  
+          - os: macos-latest
             platform: x32
         include:
           - python-version: "3.12"
