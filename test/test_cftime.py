@@ -930,6 +930,19 @@ class cftimeTestCase(unittest.TestCase):
         # date2num should return an empty array if given one (issue #315)
         d = cftime.date2num([], 'seconds since 2000-01-01 12:00:00')
         assert d.size==0
+        # issue #328:  handle nan/inf in num2date.
+        times = np.array([1,2,3,np.nan],dtype=np.float64)
+        expected = np.array([DatetimeGregorian(2000, 1, 2, 0, 0, 0, 0),
+                             DatetimeGregorian(2000, 1, 3, 0, 0, 0, 0),
+                             DatetimeGregorian(2000, 1, 4, 0, 0, 0, 0),
+                             DatetimeGregorian(2000, 1, 5, 0, 0, 0, 0)])
+        mask = [False, False, False, True]
+        expected = np.ma.masked_array(expected, mask=mask)
+        result = cftime.num2date(times, 'days since 2000-01-01', 'standard')
+        np.testing.assert_equal(result, expected)
+        times = np.array([1,2,3,np.inf],dtype=np.float64)
+        result = cftime.num2date(times, 'days since 2000-01-01', 'standard')
+        np.testing.assert_equal(result, expected)
 
 
 class TestDate2index(unittest.TestCase):
