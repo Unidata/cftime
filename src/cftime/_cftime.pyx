@@ -620,6 +620,9 @@ def num2date(
     factor = UNIT_CONVERSION_FACTORS[unit]
     times = np.asanyarray(times)  # Allow list as input
     times = upcast_times(times)
+    # convert to masked array if any nan or inf values present
+    if not np.isfinite(times).all():
+        times = np.ma.masked_invalid(times)
     scaled_times = scale_times(times, factor)
     scaled_times = cast_to_int(scaled_times,units=unit)
 
