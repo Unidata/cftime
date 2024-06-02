@@ -2,6 +2,8 @@ name: Wheels
 
 on:
   pull_request:
+    branches:
+      - master
 
   push:
     tags:
@@ -14,19 +16,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04", "windows-2022", "macos-14"]
-        arch: ["x86_64", "arm64", "AMD64"]
-        exclude:
-        - os: ubuntu-22.04
-          arch: arm64
-        - os: ubuntu-22.04
-          arch: AMD64
-        - os: windows-2022
-          arch: arm64
-        - os: windows-2022
-          arch: x86_64
-        - os: macos-14
-          arch: AMD64
+        include:
+          - os: ubuntu-22.04
+            arch: x86_64
+          - os: ubuntu-22.04
+            arch: aarch64
+          - os: windows-2022
+            arch: AMD64
+          - os: macos-14
+            arch: arm64
+          - os: macos-13
+            arch: x86_64
 
     steps:
     - uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
         CIBW_SKIP: "pp* cp36-* cp37-*"
         CIBW_ARCHS: ${{ matrix.arch }}
         CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-        CIBW_TEST_SKIP: "*_arm64"
+        CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
         CIBW_TEST_REQUIRES: pytest
         CIBW_TEST_COMMAND: >
           python -c "import cftime; print(f'cftime v{cftime.__version__}')" &&
