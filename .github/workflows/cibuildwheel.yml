@@ -48,6 +48,8 @@ jobs:
         CIBW_ARCHS: ${{ matrix.arch }}
         CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
         CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
+        # Emulated testing is slow, so trust that the Python 3.12 test is good enough on aarch64
+        CIBW_TEST_SKIP: "cp38-*_aarch64 cp39-*_aarch64 cp310-*_aarch64 cp311-*_aarch64"
         CIBW_TEST_REQUIRES: pytest
         CIBW_TEST_COMMAND: >
           python -c "import cftime; print(f'cftime v{cftime.__version__}')" &&
