@@ -40,10 +40,11 @@ jobs:
         platforms: all
       if: runner.os == 'Linux' && matrix.arch == 'aarch64'
 
-
     - name: Build just oldest and newest on PRs, all on tags
       shell: bash
-      # Always omit musl 3.8 b/c NumPy does not provide wheels for it
+      # - Always omit musl 3.8 b/c NumPy does not provide wheels for it
+      # - Omit musllinux on PRs (slow)
+      # - Omit musllinux_aarch64 because it's slow and niche
       run: |
         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
           CIBW_SKIP="pp* cp36-* cp37-* cp38-musllinux* cp39-* cp310-* cp311-* *musllinux*"
