@@ -48,7 +48,7 @@ jobs:
       # - On PRs, run just oldest and newest Python versions (and omit 3.8 aarch64)
       run: |
         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-          CIBW_SKIP="pp* cp36-* cp37-* cp38-musllinux* cp39-* cp310-* cp311-* cp38-*-aarch64 *musllinux*"
+          CIBW_SKIP="pp* cp36-* cp37-* cp38-musllinux* cp39-* cp310-* cp311-* cp38-*_aarch64 *musllinux*"
         else
           CIBW_SKIP="pp* cp36-* cp37-* cp38-musllinux* *musllinux_aarch64"
         fi
