@@ -43,11 +43,12 @@ jobs:
     - name: Build just oldest and newest on PRs, all on tags
       shell: bash
       # - Always omit musl 3.8 b/c NumPy does not provide wheels for it
-      # - Omit musllinux on PRs (slow)
-      # - Omit musllinux_aarch64 because it's slow and niche
+      # - Always omit musllinux_aarch64 because it's slow and niche
+      # - On PPs, omit musllinux for speed
+      # - On PRs, run just oldest and newest Python versions (and omit 3.8 aarch64)
       run: |
         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-          CIBW_SKIP="pp* cp36-* cp37-* cp38-musllinux* cp39-* cp310-* cp311-* *musllinux*"
+          CIBW_SKIP="pp* cp36-* cp37-* cp38-musllinux* cp39-* cp310-* cp311-* cp38-*-aarch64 *musllinux*"
         else
           CIBW_SKIP="pp* cp36-* cp37-* cp38-musllinux* *musllinux_aarch64"
         fi
