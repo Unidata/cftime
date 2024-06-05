@@ -43,11 +43,12 @@ jobs:
 
     - name: Build just oldest and newest on PRs, all on tags
       shell: bash
+      # Always omit musl 3.8 b/c NumPy does not provide wheels for it
       run: |
         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-          CIBW_SKIP="pp* cp36-* cp37-* cp39-* cp310-* cp311-* *musllinux*"
+          CIBW_SKIP="pp* cp36-* cp37-* cp38-musllinux* cp39-* cp310-* cp311-* *musllinux*"
         else
-          CIBW_SKIP="pp* cp36-* cp37-* *musllinux_aarch64"
+          CIBW_SKIP="pp* cp36-* cp37-* cp38-musllinux* *musllinux_aarch64"
         fi
         echo "CIBW_SKIP=$CIBW_SKIP" >> $GITHUB_ENV
         echo "Setting CIBW_SKIP=$CIBW_SKIP"
