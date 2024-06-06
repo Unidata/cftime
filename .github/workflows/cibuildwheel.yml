@@ -12,36 +12,60 @@ jobs:
   build_bdist:
     name: "Build ${{ matrix.os }} (${{ matrix.arch }}) wheels"
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60  # should be long enough even on tags, but let's prevent hangs
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04", "windows-2022", "macos-14"]
-        arch: ["x86_64", "arm64", "AMD64"]
-        exclude:
-        - os: ubuntu-22.04
-          arch: arm64
-        - os: ubuntu-22.04
-          arch: AMD64
-        - os: windows-2022
-          arch: arm64
-        - os: windows-2022
-          arch: x86_64
-        - os: macos-14
-          arch: AMD64
+        include:
+          - os: ubuntu-22.04
+            arch: x86_64
+          - os: ubuntu-22.04
+            arch: aarch64
+          - os: windows-2022
+            arch: AMD64
+          - os: macos-14
+            arch: arm64
+          - os: macos-13
+            arch: x86_64
 
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
+    # For aarch64 support
+    # https://cibuildwheel.pypa.io/en/stable/faq/#emulation
+    - uses: docker/setup-qemu-action@v3
+      with:
+        platforms: all
+      if: runner.os == 'Linux' && matrix.arch == 'aarch64'
+
+    - name: Build just oldest and newest on PRs, all on tags
+      shell: bash
+      # - Always omit musl 3.8 b/c NumPy does not provide wheels for it
+      # - Always omit musllinux_aarch64 because it's slow and niche
+      # - On PPs, omit musllinux for speed
+      # - On PRs, run just oldest and newest Python versions (and omit 3.8 aarch64)
+      run: |
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          CIBW_SKIP="pp* cp36-* cp37-* cp38-musllinux* cp39-* cp310-* cp311-* cp38-*_aarch64 *musllinux*"
+        else
+          CIBW_SKIP="pp* cp36-* cp37-* cp38-musllinux* *musllinux_aarch64"
+        fi
+        echo "CIBW_SKIP=$CIBW_SKIP" >> $GITHUB_ENV
+        echo "Setting CIBW_SKIP=$CIBW_SKIP"
+
     - name: "Building ${{ matrix.os }} (${{ matrix.arch }}) wheels"
       uses: pypa/cibuildwheel@v2.18.1
       env:
         # Skips pypy py36,37
-        CIBW_SKIP: "pp* cp36-* cp37-*"
+        CIBW_SKIP: ${{ env.CIBW_SKIP }}
         CIBW_ARCHS: ${{ matrix.arch }}
         CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-        CIBW_TEST_SKIP: "*_arm64"
+        CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
+        # Emulated testing is slow, so trust that the Python 3.12 test is good enough on aarch64
+        # (takes about 5 minutes per wheel to build, and 5 minutes to test)
+        CIBW_TEST_SKIP: "cp38-*_aarch64 cp39-*_aarch64 cp310-*_aarch64 cp311-*_aarch64"
         CIBW_TEST_REQUIRES: pytest
         CIBW_TEST_COMMAND: >
           python -c "import cftime; print(f'cftime v{cftime.__version__}')" &&

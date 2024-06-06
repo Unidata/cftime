@@ -1,5 +1,6 @@
 since version 1.6.3 release
 ===========================
+ * build aarch64 linux wheels (issue #333).
  * build musllinux wheels (issue #307).
  * return empty array if one provided to date2num (issue #315).
  * numpy 2.0 compatibility (issue #325).
