@@ -12,6 +12,8 @@ Time-handling functionality from netcdf4-python
 ## News
 For details on the latest updates, see the [Changelog](https://github.com/Unidata/cftime/blob/master/Changelog).
 
+6/7/2024:  Version 1.6.4 release.  Wheels for muslinux and aarch64, numpy 2.0 compatibility. 
+
 10/20/2023:  Version 1.6.3 released.  Support for python 3.12, cython 3.0, strptime formats without separators.
  
 9/18/2022:  Version 1.6.2 released.  strptime method added, fix for num2date failure on
