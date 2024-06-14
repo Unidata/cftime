@@ -80,9 +80,11 @@ jobs:
 
   build_sdist:
     name: Build source distribution
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Build sdist
         run: >
@@ -91,7 +93,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          path: dist/*.tar.gz
+          name: pypi-artifacts
+          path: ${{ github.workspace }}/dist/*.tar.gz
 
   show-artifacts:
     needs: [build_bdist, build_sdist]
