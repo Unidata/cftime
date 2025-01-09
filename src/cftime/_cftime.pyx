@@ -261,7 +261,7 @@ def date2num(dates, units, calendar=None, has_year_zero=None, longdouble=False):
     if unit in ["months", "month"] and calendar != "360_day":
         raise ValueError("Units of months only valid for 360_day calendar.")
     unit_timedelta = timedelta(microseconds=UNIT_CONVERSION_FACTORS[unit])
-    can_use_python_basedatetime = _can_use_python_datetime(basedate,calendar)
+    can_use_python_basedatetime = calendar=='proleptic_gregorian' and _can_use_python_datetime(basedate,calendar)
 
     if can_use_python_basedatetime and all_python_datetimes:
         use_python_datetime = True

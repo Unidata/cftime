@@ -943,6 +943,16 @@ class cftimeTestCase(unittest.TestCase):
         times = np.array([1,2,3,np.inf],dtype=np.float64)
         result = cftime.num2date(times, 'days since 2000-01-01', 'standard')
         np.testing.assert_equal(result, expected)
+        # issue #354: roundtrip not correct when dates are all python datetime
+        # instances and calendar not proleptic_gregorian.
+        datesin = np.array(["0002"],
+                  dtype="datetime64[s]").astype("M8[us]").astype(datetime)
+        datein = datesin.item()
+        num = cftime.date2num(datein, "seconds since 2000-01-01", calendar='standard')
+        dateout = cftime.num2date(num, "seconds since 2000-01-01", calendar='standard')
+        dateout2 = cftime.datetime(datein.year, datein.month, datein.day,
+                   calendar='standard')
+        assert(dateout==dateout2)
 
 
 class TestDate2index(unittest.TestCase):
