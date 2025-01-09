@@ -1,3 +1,8 @@
+since version 1.6.4 release
+===========================
+* roundtrip not correct when dates are all python datetime
+  instances and calendar not proleptic_gregorian (issue #354).
+
 version 1.6.4 (release tag v1.6.4rel)
 =====================================
  * build aarch64 linux wheels (issue #333).
