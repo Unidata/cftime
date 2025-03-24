@@ -1471,8 +1471,8 @@ The default format of the string produced by strftime is controlled by self.form
     def fromordinal(jday,calendar='standard',has_year_zero=None):
         """Create a datetime instance from a julian day ordinal, calendar
         and (optionally) year zero convention (inverse of toordinal). The
-        Julian day number is the number of days since noon UTC January 1, 4713
-        in the proleptic julian calendar with no year zero  (November 24, 4713 
+        Julian day number is the number of days since noon UTC January 1, -4713
+        in the proleptic julian calendar with no year zero  (November 24, -4713 
         in the proleptic gregorian calendar that includes the year zero). For
         idealized calendars, the origin is noon UTC of the year zero."""
         calendar = calendar.lower()
