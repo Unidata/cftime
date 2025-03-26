@@ -18,3 +18,6 @@ timevals2 = date2num(dates,units=units,calendar=calendar)
 t1 = perf_counter()
 t = t1-t2
 print('date2num took %s seconds' % t)
+
+
+print('hello')
