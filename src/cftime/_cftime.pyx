@@ -1718,12 +1718,14 @@ cdef _strftime(datetime dt, fmt):
         syear = "%05d" % (dt.year,)
     else:
         syear = "%04d" % (dt.year,)
+    n=4
     if twodigityear:
         syear = syear[-2:]
         if dt.year < 0:
             syear = '-'+syear
+        n=2
     for site in sites:
-        s = s[:site] + syear + s[site + 4:]
+        s = s[:site] + syear + s[site + n:]
     if ihavems:
         s = s + '.{:06d}'.format(dt.microsecond)
     return s

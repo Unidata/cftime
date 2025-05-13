@@ -64,6 +64,7 @@ est = timezone(timedelta(hours=-5), 'UTC')
 
 dtime = namedtuple('dtime', ('values', 'units', 'calendar'))
 dateformat =  '%Y-%m-%d %H:%M:%S'
+dateformat2 =  '%y-%m-%d %H:%M:%S'
 
 calendars=['standard', 'gregorian', 'proleptic_gregorian', 'noleap', 'julian',\
            'all_leap', '365_day', '366_day', '360_day']
@@ -201,6 +202,8 @@ class cftimeTestCase(unittest.TestCase):
         # check num2date method.
         d2 = self.cdftime_pg.num2date(t1)
         self.assertTrue(d.strftime(dateformat) == d2.strftime(dateformat))
+        # make sure two digit years work in strftime (issue #362)
+        self.assertTrue(d.strftime(dateformat2) == d2.strftime(dateformat2))
         # check day of year.
         ndayr = d.timetuple()[7]
         self.assertTrue(ndayr == 125)
