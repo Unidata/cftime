@@ -1696,10 +1696,17 @@ cdef _strftime(datetime dt, fmt):
     year = year + ((2000 - year) // 28) * 28
     timetuple = dt.timetuple()
     s1 = time.strftime(fmt1, (year,) + timetuple[1:])
-    sites1 = _findall(s1, str(year))
+    twodigityear = 'y' in fmt1
+    if twodigityear:
+        sites1 = _findall(s1, str(year)[-2:])
+    else:
+        sites1 = _findall(s1, str(year))
 
     s2 = time.strftime(fmt1, (year + 28,) + timetuple[1:])
-    sites2 = _findall(s2, str(year + 28))
+    if twodigityear:
+       sites2 = _findall(s2, str(year + 28)[-2:])
+    else:
+       sites2 = _findall(s2, str(year + 28))
 
     sites = []
     for site in sites1:
@@ -1711,8 +1718,14 @@ cdef _strftime(datetime dt, fmt):
         syear = "%05d" % (dt.year,)
     else:
         syear = "%04d" % (dt.year,)
+    n=4
+    if twodigityear:
+        syear = syear[-2:]
+        if dt.year < 0:
+            syear = '-'+syear
+        n=2
     for site in sites:
-        s = s[:site] + syear + s[site + 4:]
+        s = s[:site] + syear + s[site + n:]
     if ihavems:
         s = s + '.{:06d}'.format(dt.microsecond)
     return s

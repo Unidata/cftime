@@ -1,7 +1,10 @@
-since version 1.6.4 release
-===========================
+version 1.6.5 (not yet released)
+================================
 * roundtrip not correct when dates are all python datetime
   instances and calendar not proleptic_gregorian (issue #354).
+* fix cftime.datetime.strftime so it works with two digit year
+  formatting (%y, issue #362).
+* remove python 3.8 support.
 
 version 1.6.4 (release tag v1.6.4rel)
 =====================================
