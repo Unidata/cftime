@@ -111,7 +111,7 @@ else:
 setup(
     name=NAME,
     author='Jeff Whitaker',
-    author_email='jeffrey.s.whitaker@noaa.gov',
+    author_email='whitaker.jeffrey@gmail.com',
     description='Time-handling functionality from netcdf4-python',
     long_description=description(),
     long_description_content_type='text/markdown',
