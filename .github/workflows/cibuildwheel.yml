@@ -56,7 +56,7 @@ jobs:
         echo "Setting CIBW_SKIP=$CIBW_SKIP"
 
     - name: "Building ${{ matrix.os }} (${{ matrix.arch }}) wheels"
-      uses: pypa/cibuildwheel@v2.23.3
+      uses: pypa/cibuildwheel@v3.0.0
       env:
         # Skips pypy py36,37,38
         CIBW_SKIP: ${{ env.CIBW_SKIP }}
