@@ -1072,7 +1072,6 @@ Comparison with native python datetime instances is possible
 for cftime.datetime instances using
 'gregorian' and 'proleptic_gregorian' calendars.
 
-
 All the calendars currently defined in the
 `CF metadata convention <http://cfconventions.org/cf-conventions/cf-conventions#calendar>`__ are supported.
 Valid calendars are 'standard', 'gregorian', 'proleptic_gregorian'
