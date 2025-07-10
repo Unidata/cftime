@@ -1062,10 +1062,16 @@ Gregorian calendar.
 
 Supports timedelta operations by overloading +/-, and
 comparisons with other instances (even if they use different calendars).
+When comparing instances with different calendars, the second instance in the comparison (RHS) is
+converted to the calendar of the LHS instance.  When comparing a list or array of instances (all using
+the same calendar) to a single scalar instance,
+it is much faster to convert the single instance to the calendar of the array before doing
+the comparison.
 
 Comparison with native python datetime instances is possible
 for cftime.datetime instances using
 'gregorian' and 'proleptic_gregorian' calendars.
+
 
 All the calendars currently defined in the
 `CF metadata convention <http://cfconventions.org/cf-conventions/cf-conventions#calendar>`__ are supported.
