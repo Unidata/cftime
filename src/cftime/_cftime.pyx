@@ -1062,6 +1062,11 @@ Gregorian calendar.
 
 Supports timedelta operations by overloading +/-, and
 comparisons with other instances (even if they use different calendars).
+When comparing instances with different calendars, the second instance in the comparison (RHS) is
+converted to the calendar of the LHS instance.  When comparing a list or array of instances (all using
+the same calendar) to a single scalar instance,
+it is much faster to convert the single instance to the calendar of the array before doing
+the comparison.
 
 Comparison with native python datetime instances is possible
 for cftime.datetime instances using
@@ -1410,7 +1415,7 @@ The default format of the string produced by strftime is controlled by self.form
             return hash(self.timetuple())
         return hash(d)
 
-    cdef to_tuple(self):
+    def to_tuple(self):
         return (self.year, self.month, self.day, self.hour, self.minute,
                 self.second, self.microsecond)
 
@@ -1423,19 +1428,12 @@ The default format of the string produced by strftime is controlled by self.form
             if dt.calendar == dt_other.calendar and dt.has_year_zero == dt_other.has_year_zero:
                 return PyObject_RichCompare(dt.to_tuple(), dt_other.to_tuple(), op)
             else:
-                # convert both to common calendar (ISO 8601), then compare
-                try:
-                    if self.calendar == 'proleptic_gregorian' and self.has_year_zero:
-                        d1 = self
-                    else:
-                        d1 = self.change_calendar('proleptic_gregorian',has_year_zero=True)
-                    if other.calendar == 'proleptic_gregorian' and other.has_year_zero:
-                        d2 = other
-                    else:
-                        d2 = other.change_calendar('proleptic_gregorian',has_year_zero=True)
-                except ValueError: # change_calendar won't work for idealized calendars (ValueError)
-                    raise TypeError("cannot compare {0!r} and {1!r}".format(dt, dt_other))
-                return PyObject_RichCompare(d1.to_tuple(), d2.to_tuple(), op)
+                # raise an error if either is an idealized calendar (comparison not valid)
+                if dt.calendar in _idealized_calendars or other.calendar in _idealized_calendars:
+                    raise TypeError("cannot compare {0!r} and {1!r}".format(dt, other))
+                # convert one to match calendar of the other.
+                other2 = other.change_calendar(dt.calendar,has_year_zero=dt.has_year_zero)
+                return PyObject_RichCompare(dt.to_tuple(), other2.to_tuple(), op)
         elif isinstance(other, datetime_python):
             # comparing datetime and real_datetime
             if not dt.datetime_compatible:

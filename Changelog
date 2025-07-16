@@ -5,6 +5,7 @@ version 1.6.5 (not yet released)
 * fix cftime.datetime.strftime so it works with two digit year
   formatting (%y, issue #362).
 * remove python 3.8 support.
+* speed up comparisions (using __richcmp___) and update docs. Issue #365.
 
 version 1.6.4 (release tag v1.6.4rel)
 =====================================
