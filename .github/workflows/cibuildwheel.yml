@@ -29,7 +29,7 @@ jobs:
             arch: x86_64
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 0
 
@@ -56,7 +56,7 @@ jobs:
         echo "Setting CIBW_SKIP=$CIBW_SKIP"
 
     - name: "Building ${{ matrix.os }} (${{ matrix.arch }}) wheels"
-      uses: pypa/cibuildwheel@v3.0.1
+      uses: pypa/cibuildwheel@v3.1.3
       env:
         # Skips pypy py36,37,38
         CIBW_SKIP: ${{ env.CIBW_SKIP }}
@@ -82,7 +82,7 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -101,7 +101,7 @@ jobs:
     name: "Show artifacts"
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v5
       with:
         pattern: pypi-artifacts*
         path: ${{ github.workspace }}/dist
@@ -119,7 +119,7 @@ jobs:
     # upload to PyPI for every tag starting with 'v'
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v5
       with:
         pattern: pypi-artifacts*
         path: ${{ github.workspace }}/dist
