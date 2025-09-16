@@ -66,10 +66,9 @@ jobs:
         # Emulated testing is slow, so trust that the Python 3.12 test is good enough on aarch64
         # (takes about 5 minutes per wheel to build, and 5 minutes to test)
         CIBW_TEST_SKIP: "cp39-*_aarch64 cp310-*_aarch64 cp311-*_aarch64"
-        CIBW_TEST_REQUIRES: pytest
+        CIBW_TEST_GROUPS: dev
         CIBW_TEST_COMMAND: >
           python -c "import cftime; print(f'cftime v{cftime.__version__}')" &&
-          python -m pip install check-manifest cython pytest pytest-cov &&
           python -m pytest -vv {package}/test
 
     - uses: actions/upload-artifact@v4
