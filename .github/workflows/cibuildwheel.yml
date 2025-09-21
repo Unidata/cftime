@@ -45,10 +45,10 @@ jobs:
       # - Always omit musllinux_aarch64 because it's slow and niche
       # - Always skip free-threading wheels for now
       # - On PPs, omit musllinux for speed
-      # - On PRs, run just oldest and newest Python versions
+      # - On PRs, run just oldest and newest Python versions (3.11 is the oldest abi3 target)
       run: |
         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-          CIBW_SKIP="cp311-* cp312-* cp313-* cp314t-* *musllinux*"
+          CIBW_SKIP="cp3{12,13}-* cp314t-* *musllinux*"
         else
           CIBW_SKIP="cp314t-* *musllinux_aarch64"
         fi
