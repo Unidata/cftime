@@ -46,16 +46,21 @@ jobs:
       if:  ${{ github.event_name }} == pull_request
       shell: bash
       # - On PPs, omit musllinux for speed
-      # - On PRs, run just oldest and newest Python versions
+      # - On PRs, run just oldest and newest Python versions (3.11 is the oldest abi3 target)
       run: |
-        CIBW_SKIP="cp310-win_arm64 cp311-* cp312-* cp313-* *musllinux*"
+        CIBW_SKIP="cp310-win_arm64 *musllinux*"
         echo "CIBW_SKIP=$CIBW_SKIP" >> $GITHUB_ENV
         echo "Setting CIBW_SKIP=$CIBW_SKIP"
+
+        CIBW_TEST_SKIP="cp312-* cp313-*"
+        echo "CIBW_TEST_SKIP=$CIBW_TEST_SKIP" >> $GITHUB_ENV
+        echo "Setting CIBW_TEST_SKIP=$CIBW_TEST_SKIP"
 
     - name: "Building ${{ matrix.os }} (${{ matrix.arch }}) wheels"
       uses: pypa/cibuildwheel@v3.3.1
       env:
         CIBW_SKIP: ${{ env.CIBW_SKIP }}
+        CIBW_TEST_SKIP: ${{ env.CIBW_TEST_SKIP }}
         CIBW_ARCHS: ${{ matrix.arch }}
 
     - uses: actions/upload-artifact@v6
