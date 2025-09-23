@@ -48,9 +48,9 @@ jobs:
       # - On PRs, run just oldest and newest Python versions (and omit 3.8 aarch64)
       run: |
         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-          CIBW_SKIP="pp* cp36-* cp37-* cp38-* cp39-* cp310-* cp311-* cp38-*_aarch64 *musllinux*"
+          CIBW_SKIP="cp38-* cp39-* cp310-* cp311-* cp38-*_aarch64 *musllinux*"
         else
-          CIBW_SKIP="pp* cp36-* cp37-* cp38-* *musllinux_aarch64"
+          CIBW_SKIP="cp38-* *musllinux_aarch64"
         fi
         echo "CIBW_SKIP=$CIBW_SKIP" >> $GITHUB_ENV
         echo "Setting CIBW_SKIP=$CIBW_SKIP"
@@ -58,7 +58,6 @@ jobs:
     - name: "Building ${{ matrix.os }} (${{ matrix.arch }}) wheels"
       uses: pypa/cibuildwheel@v3.1.4
       env:
-        # Skips pypy py36,37,38
         CIBW_SKIP: ${{ env.CIBW_SKIP }}
         CIBW_ARCHS: ${{ matrix.arch }}
         CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
