@@ -59,7 +59,7 @@ addopts = [
     "-v",
     "--doctest-modules",
     "--cov=cftime",
-    "--cov-report term-missing",
+    "--cov-report=term-missing",
 ]
 doctest_optionflags = [
     "NORMALIZE_WHITESPACE",
