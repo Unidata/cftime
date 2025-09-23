@@ -1,9 +1,0 @@
-check-manifest
-coverage
-coveralls
-cython>=0.29.20
-pytest
-pytest-cov
-sphinx
-twine
-wheel
