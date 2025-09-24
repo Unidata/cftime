@@ -33,8 +33,8 @@ CYTHON_FNAME = os.path.join(CFTIME_DIR, '_{}.pyx'.format(NAME))
 USE_PY_LIMITED_API = (
     # require opt-in (builds are specialized by default)
     os.getenv('CFTIME_LIMITED_API', '0') == '1'
-    # Cython + numpy + limited API de facto requires Python >=3.11
-    and sys.version_info >= (3, 11)
+    # Cython + numpy + limited API de facto requires Python >=3.12
+    and sys.version_info >= (3, 12)
     # as of Python 3.14t, free-threaded builds don't support the limited API
     and not sysconfig.get_config_var("Py_GIL_DISABLED")
 )
