@@ -36,7 +36,7 @@ jobs:
           numpy>1.13.3
           cython>=0.29.20
           pytest
-          pytest-cov
+          coverage
     - name: Install unstable dependencies
       if: matrix.experimental == true
       shell: bash -l {0}
@@ -57,4 +57,5 @@ jobs:
     - name: Run Tests
       shell: bash -l {0}
       run: |
-        pytest -vv test
+        coverage run -m pytest -vv test
+        coverage report
