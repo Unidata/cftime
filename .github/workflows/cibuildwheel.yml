@@ -42,29 +42,29 @@ jobs:
 
     - name: Build just oldest and newest on PRs, all on tags
       shell: bash
-      # - Always omit musl 3.8 b/c NumPy does not provide wheels for it
       # - Always omit musllinux_aarch64 because it's slow and niche
+      # - Always skip free-threading wheels for now
       # - On PPs, omit musllinux for speed
-      # - On PRs, run just oldest and newest Python versions (and omit 3.8 aarch64)
+      # - On PRs, run just oldest and newest Python versions
       run: |
         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-          CIBW_SKIP="cp38-* cp39-* cp310-* cp311-* cp38-*_aarch64 *musllinux*"
+          CIBW_SKIP="cp311-* cp312-* cp313-* cp314t-* *musllinux*"
         else
-          CIBW_SKIP="cp38-* *musllinux_aarch64"
+          CIBW_SKIP="cp314t-* *musllinux_aarch64"
         fi
         echo "CIBW_SKIP=$CIBW_SKIP" >> $GITHUB_ENV
         echo "Setting CIBW_SKIP=$CIBW_SKIP"
 
     - name: "Building ${{ matrix.os }} (${{ matrix.arch }}) wheels"
-      uses: pypa/cibuildwheel@v3.2.0
+      uses: pypa/cibuildwheel@v3.2.1
       env:
         CIBW_SKIP: ${{ env.CIBW_SKIP }}
         CIBW_ARCHS: ${{ matrix.arch }}
         CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
         CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
-        # Emulated testing is slow, so trust that the Python 3.12 test is good enough on aarch64
+        # Emulated testing is slow, so trust that the Python 3.14 test is good enough on aarch64
         # (takes about 5 minutes per wheel to build, and 5 minutes to test)
-        CIBW_TEST_SKIP: "cp39-*_aarch64 cp310-*_aarch64 cp311-*_aarch64"
+        CIBW_TEST_SKIP: "cp3{10,11,12,13}-*_aarch64"
         CIBW_TEST_GROUPS: dev
         CIBW_TEST_COMMAND: >
           python -c "import cftime; print(f'cftime v{cftime.__version__}')" &&

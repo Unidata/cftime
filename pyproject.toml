@@ -15,27 +15,25 @@ classifiers = [
     'Operating System :: POSIX :: Linux',
     'Programming Language :: Python',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.8',
-    'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
     'Programming Language :: Python :: 3.12',
     'Programming Language :: Python :: 3.13',
+    'Programming Language :: Python :: 3.14',
     'Topic :: Scientific/Engineering',
 ]
 dependencies = [
-    "numpy>1.13.3",
+    "numpy>=1.21.2",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 
 [dependency-groups]
 dev = [
     "check-manifest",
-    "coverage",
+    "coverage>=7.10.0",
     "coveralls",
     "cython>=0.29.20",
     "pytest",
-    "pytest-cov",
     "sphinx",
     "twine",
 ]
@@ -44,8 +42,7 @@ dev = [
 requires = [
     "setuptools>=77.0.1",
     "cython>=0.29.20",
-    "oldest-supported-numpy ; python_version < '3.9'",
-    "numpy>=2.0.0,<3 ; python_version >= '3.9'",
+    "numpy>=2.0.0,<3",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -58,8 +55,6 @@ addopts = [
     "-ra",
     "-v",
     "--doctest-modules",
-    "--cov=cftime",
-    "--cov-report=term-missing",
 ]
 doctest_optionflags = [
     "NORMALIZE_WHITESPACE",
@@ -67,6 +62,7 @@ doctest_optionflags = [
 ]
 
 [tool.coverage.run]
+source = ["src"]
 relative_files = true
 branch = true
 plugins = [
@@ -84,6 +80,7 @@ omit = [
 ]
 
 [tool.coverage.report]
+show_missing = true
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
