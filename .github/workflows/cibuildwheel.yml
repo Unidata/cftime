@@ -19,7 +19,7 @@ jobs:
         include:
           - os: ubuntu-22.04
             arch: x86_64
-          - os: ubuntu-22.04
+          - os: ubuntu-22.04-arm
             arch: aarch64
           - os: windows-2022
             arch: AMD64
@@ -35,10 +35,10 @@ jobs:
 
     # For aarch64 support
     # https://cibuildwheel.pypa.io/en/stable/faq/#emulation
-    - uses: docker/setup-qemu-action@v3
-      with:
-        platforms: all
-      if: runner.os == 'Linux' && matrix.arch == 'aarch64'
+    #- uses: docker/setup-qemu-action@v3
+    #  with:
+    #    platforms: all
+    #  if: runner.os == 'Linux' && matrix.arch == 'aarch64'
 
     - name: Build just oldest and newest on PRs, all on tags
       shell: bash
