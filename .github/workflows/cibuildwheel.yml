@@ -47,11 +47,11 @@ jobs:
       # - On PPs, omit musllinux for speed
       # - On PRs, run just oldest and newest Python versions
       run: |
-        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-          CIBW_SKIP="cp311-* cp312-* cp313-* cp314t-* *musllinux*"
-        else
+        #if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+        #  CIBW_SKIP="cp311-* cp312-* cp313-* cp314t-* *musllinux*"
+        #else
           CIBW_SKIP="cp314t-* *musllinux_aarch64"
-        fi
+        #fi
         echo "CIBW_SKIP=$CIBW_SKIP" >> $GITHUB_ENV
         echo "Setting CIBW_SKIP=$CIBW_SKIP"
 
