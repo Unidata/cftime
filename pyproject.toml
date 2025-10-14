@@ -40,7 +40,6 @@ dev = [
 [build-system]
 requires = [
     "setuptools>=77.0.1",
-    "setuptools_scm[toml]>=3.4",
     "cython>=0.29.20",
     "numpy>=2.0.0,<3",
 ]
