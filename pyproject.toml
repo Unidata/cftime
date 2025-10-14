@@ -6,8 +6,7 @@ readme = "README.md"
 authors = [
     { name="Jeff Whitaker", email="whitaker.jeffrey@gmail.com"}
 ]
-license = "MIT"
-license-files = ["LICENSE"]
+license = {text = "MIT"}
 classifiers = [
     'Development Status :: 5 - Production/Stable',
     'Operating System :: MacOS :: MacOS X',
@@ -41,6 +40,7 @@ dev = [
 [build-system]
 requires = [
     "setuptools>=77.0.1",
+    "setuptools_scm[toml]>=3.4",
     "cython>=0.29.20",
     "numpy>=2.0.0,<3",
 ]

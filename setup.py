@@ -2,7 +2,6 @@ import os
 import sys
 import numpy
 
-from Cython.Build import cythonize
 from setuptools import Command, Extension, setup
 
 
@@ -28,6 +27,7 @@ FLAG_COVERAGE = '--cython-coverage'  # custom flag enabling Cython line tracing
 NAME = 'cftime'
 CFTIME_DIR = os.path.join(SRCDIR, NAME)
 CYTHON_FNAME = os.path.join(CFTIME_DIR, '_{}.pyx'.format(NAME))
+CYTHON_CNAME = os.path.join(CFTIME_DIR, '_{}.c'.format(NAME))
 
 
 class CleanCython(Command):
@@ -53,8 +53,7 @@ class CleanCython(Command):
                         print('clean: skipping file {!r}'.format(artifact))
 
 
-if ((FLAG_COVERAGE in sys.argv or os.environ.get('CYTHON_COVERAGE', None))
-    and cythonize):
+if FLAG_COVERAGE in sys.argv or os.environ.get('CYTHON_COVERAGE', None):
     COMPILER_DIRECTIVES = {
         **COMPILER_DIRECTIVES, **COVERAGE_COMPILER_DIRECTIVES
     }
@@ -68,16 +67,21 @@ if ((FLAG_COVERAGE in sys.argv or os.environ.get('CYTHON_COVERAGE', None))
 if any([arg in CMDS_NOCYTHONIZE for arg in sys.argv]):
     ext_modules = []
 else:
-    extension = Extension('{}._{}'.format(NAME, NAME),
-                          sources=[os.path.relpath(CYTHON_FNAME, BASEDIR)],
-                          define_macros=DEFINE_MACROS,
-                          include_dirs=[numpy.get_include(),])
+    ext_modules = [Extension('{}._{}'.format(NAME, NAME),
+                  sources=[os.path.relpath(CYTHON_FNAME, BASEDIR)],
+                  define_macros=DEFINE_MACROS,
+                  include_dirs=[numpy.get_include(),])]
+    for e in ext_modules:
+        e.cython_directives = {'language_level': "3"} 
+        e.compiler_directives = COMPILER_DIRECTIVES
 
-    ext_modules = cythonize(
-        extension,
-        compiler_directives=COMPILER_DIRECTIVES,
-        language_level=3,
-    )
+if 'sdist' not in sys.argv[1:] and 'clean' not in sys.argv[1:] and '--version' not in sys.argv[1:]:
+    # remove _cftime.c file if it exists, so cython will recompile _netCDF4.pyx.
+    # run for build *and* install (issue #263). Otherwise 'pip install' will
+    # not regenerate _netCDF4.c, even if the C lib supports the new features.
+    if len(sys.argv) >= 2:
+        if os.path.exists(CYTHON_CNAME):
+            os.remove(CYTHON_CNAME)
 
 setup(
     cmdclass={'clean_cython': CleanCython},
