@@ -2,8 +2,7 @@
 Time-handling functionality from netcdf4-python
 
 [![Build status](https://github.com/Unidata/cftime/workflows/cftime%20test/badge.svg)](https://github.com/Unidata/cftime/actions)
-[![PyPI package](https://badge.fury.io/py/cftime.svg)](http://python.org/pypi/cftime)
-[![Coverage Status](https://coveralls.io/repos/github/Unidata/cftime/badge.svg?branch=master)](https://coveralls.io/github/Unidata/cftime?branch=master)
+[![PyPI package](https://img.shields.io/pypi/v/cftime.svg)](http://python.org/pypi/cftime)
 [![Tag Status](https://img.shields.io/github/tag/UniData/cftime.svg)](https://github.com/Unidata/cftime/tags)
 [![Release Status](https://img.shields.io/github/release/UniData/cftime.svg)](https://github.com/Unidata/cftime/releases)
 [![Commits Status](https://img.shields.io/github/commits-since/UniData/cftime/latest.svg)](https://github.com/UniData/cftime/commits/master)
