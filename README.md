@@ -3,7 +3,7 @@ Time-handling functionality from netcdf4-python
 
 [![CodeQL](https://github.com/Unidata/cftime/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/Unidata/cftime/actions/workflows/github-code-scanning/codeql)
 [![PyPI package](https://img.shields.io/pypi/v/cftime.svg)](http://python.org/pypi/cftime)
-[![Tag Status](https://img.shields.io/github/tag/UniData/cftime.svg)](https://github.com/Unidata/cftime/tags)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/cftime/badges/version.svg)](https://anaconda.org/conda-forge/cftime)
 [![Release Status](https://img.shields.io/github/release/UniData/cftime.svg)](https://github.com/Unidata/cftime/releases)
 [![Commits Status](https://img.shields.io/github/commits-since/UniData/cftime/latest.svg)](https://github.com/UniData/cftime/commits/master)
 [![DOI](https://zenodo.org/badge/73107250.svg)](https://zenodo.org/badge/latestdoi/73107250)
