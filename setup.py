@@ -74,11 +74,7 @@ else:
     for e in ext_modules:
         e.cython_directives = {'language_level': "3"} 
         e.compiler_directives = COMPILER_DIRECTIVES
-
-if 'sdist' not in sys.argv[1:] and 'clean' not in sys.argv[1:] and '--version' not in sys.argv[1:]:
     # remove _cftime.c file if it exists, so cython will recompile _cftime.pyx.
-    # run for build *and* install (issue #263). Otherwise 'pip install' will
-    # not regenerate _cftime.c, even if the C lib supports the new features.
     if len(sys.argv) >= 2:
         if os.path.exists(CYTHON_CNAME):
             os.remove(CYTHON_CNAME)
