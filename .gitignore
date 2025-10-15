@@ -7,4 +7,3 @@ build/
 __pycache__
 .pytest_cache/
 dist/
-docs/_build/*
