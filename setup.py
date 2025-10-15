@@ -75,9 +75,8 @@ else:
         e.cython_directives = {'language_level': "3"} 
         e.compiler_directives = COMPILER_DIRECTIVES
     # remove _cftime.c file if it exists, so cython will recompile _cftime.pyx.
-    if len(sys.argv) >= 2:
-        if os.path.exists(CYTHON_CNAME):
-            os.remove(CYTHON_CNAME)
+    if os.path.exists(CYTHON_CNAME):
+        os.remove(CYTHON_CNAME)
 
 setup(
     cmdclass={'clean_cython': CleanCython},
