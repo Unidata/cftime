@@ -25,7 +25,7 @@ jobs:
             experimental: true
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
 
     - name: Setup micromamba Env
       uses: mamba-org/setup-micromamba@v2
