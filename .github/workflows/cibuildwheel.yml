@@ -5,8 +5,8 @@ on:
     branches:
       - master
   push:
-    tags:
-      - "v*"
+    # tags:
+    #   - "v*"
 
 jobs:
   build_bdist:
@@ -17,16 +17,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04
-            arch: x86_64
-          - os: ubuntu-22.04-arm
-            arch: aarch64
-          - os: windows-2022
-            arch: AMD64
-          - os: macos-14
-            arch: arm64
-          - os: macos-15-intel
-            arch: x86_64
+          # - os: ubuntu-22.04
+          #   arch: x86_64
+          # - os: ubuntu-22.04-arm
+          #   arch: aarch64
+          # - os: windows-2022
+          #   arch: AMD64
+          # - os: macos-14
+          #   arch: arm64
+          # - os: macos-15-intel
+          #   arch: x86_64
+          - os: windows-11-arm
+            arch: ARM64
 
     steps:
     - uses: actions/checkout@v6
