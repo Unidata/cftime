@@ -27,6 +27,8 @@ jobs:
             arch: arm64
           - os: macos-15-intel
             arch: x86_64
+          - os: windows-11-arm
+            arch: ARM64
 
     steps:
     - uses: actions/checkout@v6
@@ -51,6 +53,10 @@ jobs:
           CIBW_SKIP="cp311-* cp312-* cp313-* cp314t-* *musllinux*"
         else
           CIBW_SKIP="cp314t-* *musllinux_aarch64"
+        fi
+        # skip cp310 if building on windows arm64
+        if [[ "${{ matrix.arch }}" == "ARM64" ]]; then
+          CIBW_SKIP="$CIBW_SKIP cp310-*"
         fi
         echo "CIBW_SKIP=$CIBW_SKIP" >> $GITHUB_ENV
         echo "Setting CIBW_SKIP=$CIBW_SKIP"
