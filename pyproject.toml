@@ -61,6 +61,11 @@ doctest_optionflags = [
     "NORMALIZE_WHITESPACE",
     "ELLIPSIS",
 ]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::RuntimeWarning",
+]
 
 [tool.coverage.run]
 source = ["src"]

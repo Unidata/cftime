@@ -50,9 +50,9 @@ jobs:
       # - On PRs, run just oldest and newest Python versions
       run: |
         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-          CIBW_SKIP="cp311-* cp312-* cp313-* cp314t-* *musllinux*"
+          CIBW_SKIP="cp311-* cp312-* cp313-* *musllinux*"
         else
-          CIBW_SKIP="cp314t-* *musllinux_aarch64"
+          CIBW_SKIP="*musllinux_aarch64"
         fi
         # skip cp310 if building on windows arm64
         if [[ "${{ matrix.arch }}" == "ARM64" ]]; then
