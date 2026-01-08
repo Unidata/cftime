@@ -30,7 +30,7 @@ _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 # '366_day'=='all_leap','365_day'=='noleap')
 # see http://cfconventions.org/cf-conventions/cf-conventions#calendar
 # for definitions.
-_calendars = ['standard', 'gregorian', 'proleptic_gregorian',
+_calendars = ['standard', 'gregorian', 'proleptic_gregorian','tai',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
 _idealized_calendars= ['all_leap','noleap','366_day','365_day','360_day']
 # Following are number of days per month
@@ -109,6 +109,9 @@ def _dateparse(timestr,calendar,has_year_zero=None):
     # parse the date string.
     year, month, day, hour, minute, second, microsecond, utc_offset =\
         _parse_date( isostring.strip() )
+    if calendar == 'tai':
+        if year != 1958 or month != 1 or day != 1 or minute != 0 or second != 0 or microsecond != 0:
+            raise ValueError('TAI calendar must have a reference date of 1958-01-01')
     if year == 0 and not has_year_zero and calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
         msg='zero not allowed as a reference year when has_year_zero=False'
         raise ValueError(msg)
@@ -157,7 +160,7 @@ def date2num(dates, units, calendar=None, has_year_zero=None, longdouble=False):
     **calendar**: describes the calendar to be used in the time calculations.
     All the values currently defined in the
     `CF metadata convention <http://cfconventions.org/cf-conventions/cf-conventions#calendar>`__ are supported.
-    Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
+    Valid calendars **'standard', 'gregorian', 'proleptic_gregorian', 'tai',
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
     Default is `None` which means the calendar associated with the first
     input datetime instance will be used.
@@ -373,6 +376,7 @@ UNIT_CONVERSION_FACTORS = {
 
 DATE_TYPES = {
      "proleptic_gregorian": DatetimeProlepticGregorian,
+     "tai": DatetimeTAI,
      "standard": DatetimeGregorian,
      "noleap": DatetimeNoLeap,
      "365_day": DatetimeNoLeap,
@@ -537,7 +541,7 @@ def num2date(
     **calendar**: describes the calendar used in the time calculations.
     All the values currently defined in the
     `CF metadata convention <http://cfconventions.org/cf-conventions/cf-conventions#calendar>`__ are supported.
-    Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
+    Valid calendars **'standard', 'gregorian', 'proleptic_gregorian', 'tai',
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
     Default is **'standard'**, which is a mixed Julian/Gregorian calendar.
 
@@ -652,7 +656,7 @@ def date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None)
     **calendar**: describes the calendar to be used in the time calculations.
     All the values currently defined in the
     `CF metadata convention <http://cfconventions.org/cf-conventions/cf-conventions#calendar>`__ are supported.
-    Valid calendars **'standard', 'gregorian', 'proleptic_gregorian'
+    Valid calendars **'standard', 'gregorian', 'proleptic_gregorian', 'tai',
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'**.
     Default is `None` which means the calendar associated with the first
     input datetime instance will be used.
@@ -864,7 +868,7 @@ def _date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None
     order.
 
     **calendar**: Describes the calendar used in the time calculation.
-    Valid calendars 'standard', 'gregorian', 'proleptic_gregorian'
+    Valid calendars 'standard', 'gregorian', 'proleptic_gregorian', 'tai',
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'.
     Default is 'standard', which is a mixed Julian/Gregorian calendar
     If `calendar` is None, its value is given by `nctime.calendar` or
@@ -911,7 +915,7 @@ def time2index(times, nctime, calendar=None, select='exact'):
     order.
 
     **calendar**: Describes the calendar used in the time calculation.
-    Valid calendars 'standard', 'gregorian', 'proleptic_gregorian'
+    Valid calendars 'standard', 'gregorian', 'proleptic_gregorian', 'tai',
     'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'.
     Default is `standard`, which is a mixed Julian/Gregorian calendar
     If `calendar` is None, its value is given by `nctime.calendar` or
@@ -1072,7 +1076,7 @@ for cftime.datetime instances using
 
 All the calendars currently defined in the
 `CF metadata convention <http://cfconventions.org/cf-conventions/cf-conventions#calendar>`__ are supported.
-Valid calendars are 'standard', 'gregorian', 'proleptic_gregorian'
+Valid calendars are 'standard', 'gregorian', 'proleptic_gregorian', 'tai',
 'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'.
 Default is 'standard', which is a mixed Julian/Gregorian calendar.
 'standard' and 'gregorian' are synonyms, as are 'all_leap'/'366_day'
@@ -1152,6 +1156,12 @@ The default format of the string produced by strftime is controlled by self.form
         # and has a year zero, so for now this is the default in cftime.
         if calendar in ['julian','gregorian','standard'] and year <= 0:
             warnings.warn(cfwarnmsg,category=CFWarning)
+        # raise exception if date before 1958-01-01 requested for tai calendar.
+        if calendar == 'tai':
+            if year < 1958:
+                raise ValueError('dates before 1958-01-01 not allowed in TAI calendar')
+            if has_year_zero:
+                raise ValueError('year zero not allowed in TAI calendar')
         # raise exception if year zero requested but has_year_zero set
         # to False (issue #248).
         if year == 0 and has_year_zero==False:
@@ -1185,7 +1195,7 @@ The default format of the string produced by strftime is controlled by self.form
             self.calendar = calendar
             self.datetime_compatible = False
             assert_valid_date(self, is_leap_julian, False, has_year_zero=has_year_zero)
-        elif calendar == 'proleptic_gregorian':
+        elif calendar == 'proleptic_gregorian' or calendar == 'tai':
             self.calendar = calendar
             self.datetime_compatible = True
             assert_valid_date(self, is_leap_proleptic_gregorian, False, has_year_zero=has_year_zero)
@@ -1275,7 +1285,7 @@ The default format of the string produced by strftime is controlled by self.form
             if getattr(pydatetime, 'tzinfo',None) is not None:
                  pydatetime = pydatetime.replace(tzinfo=None) - pydatetime.utcoffset()
             compatible_date =\
-            calendar == 'proleptic_gregorian' or \
+            calendar == 'proleptic_gregorian' or calendar == 'tai' or \
             (calendar in ['gregorian','standard'] and (pydatetime.year > 1582 or \
              (pydatetime.year == 1582 and pydatetime.month > 10) or \
              (pydatetime.year == 1582 and pydatetime.month == 10 and pydatetime.day > 15)))
@@ -1480,7 +1490,7 @@ The default format of the string produced by strftime is controlled by self.form
                units = 'days since -4712-1-1-12'
             else:
                units = 'days since -4713-1-1-12'
-        elif calendar == 'proleptic_gregorian':
+        elif calendar == 'proleptic_gregorian' or calendar == 'tai':
             if has_year_zero:
                 units = 'days since -4713-11-24-12'
             else:
@@ -1566,6 +1576,9 @@ The default format of the string produced by strftime is controlled by self.form
         elif calendar == 'proleptic_gregorian':
             #return dt.__class__(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, has_year_zero),calendar=calendar,has_year_zero=has_year_zero)
             return DatetimeProlepticGregorian(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, has_year_zero),has_year_zero=has_year_zero)
+        elif calendar == 'tai':
+            #return dt.__class__(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, has_year_zero),calendar=calendar,has_year_zero=has_year_zero)
+            return DatetimeTAI(*add_timedelta(dt, delta, is_leap_proleptic_gregorian, False, has_year_zero),has_year_zero=has_year_zero)
         else:
             return NotImplemented
 
@@ -1626,6 +1639,10 @@ datetime object."""
                     #return self.__class__(*add_timedelta(self, -other,
                     #    is_leap_proleptic_gregorian, False, has_year_zero),calendar=self.calendar,has_year_zero=self.has_year_zero)
                     return DatetimeProlepticGregorian(*add_timedelta(self, -other, is_leap_proleptic_gregorian, False, has_year_zero),has_year_zero=self.has_year_zero)
+                elif self.calendar == 'tai':
+                    #return self.__class__(*add_timedelta(self, -other,
+                    #    is_leap_proleptic_gregorian, False, has_year_zero),calendar=self.calendar,has_year_zero=self.has_year_zero)
+                    return DatetimeTAI(*add_timedelta(self, -other, is_leap_proleptic_gregorian, False, has_year_zero),has_year_zero=self.has_year_zero)
                 else:
                     return NotImplemented
             else:
@@ -1944,7 +1961,7 @@ cdef _is_leap(int year, calendar, has_year_zero=None):
         tyear = year + 1
     else:
         tyear = year
-    if calendar == 'proleptic_gregorian' or (calendar == 'standard' and year > 1581):
+    if calendar == 'proleptic_gregorian' or calendar == 'tai' or (calendar == 'standard' and year > 1581):
         if tyear % 4: # not divisible by 4
             leap = False
         elif tyear % 100: # not divisible by 100
@@ -2040,7 +2057,7 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
     elif calendar == '366_day':
         return year*366 + _cumdayspermonth_leap[month-1] + day - 1
 
-    # handle standard, julian, proleptic_gregorian calendars.
+    # handle standard, julian, tai, proleptic_gregorian calendars.
     if year == 0 and not has_year_zero:
         raise ValueError('year zero does not exist in the %s calendar' %\
                 calendar)
@@ -2066,7 +2083,7 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
     jday_greg -= 31739
     if calendar == 'julian':
         return jday_jul
-    elif calendar == 'proleptic_gregorian':
+    elif calendar == 'proleptic_gregorian' or calendar == 'tai':
         return jday_greg
     elif calendar in ['standard','gregorian']:
         # check for invalid days in mixed calendar (there are 10 missing)
@@ -2140,4 +2157,14 @@ but allows for dates that don't exist in the proleptic gregorian calendar.
     """
     def __init__(self, *args, **kwargs):
         kwargs['calendar']='proleptic_gregorian'
+        super().__init__( *args, **kwargs)
+
+@cython.embedsignature(True)
+cdef class DatetimeTAI(datetime):
+    """
+Phony datetime object which mimics the python datetime object,
+but allows for dates that don't exist in the proleptic gregorian calendar.
+    """
+    def __init__(self, *args, **kwargs):
+        kwargs['calendar']='tai'
         super().__init__( *args, **kwargs)
