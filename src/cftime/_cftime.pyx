@@ -110,8 +110,8 @@ def _dateparse(timestr,calendar,has_year_zero=None):
     year, month, day, hour, minute, second, microsecond, utc_offset =\
         _parse_date( isostring.strip() )
     if calendar == 'tai':
-        if year != 1958 or month != 1 or day != 1 or minute != 0 or second != 0 or microsecond != 0 or utc_offset:
-            raise ValueError('TAI calendar must have a reference date of 1958-01-01T00:00:00Z (no utc offset)')
+        if year < 1958 or utc_offset:
+            raise ValueError('TAI calendar must have a reference date of 1958-01-01T00:00:00 or later (with no utc offset)')
     if year == 0 and not has_year_zero and calendar in ['julian', 'standard', 'gregorian', 'proleptic_gregorian']:
         msg='zero not allowed as a reference year when has_year_zero=False'
         raise ValueError(msg)
@@ -2097,7 +2097,7 @@ cdef _IntJulianDayFromDate(int year,int month,int day,calendar,skip_transition=F
             else:
                 return jday_greg
 
-# legacy calendar specific sub-classes (will be removed in a future release).
+# legacy calendar specific sub-classes (may be removed in a future release).
 
 @cython.embedsignature(True)
 cdef class DatetimeNoLeap(datetime):
