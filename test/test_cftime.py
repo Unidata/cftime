@@ -2248,9 +2248,9 @@ def test_num2date_precision():
             assert np.ma.is_masked(date2[0])
             assert date[1] == date2[1]
 
-# NOTE: using pytest style tests -- these wont run without pytest
-#       but it looks like you're using pytest, so this is cleaner,
-#       easier
+# NOTE: using pytest style tests -- these won't run without pytest
+#       but it looks like you're using pytest, so this is cleaner and easier
+
 #       There's really no reason to put these in a class, but it does organize things
 class Test_tai:
     """
