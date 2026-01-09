@@ -30,7 +30,7 @@ _units = microsec_units+millisec_units+sec_units+min_units+hr_units+day_units
 # '366_day'=='all_leap','365_day'=='noleap')
 # see http://cfconventions.org/cf-conventions/cf-conventions#calendar
 # for definitions.
-_calendars = ['standard', 'gregorian', 'proleptic_gregorian','tai',
+_calendars = ['standard', 'gregorian', 'proleptic_gregorian', 'tai',
               'noleap', 'julian', 'all_leap', '365_day', '366_day', '360_day']
 _idealized_calendars= ['all_leap','noleap','366_day','365_day','360_day']
 # Following are number of days per month
@@ -83,7 +83,7 @@ def _datesplit(timestr):
 
     return units.lower(), remainder
 
-def _dateparse(timestr,calendar,has_year_zero=None):
+def _dateparse(timestr, calendar, has_year_zero=None):
     """parse a string of the form time-units since yyyy-mm-dd hh:mm:ss,
     return a datetime instance"""
     # same as version in cftime, but returns a timezone naive
