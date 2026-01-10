@@ -45,7 +45,7 @@ The datetime objects should not include a time-zone offset.</p>
 <p><strong>calendar</strong>: describes the calendar to be used in the time calculations.
 All the values currently defined in the
 <a class="reference external" href="http://cfconventions.org/cf-conventions/cf-conventions#calendar">CF metadata convention</a> are supported.
-Valid calendars <strong>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
+Valid calendars <strong>‘standard’, ‘gregorian’, ‘proleptic_gregorian’, ‘tai’,
 ‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</strong>.
 Default is <cite>None</cite> which means the calendar associated with the first
 input datetime instance will be used.</p>
@@ -93,7 +93,7 @@ and <strong>common_years since</strong> is allowed <em>only</em> for the <strong
 <p><strong>calendar</strong>: describes the calendar to be used in the time calculations.
 All the values currently defined in the
 <a class="reference external" href="http://cfconventions.org/cf-conventions/cf-conventions#calendar">CF metadata convention</a> are supported.
-Valid calendars <strong>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
+Valid calendars <strong>‘standard’, ‘gregorian’, ‘proleptic_gregorian’, ‘tai’,
 ‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</strong>.
 Default is <cite>None</cite> which means the calendar associated with the first
 input datetime instance will be used.</p>
@@ -140,7 +140,7 @@ for cftime.datetime instances using
 ‘gregorian’ and ‘proleptic_gregorian’ calendars.</p>
 <p>All the calendars currently defined in the
 <a class="reference external" href="http://cfconventions.org/cf-conventions/cf-conventions#calendar">CF metadata convention</a> are supported.
-Valid calendars are ‘standard’, ‘gregorian’, ‘proleptic_gregorian’
+Valid calendars are ‘standard’, ‘gregorian’, ‘proleptic_gregorian’, ‘tai’,
 ‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’.
 Default is ‘standard’, which is a mixed Julian/Gregorian calendar.
 ‘standard’ and ‘gregorian’ are synonyms, as are ‘all_leap’/’366_day’
@@ -274,7 +274,7 @@ and <strong>common_years since</strong> is allowed <em>only</em> for the <strong
 <p><strong>calendar</strong>: describes the calendar used in the time calculations.
 All the values currently defined in the
 <a class="reference external" href="http://cfconventions.org/cf-conventions/cf-conventions#calendar">CF metadata convention</a> are supported.
-Valid calendars <strong>‘standard’, ‘gregorian’, ‘proleptic_gregorian’
+Valid calendars <strong>‘standard’, ‘gregorian’, ‘proleptic_gregorian’, ‘tai’,
 ‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’</strong>.
 Default is <strong>‘standard’</strong>, which is a mixed Julian/Gregorian calendar.</p>
 <p><strong>only_use_cftime_datetimes</strong>: if False, python datetime.datetime
@@ -329,7 +329,7 @@ num2date(times,units,calendar,only_use_cftime_datetimes=False,only_use_python_da
 <cite>units</cite> attribute. The entries are assumed to be stored in increasing
 order.</p>
 <p><strong>calendar</strong>: Describes the calendar used in the time calculation.
-Valid calendars ‘standard’, ‘gregorian’, ‘proleptic_gregorian’
+Valid calendars ‘standard’, ‘gregorian’, ‘proleptic_gregorian’, ‘tai’,
 ‘noleap’, ‘365_day’, ‘360_day’, ‘julian’, ‘all_leap’, ‘366_day’.
 Default is <cite>standard</cite>, which is a mixed Julian/Gregorian calendar
 If <cite>calendar</cite> is None, its value is given by <cite>nctime.calendar</cite> or
