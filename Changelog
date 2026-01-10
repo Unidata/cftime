@@ -1,3 +1,8 @@
+version 1.6.6 (not yet released)
+================================
+* added new CF calendar "tai", which is the same as proleptic_gregorian but is only
+  valid for dates after 1958-01-01.
+
 version 1.6.5 (release tag v1.6.5rel)
 =====================================
 * python 3.14 wheels, 3.8/3.9 support dropped.
