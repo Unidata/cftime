@@ -72,8 +72,7 @@ else:
                   define_macros=DEFINE_MACROS,
                   include_dirs=[numpy.get_include(),])]
     for e in ext_modules:
-        e.cython_directives = {'language_level': "3"} 
-        e.compiler_directives = COMPILER_DIRECTIVES
+        e.cython_directives = {**{'language_level': "3"} ,  **COMPILER_DIRECTIVES}
     # remove _cftime.c file if it exists, so cython will recompile _cftime.pyx.
     if os.path.exists(CYTHON_CNAME):
         os.remove(CYTHON_CNAME)
