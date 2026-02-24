@@ -209,6 +209,11 @@ def date2num(dates, units, calendar=None, has_year_zero=None, longdouble=False):
         mask = dates.mask
         ismasked = True
 
+    # Convert numpy.datetime64 to a list to convert them to datetime instances.
+    if hasattr(dates, "dtype"):
+        if np.issubdtype(dates.dtype, np.datetime64):
+            dates = dates.tolist()
+
     # are all input dates 'real' python datetime objects?
     dates = np.asanyarray(dates) # convert to numpy array
     shape = dates.shape # save shape of input

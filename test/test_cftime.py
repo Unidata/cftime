@@ -2170,6 +2170,22 @@ def test_date2num_missing_data():
     assert out is np.ma.masked
 
 
+def test_date2num_numpy_datetime64():
+    # Array
+    array = np.array([
+        np.datetime64(123, "s"),
+        np.datetime64(124, "s"),
+        np.datetime64(125, "s")
+    ])
+    out = date2num(array, units="seconds since 1970-01-01T00:00:00", calendar="gregorian")
+    assert ((out == np.array([123, 124, 125]))).all()
+
+    # Scalar
+    array = np.datetime64(123, "s")
+    out = date2num(array, units="seconds since 1970-01-01T00:00:00", calendar="gregorian")
+    assert out == np.int64(123)
+
+
 def test_num2date_preserves_shape():
     # The optimized num2date algorithm operates on a flattened array.  This
     # check ensures that the original shape of the times is restored in the
