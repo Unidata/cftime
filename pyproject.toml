@@ -6,8 +6,7 @@ readme = "README.md"
 authors = [
     { name="Jeff Whitaker", email="whitaker.jeffrey@gmail.com"}
 ]
-license = "MIT"
-license-files = ["LICENSE"]
+license = {text = "MIT"}
 classifiers = [
     'Development Status :: 5 - Production/Stable',
     'Operating System :: MacOS :: MacOS X',
