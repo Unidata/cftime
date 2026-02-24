@@ -31,7 +31,7 @@ dev = [
     "check-manifest",
     "coverage>=7.10.0",
     "coveralls",
-    "cython>=0.29.20",
+    "cython>=3",
     "pytest",
     "sphinx",
     "twine",
@@ -40,7 +40,7 @@ dev = [
 [build-system]
 requires = [
     "setuptools>=77.0.1",
-    "cython>=0.29.20",
+    "cython>=3",
     "numpy>=2.0.0,<3",
 ]
 build-backend = "setuptools.build_meta"
