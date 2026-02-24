@@ -106,3 +106,24 @@ ignore = [
     "test",
     "test/*",
 ]
+
+[tool.cibuildwheel]
+build-verbosity = 1
+skip = [
+    "*musllinux_aarch64*",
+    # Skipped due to unavailability of Python binary and NumPy for Win-ARM64
+    "cp310-win_arm64",
+]
+
+test-skip = [
+    # Emulated testing is slow, so trust that the Python 3.14 test is good enough on aarch64
+    # (takes about 5 minutes per wheel to build, and 5 minutes to test)
+    "cp3{10,11,12,13}-*_aarch64",
+]
+test-groups = "dev"
+test-command = [
+    '''python -c "import cftime; print(f'cftime v{cftime.__version__}')"''',
+    "python -m pytest -vv {package}/test"
+]
+manylinux-x86_64-image = "manylinux2014"
+manylinux-aarch64-image = "manylinux2014"
