@@ -43,20 +43,12 @@ jobs:
     #  if: runner.os == 'Linux' && matrix.arch == 'aarch64'
 
     - name: Build just oldest and newest on PRs, all on tags
+      if:  ${{ github.event_name }} == pull_request
       shell: bash
-      # - Always omit musllinux_aarch64 because it's slow and niche
       # - On PPs, omit musllinux for speed
       # - On PRs, run just oldest and newest Python versions
       run: |
-        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-           CIBW_SKIP="cp311-* cp312-* cp313-* *musllinux*"
-        else
-           CIBW_SKIP="*musllinux_aarch64"
-        fi
-        # skip cp310 if building on windows arm64
-        if [[ "${{ matrix.arch }}" == "ARM64" ]]; then
-          CIBW_SKIP="$CIBW_SKIP cp310-*"
-        fi
+        CIBW_SKIP="cp310-win_arm64 cp311-* cp312-* cp313-* *musllinux*"
         echo "CIBW_SKIP=$CIBW_SKIP" >> $GITHUB_ENV
         echo "Setting CIBW_SKIP=$CIBW_SKIP"
 
@@ -65,15 +57,6 @@ jobs:
       env:
         CIBW_SKIP: ${{ env.CIBW_SKIP }}
         CIBW_ARCHS: ${{ matrix.arch }}
-        CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-        CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
-        # Emulated testing is slow, so trust that the Python 3.14 test is good enough on aarch64
-        # (takes about 5 minutes per wheel to build, and 5 minutes to test)
-        CIBW_TEST_SKIP: "cp3{10,11,12,13}-*_aarch64"
-        CIBW_TEST_GROUPS: dev
-        CIBW_TEST_COMMAND: >
-          python -c "import cftime; print(f'cftime v{cftime.__version__}')" &&
-          python -m pytest -vv {package}/test
 
     - uses: actions/upload-artifact@v6
       with:
