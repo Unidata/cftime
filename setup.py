@@ -42,6 +42,9 @@ ABI3_TARGET_VERSION = "".join(str(_) for _ in sys.version_info[:2])
 ABI3_TARGET_HEX = hex(sys.hexversion & 0xFFFF00F0)
 
 if USE_PY_LIMITED_API:
+    DEFINE_MACROS  += [(("Py_LIMITED_API", ABI3_TARGET_HEX))]
+    
+if USE_PY_LIMITED_API:
     SETUP_OPTIONS = {"bdist_wheel": {"py_limited_api": f"cp{ABI3_TARGET_VERSION}"}}
 else:
     SETUP_OPTIONS = {}
@@ -76,8 +79,7 @@ if ((FLAG_COVERAGE in sys.argv or os.environ.get('CYTHON_COVERAGE', None))
     }
     DEFINE_MACROS += [('CYTHON_TRACE', '1'),
                      ('CYTHON_TRACE_NOGIL', '1')]
-    if USE_PY_LIMITED_API:
-        DEFINE_MACROS.append(("Py_LIMITED_API", ABI3_TARGET_HEX))
+
     if FLAG_COVERAGE in sys.argv:
         sys.argv.remove(FLAG_COVERAGE)
     print('enable: "linetrace" Cython compiler directive')
