@@ -1,22 +1,32 @@
 name: Build and Deploy docs
 
 on:
+  pull_request:
   push:
     branches:
       - master
+  release:
+    types:
+      - published
+
+# Deny all permissions by default
+permissions: {}
 
 jobs:
   build-docs:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - name: checkout
-      uses: actions/checkout@v6
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
       with:
         fetch-depth: 0
+        persist-credentials: false
 
     - name: Setup Mamba
-      uses: mamba-org/setup-micromamba@v2
+      uses: mamba-org/setup-micromamba@add3a49764cedee8ee24e82dfde87f5bc2914462 # v2.0.7
       with:
         environment-name: TEST
         create-args: >-
@@ -43,7 +53,8 @@ jobs:
         popd
 
     - name: Deploy
-      uses: peaceiris/actions-gh-pages@v4
+      if: success() && github.event_name == 'release'
+      uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e  # v4.0.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: docs/_build/html

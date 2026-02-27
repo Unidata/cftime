@@ -4,9 +4,9 @@ on:
   pull_request:
     branches:
       - master
-  push:
-    tags:
-      - "v*"
+  release:
+    types:
+      - published
 
 jobs:
   build_bdist:
@@ -31,19 +31,13 @@ jobs:
             arch: ARM64
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
       with:
         fetch-depth: 0
-
-    # For aarch64 support
-    # https://cibuildwheel.pypa.io/en/stable/faq/#emulation
-    #- uses: docker/setup-qemu-action@v3
-    #  with:
-    #    platforms: all
-    #  if: runner.os == 'Linux' && matrix.arch == 'aarch64'
+        persist-credentials: false
 
     - name: Build just oldest and newest on PRs, all on tags
-      if:  ${{ github.event_name }} == pull_request
+      if: ${{ github.event_name == 'pull_request' }}
       shell: bash
       # - On PPs, omit musllinux for speed
       # - On PRs, run just oldest and newest Python versions (3.11 is the oldest abi3 target)
@@ -57,51 +51,39 @@ jobs:
         echo "Setting CIBW_TEST_SKIP=$CIBW_TEST_SKIP"
 
     - name: "Building ${{ matrix.os }} (${{ matrix.arch }}) wheels"
-      uses: pypa/cibuildwheel@v3.3.1
+      uses: pypa/cibuildwheel@298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e  # v3.3.1
       env:
         CIBW_SKIP: ${{ env.CIBW_SKIP }}
         CIBW_TEST_SKIP: ${{ env.CIBW_TEST_SKIP }}
         CIBW_ARCHS: ${{ matrix.arch }}
 
-    - uses: actions/upload-artifact@v6
+    - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
       with:
         name: pypi-artifacts-${{ matrix.os }}-${{ matrix.arch }}
         path: ${{ github.workspace }}/wheelhouse/*.whl
-
+    permissions:
+      actions: write
 
   build_sdist:
     name: Build source distribution
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Build sdist
         run: >
           pip install build
           && python -m build --sdist . --outdir dist
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: pypi-artifacts
           path: ${{ github.workspace }}/dist/*.tar.gz
-
-  show-artifacts:
-    needs: [build_bdist, build_sdist]
-    name: "Show artifacts"
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/download-artifact@v7
-      with:
-        pattern: pypi-artifacts*
-        path: ${{ github.workspace }}/dist
-        merge-multiple: true
-
-    - shell: bash
-      run: |
-        ls -l ${{ github.workspace }}/dist
-
+    permissions:
+      actions: write
 
   publish-artifacts-pypi:
     needs: [build_bdist, build_sdist]
@@ -110,14 +92,17 @@ jobs:
     # upload to PyPI for every tag starting with 'v'
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
-    - uses: actions/download-artifact@v7
+    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
       with:
         pattern: pypi-artifacts*
         path: ${{ github.workspace }}/dist
         merge-multiple: true
 
-    - uses: pypa/gh-action-pypi-publish@release/v1
+    # Move to Trusted Publishing
+    - uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e  # v1.13.0
       with:
         user: __token__
         password: ${{ secrets.PYPI_PASSWORD }}
         print_hash: true
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
