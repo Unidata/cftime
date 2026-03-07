@@ -58,7 +58,7 @@ jobs:
         CIBW_SKIP: ${{ env.CIBW_SKIP }}
         CIBW_ARCHS: ${{ matrix.arch }}
 
-    - uses: actions/upload-artifact@v6
+    - uses: actions/upload-artifact@v7
       with:
         name: pypi-artifacts-${{ matrix.os }}-${{ matrix.arch }}
         path: ${{ github.workspace }}/wheelhouse/*.whl
@@ -77,7 +77,7 @@ jobs:
           pip install build
           && python -m build --sdist . --outdir dist
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: pypi-artifacts
           path: ${{ github.workspace }}/dist/*.tar.gz
@@ -87,7 +87,7 @@ jobs:
     name: "Show artifacts"
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/download-artifact@v7
+    - uses: actions/download-artifact@v8
       with:
         pattern: pypi-artifacts*
         path: ${{ github.workspace }}/dist
@@ -105,7 +105,7 @@ jobs:
     # upload to PyPI for every tag starting with 'v'
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
-    - uses: actions/download-artifact@v7
+    - uses: actions/download-artifact@v8
       with:
         pattern: pypi-artifacts*
         path: ${{ github.workspace }}/dist
