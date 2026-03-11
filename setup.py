@@ -43,8 +43,6 @@ ABI3_TARGET_HEX = hex(sys.hexversion & 0xFFFF00F0)
 
 if USE_PY_LIMITED_API:
     DEFINE_MACROS  += [(("Py_LIMITED_API", ABI3_TARGET_HEX))]
-    
-if USE_PY_LIMITED_API:
     SETUP_OPTIONS = {"bdist_wheel": {"py_limited_api": f"cp{ABI3_TARGET_VERSION}"}}
 else:
     SETUP_OPTIONS = {}
