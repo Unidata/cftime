@@ -127,3 +127,4 @@ test-command = [
 ]
 manylinux-x86_64-image = "manylinux2014"
 manylinux-aarch64-image = "manylinux2014"
+environment = { CFTIME_LIMITED_API = "1" }
