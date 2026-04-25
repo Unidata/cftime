@@ -1714,7 +1714,7 @@ cdef _strftime(datetime dt, fmt):
     year = year + ((2000 - year) // 28) * 28
     timetuple = dt.timetuple()
     s1 = time.strftime(fmt1, (year,) + timetuple[1:])
-    twodigityear = 'y' in fmt1
+    twodigityear = '%y' in fmt1
     if twodigityear:
         sites1 = _findall(s1, str(year)[-2:])
     else:

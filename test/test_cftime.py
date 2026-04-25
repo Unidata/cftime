@@ -204,6 +204,9 @@ class cftimeTestCase(unittest.TestCase):
         self.assertTrue(d.strftime(dateformat) == d2.strftime(dateformat))
         # make sure two digit years work in strftime (issue #362)
         self.assertTrue(d.strftime(dateformat2) == d2.strftime(dateformat2))
+        # issue #401 (check for %y not y)
+        t = cftime.DatetimeGregorian(2026,4,14,0)
+        self.assertTrue(t.strftime('year=%Y') == 'year=2026')
         # check day of year.
         ndayr = d.timetuple()[7]
         self.assertTrue(ndayr == 125)
