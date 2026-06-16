@@ -31,7 +31,7 @@ jobs:
             arch: ARM64
 
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
       with:
         fetch-depth: 0
         persist-credentials: false
@@ -51,7 +51,7 @@ jobs:
         echo "Setting CIBW_TEST_SKIP=$CIBW_TEST_SKIP"
 
     - name: "Building ${{ matrix.os }} (${{ matrix.arch }}) wheels"
-      uses: pypa/cibuildwheel@8d2b08b68458a16aeb24b64e68a09ab1c8e82084  # v3.4.1
+      uses: pypa/cibuildwheel@f03ac7617d6cff873ccf24cc0d567ef5ba5a9e6d  # v4.0.0
       env:
         CIBW_SKIP: ${{ env.CIBW_SKIP }}
         CIBW_TEST_SKIP: ${{ env.CIBW_TEST_SKIP }}
@@ -68,7 +68,7 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
         with:
           fetch-depth: 0
           persist-credentials: false
