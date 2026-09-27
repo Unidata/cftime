@@ -25,27 +25,21 @@ jobs:
         fetch-depth: 0
         persist-credentials: false
 
-    - name: Setup Mamba
-      uses: mamba-org/setup-micromamba@f457c30a868e4760d3a6fcea5f25dc655b8edf39 # v3.2.1
+    - name: Set up Python
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
       with:
-        environment-name: TEST
-        create-args: >-
-          python=3
-          numpy>1.13.3
-          sphinx
+        python-version: "3.x"
 
-    - name: Build environment
-      shell: bash -l {0}
+    - name: Install cftime
       run: |
-        python -m pip install -e . --no-deps --force-reinstall
+        pip install --group dev
+        pip install -e .
 
     - name: Get the version
-      shell: bash -l {0}
       id: get_version
-      run: echo "name=VERSION::$(python setup.py --version)" >> $GITHUB_OUTPUT
+      run: echo "name=VERSION::$(python -c 'import cftime; print(cftime.__version__)')" >> $GITHUB_OUTPUT
 
     - name: Build documentation
-      shell: bash -l {0}
       run: |
         set -e
         pushd docs

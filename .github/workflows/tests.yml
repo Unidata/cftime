@@ -1,0 +1,39 @@
+name: TESTS
+
+on:
+  pull_request:
+  push:
+    branches: [ master ]
+
+# Deny all permissions by default
+permissions: {}
+
+jobs:
+  run:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.11", "3.15-dev" ]
+        os: [ windows-latest, ubuntu-latest, macos-latest, macos-15-intel ]
+
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      with:
+        persist-credentials: false
+
+    - name: Set up Python
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install cftime
+      run: |
+        pip install --group dev
+        pip install -e .
+
+
+    - name: Run Tests
+      run: |
+        coverage run -m pytest -vv test
+        coverage report

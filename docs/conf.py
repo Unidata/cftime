@@ -18,15 +18,14 @@
 
 
 # -- Project information -----------------------------------------------------
+import cftime
 
 project = 'cftime'
 copyright = '2018, Jeff Whitaker'
 author = 'Jeff Whitaker'
 
 # The short X.Y version
-version = ''
-# The full version, including alpha/beta/rc tags
-release = '1.0'
+version = release = cftime.__version__
 
 
 # -- General configuration ---------------------------------------------------
