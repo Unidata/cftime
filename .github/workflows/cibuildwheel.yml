@@ -10,25 +10,37 @@ on:
 
 jobs:
   build_bdist:
-    name: "Build ${{ matrix.os }} (${{ matrix.arch }}) wheels"
+    name: "Build ${{ matrix.os }} (${{ matrix.cibw_platform }}-${{ matrix.arch }}) wheels"
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60  # should be long enough even on tags, but let's prevent hangs
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-24.04
+          - name: Linux
+            os: ubuntu-22.04
             arch: x86_64
-          - os: ubuntu-24.04-arm
+            cibw_platform: linux
+          - name: Pyodide
+            os: ubuntu-22.04
+            arch: auto
+            cibw_platform: pyodide
+          - name: Linux-arm
+            os: ubuntu-24.04-arm
             arch: aarch64
-          - os: windows-2022
+            cibw_platform: linux
+          - name: Windows
+            os: windows-2022
             arch: AMD64
-          - os: macos-14
+            cibw_platform: windows
+          - name: macOS-arm
+            os: macos-14
             arch: arm64
-          - os: macos-15-intel
+            cibw_platform: macos
+          - name: macOS-intel
+            os: macos-15-intel
             arch: x86_64
-          - os: windows-11-arm
-            arch: ARM64
+            cibw_platform: macos
 
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -40,6 +52,7 @@ jobs:
       uses: pypa/cibuildwheel@e090b81e30c4d855ea63bf4b6e59204c09a101ae  # v4.2.1
       env:
         CIBW_ARCHS: ${{ matrix.arch }}
+        CIBW_PLATFORM: ${{ matrix.cibw_platform }}
 
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
@@ -66,7 +79,6 @@ jobs:
         with:
           name: pypi-artifacts
           path: ${{ github.workspace }}/dist/*.tar.gz
-
     permissions:
       actions: write
 
