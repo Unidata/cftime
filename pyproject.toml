@@ -32,8 +32,11 @@ dev = [
     "check-manifest",
     "coverage>=7.10.0",
     "coveralls",
-    "cython>=0.29.20",
     "pytest",
+    "sphinx",
+]
+
+docs = [
     "sphinx",
 ]
 
