@@ -155,7 +155,8 @@ def date2num(dates, units, calendar=None, has_year_zero=None, longdouble=False):
     describing the time units. **<time units>** can be days, hours, minutes,
     seconds, milliseconds or microseconds. **<reference time>** is the time
     origin. **months since** is allowed *only* for the **360_day** calendar
-    and **common_years since** is allowed *only* for the **365_day** calendar.
+    and **common_years since** is allowed *only* for the **365_day** calendar
+    (also called **noleap**).
 
     **calendar**: describes the calendar to be used in the time calculations.
     All the values currently defined in the
@@ -541,7 +542,8 @@ def num2date(
     describing the time units. **<time units>** can be days, hours, minutes,
     seconds, milliseconds or microseconds. **<reference time>** is the time
     origin. **months since** is allowed *only* for the **360_day** calendar
-    and **common_years since** is allowed *only* for the **365_day** calendar.
+    and **common_years since** is allowed *only* for the **365_day** calendar
+    (also called **noleap**).
 
     **calendar**: describes the calendar used in the time calculations.
     All the values currently defined in the
