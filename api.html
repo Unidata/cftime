@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>API &#8212; cftime 1.0 documentation</title>
+    <title>API &#8212; cftime 1.6.6 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
-    <script src="_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="_static/documentation_options.js?v=1d29987b"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -89,7 +89,8 @@ the proleptic gregorian calendar) or cftime.datetime instances.</p>
 describing the time units. <strong>&lt;time units&gt;</strong> can be days, hours, minutes,
 seconds, milliseconds or microseconds. <strong>&lt;reference time&gt;</strong> is the time
 origin. <strong>months since</strong> is allowed <em>only</em> for the <strong>360_day</strong> calendar
-and <strong>common_years since</strong> is allowed <em>only</em> for the <strong>365_day</strong> calendar.</p>
+and <strong>common_years since</strong> is allowed <em>only</em> for the <strong>365_day</strong> calendar
+(also called <strong>noleap</strong>).</p>
 <p><strong>calendar</strong>: describes the calendar to be used in the time calculations.
 All the values currently defined in the
 <a class="reference external" href="http://cfconventions.org/cf-conventions/cf-conventions#calendar">CF metadata convention</a> are supported.
@@ -270,7 +271,8 @@ UTC with no time-zone offset, even if the specified
 describing the time units. <strong>&lt;time units&gt;</strong> can be days, hours, minutes,
 seconds, milliseconds or microseconds. <strong>&lt;reference time&gt;</strong> is the time
 origin. <strong>months since</strong> is allowed <em>only</em> for the <strong>360_day</strong> calendar
-and <strong>common_years since</strong> is allowed <em>only</em> for the <strong>365_day</strong> calendar.</p>
+and <strong>common_years since</strong> is allowed <em>only</em> for the <strong>365_day</strong> calendar
+(also called <strong>noleap</strong>).</p>
 <p><strong>calendar</strong>: describes the calendar used in the time calculations.
 All the values currently defined in the
 <a class="reference external" href="http://cfconventions.org/cf-conventions/cf-conventions#calendar">CF metadata convention</a> are supported.
