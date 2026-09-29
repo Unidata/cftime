@@ -37,6 +37,10 @@ dev = [
     "sphinx",
 ]
 
+docs = [
+    "sphinx",
+]
+
 [build-system]
 requires = [
     "setuptools>=77.0.1",
@@ -107,7 +111,7 @@ ignore = [
 
 [tool.cibuildwheel]
 build-verbosity = 1
-build = "cp311-* cp315-*"
+build = "cp311-* cp314-*"
 skip = "*-musllinux*"
 
 test-groups = "dev"
