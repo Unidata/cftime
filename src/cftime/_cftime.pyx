@@ -1101,8 +1101,9 @@ CF version 1.9 conventions (False for 'julian', 'gregorian'/'standard', True
 for 'proleptic_gregorian' (ISO 8601) and True for the idealized
 calendars 'noleap'/'365_day', '360_day', 366_day'/'all_leap')
 The defaults can only be over-ridden for the real-world calendars,
-for the the idealized calendars the year zero 
-always exists and the has_year_zero kwarg is ignored.
+for the idealized calendars the year zero always exists and the
+has_year_zero kwarg is ignored. Passing False emits a warning and the
+instance's has_year_zero attribute is set to True.
 This kwarg is not needed to define calendar systems allowed by CF
 (the calendar-specific defaults do this).
 
@@ -1169,13 +1170,15 @@ The default format of the string produced by strftime is controlled by self.form
                 raise ValueError('dates before 1958-01-01 not allowed in TAI calendar')
             if has_year_zero:
                 raise ValueError('year zero not allowed in TAI calendar')
+        # Idealized calendars always have a year zero, even if False is passed.
+        if not has_year_zero and calendar in _idealized_calendars:
+            warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
+            has_year_zero = True
         # raise exception if year zero requested but has_year_zero set
         # to False (issue #248).
         if year == 0 and has_year_zero==False:
             msg='year zero requested, but has_year_zero=False'
             raise ValueError(msg)
-        if not has_year_zero and calendar in _idealized_calendars:
-            warnings.warn('has_year_zero kwarg ignored for idealized calendars (always True)')
         self.has_year_zero = has_year_zero
         if calendar == 'gregorian' or calendar == 'standard':
             # dates after 1582-10-15 can be converted to and compared to
