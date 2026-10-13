@@ -107,7 +107,6 @@ ignore = [
 
 [tool.cibuildwheel]
 build-verbosity = 1
-build = "cp311-* cp315-*"
 skip = "*-musllinux*"
 
 test-groups = "dev"
