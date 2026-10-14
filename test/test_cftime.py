@@ -6,6 +6,7 @@ from cftime import (Datetime360Day, DatetimeAllLeap,
                     DatetimeProlepticGregorian, DatetimeTAI, _parse_date,
                     date2index, date2num, num2date,  UNIT_CONVERSION_FACTORS)
 import copy
+import pickle
 import unittest
 import warnings
 from collections import namedtuple
@@ -1558,6 +1559,84 @@ def test_zero_year(date_type):
             assert d.has_year_zero # (issue #248)
             with pytest.raises(ValueError):
                 date_type(0, 1, 1, has_year_zero=False)
+
+
+
+@pytest.fixture(params=[
+    (datetimex, 'noleap', 365),
+    (datetimex, '365_day', 365),
+    (datetimex, 'all_leap', 366),
+    (datetimex, '366_day', 366),
+    (datetimex, '360_day', 360),
+    (DatetimeNoLeap, 'noleap', 365),
+    (DatetimeAllLeap, 'all_leap', 366),
+    (Datetime360Day, '360_day', 360),
+], ids=[
+    'noleap', '365_day', 'all_leap', '366_day', '360_day',
+    'DatetimeNoLeap', 'DatetimeAllLeap', 'Datetime360Day',
+])
+def idealized_year_zero_calendar(request):
+    return request.param
+
+
+@pytest.mark.parametrize('year', [-1, 0, 1, 2000])
+def test_idealized_has_year_zero_false(idealized_year_zero_calendar, year):
+    # Issue #419: the ignored argument must not change the stored convention.
+    date_type, calendar, _ = idealized_year_zero_calendar
+    with pytest.warns(UserWarning, match='has_year_zero kwarg ignored'):
+        date = date_type(year, 1, 1, 12, calendar=calendar, has_year_zero=False)
+    expected = date_type(year, 1, 1, 12, calendar=calendar)
+    assert date.has_year_zero is True
+    assert date == expected
+    assert date - expected == timedelta(0)
+    assert datetimex.fromordinal(
+        date.toordinal(), calendar=calendar,
+        has_year_zero=date.has_year_zero) == date
+    restored = pickle.loads(pickle.dumps(date))
+    assert type(restored) is type(date)
+    assert restored.has_year_zero is True
+    assert restored == date
+
+
+@pytest.mark.parametrize('year', [-1, 0, 1])
+def test_idealized_replace_has_year_zero_false(idealized_year_zero_calendar, year):
+    date_type, calendar, _ = idealized_year_zero_calendar
+    date = date_type(1, 1, 1, calendar=calendar)
+    with pytest.warns(UserWarning, match='has_year_zero kwarg ignored'):
+        replaced = date.replace(year=year, has_year_zero=False)
+    assert replaced.has_year_zero is True
+    assert replaced == date_type(year, 1, 1, calendar=calendar)
+
+
+@pytest.mark.parametrize('year', [-1, 0])
+def test_idealized_has_year_zero_false_arithmetic(
+        idealized_year_zero_calendar, year):
+    date_type, calendar, days_per_year = idealized_year_zero_calendar
+    with pytest.warns(UserWarning, match='has_year_zero kwarg ignored'):
+        start = date_type(year, 1, 1, calendar=calendar, has_year_zero=False)
+    end = date_type(year + 1, 1, 1, calendar=calendar)
+    delta = timedelta(days=days_per_year)
+    assert end - start == delta
+    assert start + delta == end
+    assert end - delta == start
+    assert (start + delta).has_year_zero is True
+    assert (end - delta).has_year_zero is True
+
+
+@pytest.mark.parametrize('calendar', [
+    'standard', 'gregorian', 'julian', 'proleptic_gregorian',
+])
+def test_real_world_has_year_zero_false(calendar):
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', cftime.CFWarning)
+        before = datetimex(-1, 12, 31, calendar=calendar, has_year_zero=False)
+        after = datetimex(1, 1, 1, calendar=calendar, has_year_zero=False)
+        assert before.has_year_zero is False
+        assert after.has_year_zero is False
+        assert before + timedelta(days=1) == after
+        assert after - before == timedelta(days=1)
+        with pytest.raises(ValueError, match='year zero requested'):
+            datetimex(0, 1, 1, calendar=calendar, has_year_zero=False)
 
 
 def test_invalid_month(date_type):
