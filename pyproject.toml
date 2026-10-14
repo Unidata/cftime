@@ -1,6 +1,6 @@
 [project]
 name = "cftime"
-version = "1.6.6"
+version = "1.6.6.1"
 description = "Time-handling functionality from netcdf4-python"
 readme = "README.md"
 authors = [

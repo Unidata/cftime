@@ -11,6 +11,8 @@ Time-handling functionality from netcdf4-python
 ## News
 For details on the latest updates, see the [Changelog](https://github.com/Unidata/cftime/blob/master/Changelog).
 
+10/15/2026:  Version 1.6.6.1 release. Includes free-threaded wheels.
+
 9/15/2026:  Version 1.6.6 release. Limited API compliant wheels (should work with python 3.15). New cftime calendar "tai".
 
 10/13/2025:  Version 1.6.5 release.  Minor bugfixes/optimizations, wheels for python 3.14, no more wheels for 3.8/3.9.
