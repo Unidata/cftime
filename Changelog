@@ -1,7 +1,8 @@
-Unreleased
-==========
+version 1.6.6.1 (release tag v1.6.6.1)
+======================================
 * ensure has_year_zero=False is ignored for idealized calendars, including when
   constructing year zero dates (issue #419).
+* include free-threaded wheels (issue #421).
 
 version 1.6.6 (release tag v1.6.6rel)
 =====================================
