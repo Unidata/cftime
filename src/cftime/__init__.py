@@ -5,7 +5,7 @@ from ._cftime import (microsec_units, millisec_units,
                      sec_units, hr_units, day_units, min_units,
                      UNIT_CONVERSION_FACTORS, CALENDARS)
 from ._cftime import CFWarning
-# these will be removed in a future release
+# these may be removed in a future release
 from ._cftime import (DatetimeNoLeap, DatetimeAllLeap, Datetime360Day,
                      Datetime360Day, DatetimeJulian, DatetimeTAI,
                      DatetimeGregorian, DatetimeProlepticGregorian)
