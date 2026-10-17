@@ -1858,6 +1858,23 @@ def test_string_isoformat():
     assert dt.isoformat(' ', 'microseconds') == '-0713-01-01 12:00:00.000010'
 
 
+@pytest.mark.parametrize('calendar', list(_EXPECTED_DATE_TYPES) + ['tai'])
+@pytest.mark.parametrize('sep', ['T', ' '])
+@pytest.mark.parametrize('date_args, expected', [
+    ((2026, 1, 1, 0, 0, 0, 999499), '2026-01-01T00:00:00.999'),
+    ((2026, 1, 1, 0, 0, 0, 999500), '2026-01-01T00:00:01.000'),
+    ((2026, 1, 1, 0, 0, 0, 999999), '2026-01-01T00:00:01.000'),
+    ((2026, 1, 1, 0, 0, 59, 999999), '2026-01-01T00:01:00.000'),
+    ((2026, 1, 1, 0, 59, 59, 999999), '2026-01-01T01:00:00.000'),
+    ((2026, 1, 1, 23, 59, 59, 999999), '2026-01-02T00:00:00.000'),
+    ((2026, 4, 30, 23, 59, 59, 999999), '2026-05-01T00:00:00.000'),
+])
+def test_isoformat_millisecond_carry(calendar, sep, date_args, expected):
+    date = datetimex(*date_args, calendar=calendar)
+    assert date.isoformat(sep, timespec='milliseconds') == expected.replace('T', sep)
+    assert date.to_tuple() == date_args
+
+
 def test_dayofyr_after_replace(date_type):
     date = date_type(1, 1, 1)
     assert date.dayofyr == 1
