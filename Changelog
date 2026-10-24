@@ -1,6 +1,7 @@
 since version 1.6.6.1 release
 =============================
 * make cftime.CALENDARS public (issue #422).
+* retain longdouble precision in date2num when input dates contain masked values.
 
 version 1.6.6.1 (release tag v1.6.6.1)
 ======================================

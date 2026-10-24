@@ -321,7 +321,8 @@ def date2num(dates, units, calendar=None, has_year_zero=None, longdouble=False):
             times.append(quotient)
 
     if ismasked: # convert to masked array if input was masked array
-        times = np.array(times, dtype=float)  # None -> nan
+        dtype = np.longdouble if longdouble else float
+        times = np.array(times, dtype=dtype)  # None -> nan
         times = np.ma.masked_invalid(times)
         if isscalar:
             return times[0]

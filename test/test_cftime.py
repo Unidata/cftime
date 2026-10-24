@@ -2252,6 +2252,26 @@ def test_date2num_missing_data():
     assert out is np.ma.masked
 
 
+@pytest.mark.parametrize('calendar', ['standard', 'proleptic_gregorian',
+                                      'julian', 'noleap', '360_day', 'all_leap'])
+def test_date2num_masked_longdouble(calendar):
+    if np.finfo(np.longdouble).precision < 18:
+        pytest.skip('requires extended precision longdouble')
+    dates = np.ma.array([
+        cftime.datetime(2000, 1, 1, microsecond=1, calendar=calendar),
+        cftime.datetime(2000, 1, 2, calendar=calendar),
+    ], mask=[False, True])
+    units = 'days since 0001-01-01'
+    result = date2num(dates, units, calendar=calendar, longdouble=True)
+    assert result.dtype == np.dtype(np.longdouble)
+    assert_equal(result.mask, dates.mask)
+    assert_equal(result.compressed(), date2num(dates.compressed(), units,
+                                              calendar=calendar, longdouble=True))
+    restored = num2date(result, units, calendar=calendar)
+    assert_equal(restored.mask, dates.mask)
+    assert_equal(restored.compressed(), dates.compressed())
+
+
 def test_date2num_numpy_datetime64():
     # Array
     array = np.array([
