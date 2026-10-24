@@ -861,7 +861,11 @@ cdef _check_index(indices, times, nctime, select):
         delta_after = ta - t
         delta_before = t - tb
         delta_check = np.abs(times - t)
-        return np.all(delta_check <= delta_after) and np.all(delta_check <= delta_before)
+        # Keep the existing shortcut at ties, but reject any closer neighbor.
+        return (np.all(delta_check <= delta_after) and
+                np.all(delta_check <= delta_before) and
+                np.all(delta_check <= np.abs(ta - times)) and
+                np.all(delta_check <= np.abs(times - tb)))
 
 
 def _date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None):
