@@ -1,5 +1,6 @@
 since version 1.6.6.1 release
 =============================
+* select the closest record when nearest-time lookup uses an irregular time axis.
 * make cftime.CALENDARS public (issue #422).
 
 version 1.6.6.1 (release tag v1.6.6.1)
