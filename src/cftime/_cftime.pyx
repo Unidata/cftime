@@ -858,10 +858,14 @@ cdef _check_index(indices, times, nctime, select):
     elif select == 'nearest':
         ta = nctime[np.clip(indices + 1, 0, N - 1)]
         tb = nctime[np.clip(indices - 1, 0, N - 1)]
-        delta_after = np.abs(ta - times)
-        delta_before = np.abs(times - tb)
+        delta_after = ta - t
+        delta_before = t - tb
         delta_check = np.abs(times - t)
-        return np.all(delta_check <= delta_after) and np.all(delta_check <= delta_before)
+        # Keep the existing shortcut at ties, but reject any closer neighbor.
+        return (np.all(delta_check <= delta_after) and
+                np.all(delta_check <= delta_before) and
+                np.all(delta_check <= np.abs(ta - times)) and
+                np.all(delta_check <= np.abs(times - tb)))
 
 
 def _date2index(dates, nctime, calendar=None, select='exact', has_year_zero=None):
