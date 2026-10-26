@@ -2378,6 +2378,29 @@ def test_num2date_precision():
             assert np.ma.is_masked(date2[0])
             assert date[1] == date2[1]
 
+
+@pytest.mark.parametrize('calendar', [
+    'standard', 'proleptic_gregorian', 'julian', 'noleap',
+    'all_leap', '360_day', 'tai'])
+@pytest.mark.parametrize('unit', ['seconds', 'minutes', 'hours', 'days'])
+def test_num2date_extended_precision_near_second(calendar, unit):
+    if np.finfo(np.longdouble).eps >= np.finfo(np.float64).eps:
+        pytest.skip('requires extended precision longdouble')
+    origin = '1958-01-01' if calendar == 'tai' else '0001-01-01'
+    units = f'{unit} since {origin}'
+    dates = [cftime.datetime(2000, 1, 4, microsecond=us, calendar=calendar)
+             for us in [1, 999999]]
+    encoded = date2num(dates, units, calendar=calendar, longdouble=True)
+    # Genuine microseconds next to a whole second must not be snapped to it.
+    for number, expected in zip(encoded, dates):
+        assert num2date(number, units, calendar=calendar) == expected
+    np.testing.assert_array_equal(num2date(encoded, units, calendar=calendar), dates)
+    masked = np.ma.array(encoded.reshape(2, 1), mask=[[False], [True]])
+    result = num2date(masked, units, calendar=calendar)
+    assert result.shape == (2, 1)
+    assert result[0, 0] == dates[0]
+    assert result.mask.tolist() == [[False], [True]]
+
 # NOTE: using pytest style tests -- these won't run without pytest
 #       but it looks like you're using pytest, so this is cleaner and easier
 
