@@ -1066,6 +1066,18 @@ class TestDate2index(unittest.TestCase):
         t = date2index([datetime(1950, 2, 1), datetime(1950, 2, 3)], nutime)
         assert_equal(t, [30, 32])
 
+    def test_nearest_nonuniform(self):
+        units = 'days since 2000-01-01'
+        for values, queries, expected in [
+            ([0, 5, 20, 30, 40, 50], [10, 11, 12, 13], [1, 1, 1, 2]),
+            ([0, 10, 20, 25, 40, 50], [23, 24, 26, 27], [3, 3, 3, 3]),
+        ]:
+            times = CFTimeVariable(values=values, units=units)
+            dates = num2date(queries, units)
+            assert_equal(date2index(dates, times, select='nearest'), expected)
+            for date, index in zip(dates, expected):
+                assert_equal(date2index(date, times, select='nearest'), index)
+
     def test_failure(self):
         nutime = self.TestTime(datetime(1950, 1, 1), 366, 24,
                                'hours since 1900-01-01', 'standard')
