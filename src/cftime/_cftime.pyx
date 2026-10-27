@@ -421,7 +421,7 @@ _MAX_INT64 = np.iinfo("int64").max
 _MIN_INT64 = np.iinfo("int64").min
 
 
-def cast_to_int(num, units=None):
+def cast_to_int(num, units=None, rounding_correction=True):
     if num.dtype.kind in "iu":
         return num
     else:
@@ -433,14 +433,14 @@ def cast_to_int(num, units=None):
             int_num = np.ma.masked_array(np.rint(num), dtype=np.int64)
             # use ceil instead of rint if 1 microsec less than a second
             # or floor if 1 microsec greater than a second (issue #187)
-            if units not in microsec_units and units not in millisec_units:
+            if rounding_correction and units not in microsec_units and units not in millisec_units:
                 int_num = np.ma.where(int_num%1000000 == 1, \
                           np.ma.masked_array(np.floor(num),dtype=np.int64), int_num)
                 int_num = np.ma.where(int_num%1000000 == 999999, \
                           np.ma.masked_array(np.ceil(num),dtype=np.int64), int_num)
         else:
             int_num = np.array(np.rint(num), dtype=np.int64)
-            if units not in microsec_units and units not in millisec_units:
+            if rounding_correction and units not in microsec_units and units not in millisec_units:
                 int_num = np.where(int_num%1000000 == 1, \
                           np.array(np.floor(num),dtype=np.int64), int_num)
                 int_num = np.where(int_num%1000000 == 999999, \
@@ -630,12 +630,17 @@ def num2date(
 
     factor = UNIT_CONVERSION_FACTORS[unit]
     times = np.asanyarray(times)  # Allow list as input
+    # The near-second correction compensates for float64 precision loss.
+    # Extended-precision inputs must retain genuine microseconds next to a second.
+    rounding_correction = (times.dtype.kind != "f" or
+                          np.finfo(times.dtype).eps >= np.finfo(np.float64).eps)
     times = upcast_times(times)
     # convert to masked array if any nan or inf values present
     if not np.isfinite(times).all():
         times = np.ma.masked_invalid(times)
     scaled_times = scale_times(times, factor)
-    scaled_times = cast_to_int(scaled_times,units=unit)
+    scaled_times = cast_to_int(scaled_times,units=unit,
+                               rounding_correction=rounding_correction)
 
     if scaled_times.ndim == 0 or scaled_times.size == 0:
         return decode_date_from_scalar(scaled_times, basedate)
