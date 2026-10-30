@@ -1425,6 +1425,9 @@ The default format of the string produced by strftime is controlled by self.form
             second = '{:02d}'.format(self.second)
             if timespec == 'milliseconds':
                 millisecs = int(round(self.microsecond / 1000, 0))
+                if millisecs == 1000 and self.calendar:
+                    rounded = self + timedelta(microseconds=1000000 - self.microsecond)
+                    return rounded.isoformat(sep=sep, timespec=timespec)
                 second += '.{:03d}'.format(millisecs)
             elif timespec == 'microseconds':
                 second += '.{:06d}'.format(self.microsecond)
