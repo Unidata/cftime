@@ -1256,6 +1256,10 @@ The default format of the string produced by strftime is controlled by self.form
                     dayofyr = _cumdayspermonth_leap[self.month-1]+self.day
                 else:
                     dayofyr = _cumdayspermonth[self.month-1]+self.day
+                # the mixed Julian/Gregorian calendar skips 1582-10-05 to 1582-10-14
+                if self.calendar in ['standard', 'gregorian'] and self.year == 1582 and \
+                   (self.month, self.day) > (10, 4):
+                    dayofyr -= 10
             # cache results for dayofyr
             self._dayofyr = dayofyr
             return dayofyr
@@ -1266,6 +1270,9 @@ The default format of the string produced by strftime is controlled by self.form
     def daysinmonth(self):
         if self.calendar == '360_day':
             return 30
+        elif self.calendar in ['standard', 'gregorian'] and self.year == 1582 and self.month == 10:
+            # the mixed Julian/Gregorian calendar skips 1582-10-05 to 1582-10-14
+            return 21
         else:
             if _is_leap(self.year,self.calendar,
                     has_year_zero=self.has_year_zero):

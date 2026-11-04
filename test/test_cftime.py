@@ -2489,6 +2489,23 @@ class Test_tai:
             print(repr(dt))
 
 
+def test_dayofyr_daysinmonth_across_gregorian_transition():
+    # the standard calendar goes from 1582-10-04 to 1582-10-15, so 1582 has 355 days
+    for calendar in ['standard', 'gregorian']:
+        assert cftime.datetime(1582, 10, 4, calendar=calendar).dayofyr == 277
+        assert cftime.datetime(1582, 10, 15, calendar=calendar).dayofyr == 278
+        assert cftime.datetime(1582, 12, 31, calendar=calendar).dayofyr == 355
+        assert cftime.datetime(1582, 10, 1, calendar=calendar).daysinmonth == 21
+        assert cftime.datetime(1582, 11, 1, calendar=calendar).daysinmonth == 30
+        assert cftime.datetime(1583, 12, 31, calendar=calendar).dayofyr == 365
+        assert cftime.datetime(1583, 10, 1, calendar=calendar).daysinmonth == 31
+        # dayofyr agrees with the day count used by date2num
+        date = cftime.datetime(1582, 12, 31, calendar=calendar)
+        assert date.dayofyr == cftime.date2num(date, 'days since 1582-01-01', calendar=calendar) + 1
+    for calendar in ['proleptic_gregorian', 'julian']:
+        assert cftime.datetime(1582, 12, 31, calendar=calendar).dayofyr == 365
+        assert cftime.datetime(1582, 10, 1, calendar=calendar).daysinmonth == 31
+
 
 if __name__ == '__main__':
     unittest.main()
