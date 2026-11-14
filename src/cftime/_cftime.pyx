@@ -199,7 +199,7 @@ def date2num(dates, units, calendar=None, has_year_zero=None, longdouble=False):
     try:
         dates[0]
     except:
-        if not dates:
+        if np.asanyarray(dates).size == 0:
             # if empty list or array input, return empty array (issue #315)
             return np.array([],dtype=float)
         else:
