@@ -1,5 +1,6 @@
 since version 1.6.6.1 release
 =============================
+* distinguish empty sequences from false-valued scalars in date2num (issue #436).
 * Fix millisecond rounding carry in isoformat (PR #428).
 * preserve extended-precision microseconds next to whole seconds in num2date (PR #432).
 * select the closest record when nearest-time lookup uses an irregular time axis (PR #430).

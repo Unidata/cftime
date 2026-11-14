@@ -2301,6 +2301,34 @@ def test_date2num_masked_longdouble(calendar):
     assert_equal(restored.compressed(), dates.compressed())
 
 
+@pytest.mark.parametrize('value', [0, 0.0, False, None, '',
+                                  np.int64(0), np.float64(0), np.array(0.0)])
+def test_date2num_false_scalar_is_not_empty(value):
+    # Invalid scalars must raise just like nonzero numbers (issue #436).
+    with pytest.raises(AttributeError, match='year'):
+        date2num(value, 'days since 1970-01-01', calendar='gregorian')
+
+
+@pytest.mark.parametrize('dates', [[], (), np.array([]),
+                                  np.array([], dtype=object)])
+def test_date2num_empty_sequence(dates):
+    result = date2num(dates, 'days since 1970-01-01', calendar='gregorian')
+    assert result.shape == (0,)
+    assert result.dtype == np.dtype(float)
+
+
+@pytest.mark.parametrize('unit', ['s', 'ms', 'us'])
+@pytest.mark.parametrize('as_array', [False, True])
+def test_date2num_numpy_datetime64_epoch(unit, as_array):
+    # The Unix epoch is a valid date even though its truth value is false.
+    date = np.datetime64(0, unit)
+    if as_array:
+        date = np.array(date)
+    result = date2num(date, 'seconds since 1970-01-01', calendar='gregorian')
+    assert np.isscalar(result)
+    assert result == 0
+
+
 def test_date2num_numpy_datetime64():
     # Array
     array = np.array([
