@@ -33,6 +33,7 @@ jobs:
     - name: Install cftime
       run: |
         pip install --group dev
+        pip install --group docs
         pip install -e .
 
     - name: Get the version
