@@ -937,6 +937,11 @@ class cftimeTestCase(unittest.TestCase):
         # date2num should return an empty array if given one (issue #315)
         d = cftime.date2num([], 'seconds since 2000-01-01 12:00:00')
         assert d.size==0
+        d = cftime.date2num(np.array([]), 'seconds since 2000-01-01 12:00:00')
+        assert d.size==0
+        for nondate in (0., 0, np.float64(0), None):
+            with pytest.raises(AttributeError):
+                cftime.date2num(nondate, 'days since 1970-01-01', 'gregorian')
         # issue #328:  handle nan/inf in num2date.
         times = np.array([1,2,3,np.nan],dtype=np.float64)
         expected = np.array([DatetimeGregorian(2000, 1, 2, 0, 0, 0, 0),
