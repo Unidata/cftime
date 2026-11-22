@@ -8,6 +8,8 @@ since version 1.6.6.1 release
 * retain longdouble precision in date2num when input dates contain masked values (PR #431).
 * date2num raises AttributeError for zero-valued or None scalars instead of returning an
   empty array, and returns an empty array for empty numpy arrays (issue #436).
+* raise an informative ValueError instead of a TypeError when the reference date in the
+  units string is missing the month or day (issue #342).
 
 version 1.6.6.1 (release tag v1.6.6.1)
 ======================================

@@ -1507,6 +1507,13 @@ class issue17TestCase(unittest.TestCase):
             d = _parse_date(datestr)
             assert_equal(d, expected_parsed_date)
 
+    def test_parse_date_requires_month_and_day(self):
+        for datestr in ("2017", "2017-05", "0347-01"):
+            with self.assertRaisesRegex(ValueError, "month and day are required"):
+                _parse_date(datestr)
+        with self.assertRaisesRegex(ValueError, "month and day are required"):
+            num2date(0, units="common_years since 0347-01", calendar="noleap")
+
 
 class issue57TestCase(unittest.TestCase):
     """Regression tests for issue #57."""
