@@ -135,7 +135,7 @@ def _can_use_python_datetime(date,calendar):
     #       (calendar in ['gregorian','standard'] and date > gregorian and date.year <= MAXYEAR))
     return  (calendar == 'proleptic_gregorian' and date.year >= MINYEAR and date.year <= MAXYEAR) or \
             ((calendar in ['gregorian','standard'] and date.year <= MAXYEAR) and (date.year > 1582 or \
-            (date.year == 1582 and date.month >= 10 and date.day > 15)))
+            (date.year == 1582 and (date.month > 10 or (date.month == 10 and date.day > 15)))))
 
 @cython.embedsignature(True)
 def date2num(dates, units, calendar=None, has_year_zero=None, longdouble=False):

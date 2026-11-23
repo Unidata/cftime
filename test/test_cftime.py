@@ -2161,6 +2161,24 @@ def test_num2date_only_use_python_datetimes_invalid_basedate(
         )
 
 
+@pytest.mark.parametrize("standard_calendar", ["gregorian", "standard"])
+@pytest.mark.parametrize("basedate", ["1582-10-16", "1582-11-01", "1582-12-15"])
+def test_num2date_python_datetimes_late_1582_basedate(standard_calendar, basedate):
+    units = "days since {}".format(basedate)
+    year, month, day = (int(part) for part in basedate.split("-"))
+    expected = real_datetime(year, month, day) + timedelta(days=1)
+    for only_use_python_datetimes in [True, False]:
+        result = num2date(
+            1,
+            units=units,
+            calendar=standard_calendar,
+            only_use_python_datetimes=only_use_python_datetimes,
+            only_use_cftime_datetimes=False
+        )
+        assert type(result) is real_datetime
+        assert result == expected
+
+
 @pytest.mark.parametrize("real_world_calendar", _NO_YEAR_ZERO_CALENDARS)
 def test_num2date_invalid_zero_reference_year(real_world_calendar):
     units = "days since 0000-01-01"
