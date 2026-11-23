@@ -792,6 +792,10 @@ cpdef _parse_date(datestring):
     if not m:
         raise ValueError("Unable to parse date string %r" % datestring)
     groups = m.groupdict()
+    if groups["month"] is None or groups["day"] is None:
+        raise ValueError(
+            "Unable to parse date string %r, a year, month and day are "
+            "required (e.g. '2000-01-01')" % datestring)
     tzoffset_mins = _parse_timezone(groups["timezone"])
     if groups["hour"] is None:
         groups["hour"] = 0

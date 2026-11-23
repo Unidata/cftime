@@ -10,6 +10,8 @@ since version 1.6.6.1 release
   empty array, and returns an empty array for empty numpy arrays (issue #436).
 * num2date can return python datetimes for standard calendar reference dates in
   November and December 1582, instead of rejecting days 1-15 of those months.
+* raise an informative ValueError instead of a TypeError when the reference date in the
+  units string is missing the month or day (issue #342).
 
 version 1.6.6.1 (release tag v1.6.6.1)
 ======================================
